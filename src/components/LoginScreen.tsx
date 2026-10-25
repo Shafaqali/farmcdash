@@ -54,7 +54,7 @@ export function LoginScreen() {
       <button onClick={() => setMode(mode === "in" ? "up" : "in")} className="mt-5 text-sm font-semibold text-primary">
         {mode === "in" ? "New here? Create an account" : "Already have an account? Sign in"}
       </button>
-      <p className="mt-4 text-center text-xs text-muted-foreground">The first account created becomes the farm admin.</p>
+      <p className="mt-4 text-center text-xs text-muted-foreground">Your customers and payments are private to your account.</p>
     </div>
   );
 }
