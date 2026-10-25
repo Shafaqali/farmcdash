@@ -74,7 +74,7 @@ async function fetchAll(uid: string): Promise<Data> {
 export function FarmProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [authReady, setAuthReady] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(true);
   const [data, setData] = useState<Data>(empty);
   const [loading, setLoading] = useState(false);
 
