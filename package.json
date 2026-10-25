@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "build:android": "vite build --config vite.android.config.ts && cp dist/client/_shell.html dist/client/index.html && npx cap sync android"
   },
   "overrides": {
     "rolldown": "1.2.1"
