@@ -44,7 +44,7 @@ function Detail() {
       <div className="grid grid-cols-2 gap-3">
         {[
           { i: CalendarDays, l: "Arrived", v: fmtDate(a.arrival) },
-          { i: IndianRupee, l: a.status === "Sold" ? "Sold for" : "Charges so far", v: a.status === "Sold" && a.soldPrice != null ? inr(a.soldPrice) : inr(chargesFor(a)) },
+          { i: IndianRupee, l: a.status === "Sold" ? "Sold for" : "Charges so far", v: !mine ? "—" : a.status === "Sold" && a.soldPrice != null ? inr(a.soldPrice) : inr(chargesFor(a)) },
           { i: Scale, l: "Latest weight", v: a.weights.length ? `${a.weights.at(-1)!.kg} kg` : "—" },
           { i: Syringe, l: overdue ? "Vaccine overdue" : "Next vaccine", v: fmtDate(a.vaccineDue), bad: overdue },
         ].map((s, i) => (

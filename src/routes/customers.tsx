@@ -16,12 +16,24 @@ export const Route = createFileRoute("/customers")({
 });
 
 function Customers() {
-  const { customers, animals, payments, addPayment, isAdmin } = useFarm();
+  const { customers, animals, payments, addPayment, addCustomer, isAdmin } = useFarm();
+  const [adding, setAdding] = useState(false);
+  const [nc, setNc] = useState({ name: "", phone: "", village: "" });
   const [open, setOpen] = useState<string | null>(null);
   const [amt, setAmt] = useState("");
   return (
     <div>
-      <PageTitle eyebrow={`${customers.length} customers`} title="Customers" />
+      <PageTitle eyebrow={`${customers.length} customers`} title="Customers"
+        action={<button onClick={() => setAdding((v) => !v)} className="bg-glow flex items-center gap-1 rounded-full px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-float active:scale-95"><Plus className="h-4 w-4" />Add</button>} />
+      {adding && (
+        <form className="card-soft mb-3 space-y-2 p-4" onSubmit={(e) => { e.preventDefault(); if (!nc.name.trim()) { toast.error("Enter name"); return; } addCustomer({ name: nc.name.trim(), phone: nc.phone.trim(), village: nc.village.trim() }).then(() => { toast.success("Customer added"); setNc({ name: "", phone: "", village: "" }); setAdding(false); }, (er: Error) => toast.error(er.message)); }}>
+          <input autoFocus value={nc.name} onChange={(e) => setNc({ ...nc, name: e.target.value })} placeholder="Name" className="w-full rounded-xl border bg-background px-3 py-2 outline-none focus:border-primary" />
+          <input type="tel" value={nc.phone} onChange={(e) => setNc({ ...nc, phone: e.target.value })} placeholder="Phone" className="w-full rounded-xl border bg-background px-3 py-2 outline-none focus:border-primary" />
+          <input value={nc.village} onChange={(e) => setNc({ ...nc, village: e.target.value })} placeholder="Village" className="w-full rounded-xl border bg-background px-3 py-2 outline-none focus:border-primary" />
+          <button className="w-full rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground">Save customer</button>
+        </form>
+      )}
+      {customers.length === 0 && !adding && <p className="py-10 text-center text-sm text-muted-foreground">No customers yet. Tap Add to create one.</p>}
       <ul className="space-y-3">
         {customers.map((c, i) => {
           const mine = animals.filter((a) => a.ownerId === c.id);
