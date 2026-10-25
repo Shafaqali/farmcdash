@@ -4,6 +4,7 @@ import { Sprout, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { isNativeApp, authRedirectUrl } from "@/lib/native";
 
 const field = "w-full rounded-xl border bg-background px-4 py-3 outline-none transition focus:border-primary focus:ring-2 focus:ring-ring/30";
 
@@ -22,7 +23,7 @@ export function LoginScreen() {
         const { error } = await supabase.auth.signInWithPassword({ email, password: pw });
         if (error) throw error;
       } else {
-        const { data, error } = await supabase.auth.signUp({ email, password: pw, options: { emailRedirectTo: window.location.origin, data: { full_name: name } } });
+        const { data, error } = await supabase.auth.signUp({ email, password: pw, options: { emailRedirectTo: authRedirectUrl(), data: { full_name: name } } });
         if (error) throw error;
         if (!data.session) toast.success("Account created — please sign in");
       }
