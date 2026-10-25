@@ -10,33 +10,126 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AnimalsRouteImport } from './routes/animals'
+import { Route as CategoriesRouteImport } from './routes/categories'
+import { Route as CustomersRouteImport } from './routes/customers'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as ScanRouteImport } from './routes/scan'
+import { Route as AnimalsIdRouteImport } from './routes/animals.$id'
+import { Route as AnimalsNewRouteImport } from './routes/animals.new'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AnimalsRoute = AnimalsRouteImport.update({
+  id: '/animals',
+  path: '/animals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CategoriesRoute = CategoriesRouteImport.update({
+  id: '/categories',
+  path: '/categories',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomersRoute = CustomersRouteImport.update({
+  id: '/customers',
+  path: '/customers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ScanRoute = ScanRouteImport.update({
+  id: '/scan',
+  path: '/scan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnimalsIdRoute = AnimalsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AnimalsRoute,
+} as any)
+const AnimalsNewRoute = AnimalsNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AnimalsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/animals': typeof AnimalsRouteWithChildren
+  '/categories': typeof CategoriesRoute
+  '/customers': typeof CustomersRoute
+  '/profile': typeof ProfileRoute
+  '/scan': typeof ScanRoute
+  '/animals/$id': typeof AnimalsIdRoute
+  '/animals/new': typeof AnimalsNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/animals': typeof AnimalsRouteWithChildren
+  '/categories': typeof CategoriesRoute
+  '/customers': typeof CustomersRoute
+  '/profile': typeof ProfileRoute
+  '/scan': typeof ScanRoute
+  '/animals/$id': typeof AnimalsIdRoute
+  '/animals/new': typeof AnimalsNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/animals': typeof AnimalsRouteWithChildren
+  '/categories': typeof CategoriesRoute
+  '/customers': typeof CustomersRoute
+  '/profile': typeof ProfileRoute
+  '/scan': typeof ScanRoute
+  '/animals/$id': typeof AnimalsIdRoute
+  '/animals/new': typeof AnimalsNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/animals'
+    | '/categories'
+    | '/customers'
+    | '/profile'
+    | '/scan'
+    | '/animals/$id'
+    | '/animals/new'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/animals'
+    | '/categories'
+    | '/customers'
+    | '/profile'
+    | '/scan'
+    | '/animals/$id'
+    | '/animals/new'
+  id:
+    | '__root__'
+    | '/'
+    | '/animals'
+    | '/categories'
+    | '/customers'
+    | '/profile'
+    | '/scan'
+    | '/animals/$id'
+    | '/animals/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AnimalsRoute: typeof AnimalsRouteWithChildren
+  CategoriesRoute: typeof CategoriesRoute
+  CustomersRoute: typeof CustomersRoute
+  ProfileRoute: typeof ProfileRoute
+  ScanRoute: typeof ScanRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +141,78 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/animals': {
+      id: '/animals'
+      path: '/animals'
+      fullPath: '/animals'
+      preLoaderRoute: typeof AnimalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/categories': {
+      id: '/categories'
+      path: '/categories'
+      fullPath: '/categories'
+      preLoaderRoute: typeof CategoriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customers': {
+      id: '/customers'
+      path: '/customers'
+      fullPath: '/customers'
+      preLoaderRoute: typeof CustomersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/scan': {
+      id: '/scan'
+      path: '/scan'
+      fullPath: '/scan'
+      preLoaderRoute: typeof ScanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/animals/$id': {
+      id: '/animals/$id'
+      path: '/$id'
+      fullPath: '/animals/$id'
+      preLoaderRoute: typeof AnimalsIdRouteImport
+      parentRoute: typeof AnimalsRoute
+    }
+    '/animals/new': {
+      id: '/animals/new'
+      path: '/new'
+      fullPath: '/animals/new'
+      preLoaderRoute: typeof AnimalsNewRouteImport
+      parentRoute: typeof AnimalsRoute
+    }
   }
 }
 
+interface AnimalsRouteChildren {
+  AnimalsIdRoute: typeof AnimalsIdRoute
+  AnimalsNewRoute: typeof AnimalsNewRoute
+}
+
+const AnimalsRouteChildren: AnimalsRouteChildren = {
+  AnimalsIdRoute: AnimalsIdRoute,
+  AnimalsNewRoute: AnimalsNewRoute,
+}
+
+const AnimalsRouteWithChildren =
+  AnimalsRoute._addFileChildren(AnimalsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AnimalsRoute: AnimalsRouteWithChildren,
+  CategoriesRoute: CategoriesRoute,
+  CustomersRoute: CustomersRoute,
+  ProfileRoute: ProfileRoute,
+  ScanRoute: ScanRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

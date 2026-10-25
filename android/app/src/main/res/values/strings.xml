@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">FarmCare</string>
+    <string name="title_activity_main">FarmCare</string>
+    <string name="package_name">com.farmcare.app</string>
+    <string name="custom_url_scheme">com.farmcare.app</string>
+</resources>
