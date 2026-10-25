@@ -16,6 +16,7 @@ import { FarmProvider, useFarm } from "@/lib/farm-data";
 import { LoginScreen } from "@/components/LoginScreen";
 import { AppShell } from "@/components/AppShell";
 import { Toaster } from "@/components/ui/sonner";
+import { NativeBridge } from "@/lib/native";
 
 function NotFoundComponent() {
   return (
@@ -124,6 +125,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <FarmProvider>
+        <NativeBridge />
         <AuthGate />
 
         <Toaster position="top-center" />

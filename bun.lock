@@ -6,7 +6,9 @@
       "name": "tanstack_start_ts",
       "dependencies": {
         "@capacitor/android": "6",
+        "@capacitor/app": "6",
         "@capacitor/core": "6",
+        "@capacitor/status-bar": "6",
         "@hookform/resolvers": "^5.2.2",
         "@lovable.dev/cloud-auth-js": "^1.2.0",
         "@radix-ui/react-accordion": "^1.2.12",
@@ -142,9 +144,13 @@
 
     "@capacitor/android": ["@capacitor/android@6.2.2", "", { "peerDependencies": { "@capacitor/core": "^6.2.0" } }, "sha512-JjIu1ryNE16PQTp51rb4NEygxP7cSCDMmUqx4f5f12xscKdGKTjO9bkEP3TroLnTa/J6p2QopIhRbrd3E/7DrA=="],
 
+    "@capacitor/app": ["@capacitor/app@6.0.3", "", { "peerDependencies": { "@capacitor/core": "^6.0.0" } }, "sha512-4gFUCbcVz0N/YYN32OBFerocWXslIv3Nc90gDiRsBkJc0plwK6kIUT6PKa5WtW2kfhteUeCVXQbvArH2fH+0Ug=="],
+
     "@capacitor/cli": ["@capacitor/cli@6.2.2", "", { "dependencies": { "@ionic/cli-framework-output": "^2.2.5", "@ionic/utils-fs": "^3.1.6", "@ionic/utils-subprocess": "2.1.11", "@ionic/utils-terminal": "^2.3.3", "commander": "^9.3.0", "debug": "^4.3.4", "env-paths": "^2.2.0", "kleur": "^4.1.4", "native-run": "^2.0.0", "open": "^8.4.0", "plist": "^3.0.5", "prompts": "^2.4.2", "rimraf": "^4.4.1", "semver": "^7.3.7", "tar": "^6.1.11", "tslib": "^2.4.0", "xml2js": "^0.5.0" }, "bin": { "cap": "bin/capacitor", "capacitor": "bin/capacitor" } }, "sha512-5wEYSHBzRKJKZnhD2sVJAP0t0kUT7o2/vlgEGzFE3t2w+inL9qMDN7zxg6pvqveJiPNZT2k93ZvJDdRKIn/w1w=="],
 
     "@capacitor/core": ["@capacitor/core@6.2.2", "", { "dependencies": { "tslib": "^2.1.0" } }, "sha512-qEI3DcwJEPzhW+hVGKH8m4jbujtkdUiGkpMLHmpR8epACU7wEsV6NF8pCHzpsMYjc80oK7Cmpcw+MIienv/YRw=="],
+
+    "@capacitor/status-bar": ["@capacitor/status-bar@6.0.3", "", { "peerDependencies": { "@capacitor/core": "^6.0.0" } }, "sha512-nFlgSmtx6Zwaw0tEvZgQsWHBeOfWWB/AvEoCApopLT4mHkBVoSrwkLvy2PjZs5wxCbsmqvQczr3XCyTwaDZVQg=="],
 
     "@date-fns/tz": ["@date-fns/tz@1.5.0", "", {}, "sha512-lwYN/vDPeNRULcepoE/LO2Pgx+7/RV+S9ARfbc9lr2DtGkOD7pAiruHvbR1RX3Qyf6ja47EWJDMsNK5vK08DJg=="],
 
