@@ -2,6 +2,7 @@ import { Link, useLocation } from "@tanstack/react-router";
 import { LayoutGrid, PawPrint, Users, ScanLine, UserRound, Sprout, Bell } from "lucide-react";
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
+import { NotificationBell } from "./Notifications";
 
 const left = [{ to: "/", label: "Home", icon: LayoutGrid }, { to: "/animals", label: "Animals", icon: PawPrint }] as const;
 const right = [{ to: "/customers", label: "Customers", icon: Users }, { to: "/profile", label: "Profile", icon: UserRound }] as const;
@@ -26,9 +27,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <span className="bg-glow grid h-9 w-9 place-items-center rounded-xl text-primary-foreground shadow-float"><Sprout className="h-5 w-5" /></span>
           <span className="font-display text-xl font-semibold">FarmCare</span>
         </Link>
-        <button aria-label="Notifications" className="relative grid h-10 w-10 place-items-center rounded-full bg-muted">
-          <Bell className="h-5 w-5" /><span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-destructive" />
-        </button>
+        <NotificationBell />
       </header>
       <motion.main key={path} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: [0.2, 0.8, 0.2, 1] }} className="px-5 pt-5">
         {children}
