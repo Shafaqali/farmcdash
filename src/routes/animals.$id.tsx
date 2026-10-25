@@ -20,10 +20,11 @@ export const Route = createFileRoute("/animals/$id")({
 
 function Detail() {
   const { id } = Route.useParams();
-  const { animals, customers, isAdmin, loading } = useFarm();
-  const a = animals.find((x) => x.id.toLowerCase() === id.toLowerCase());
+  const { allAnimals, customers, uid, loading } = useFarm();
+  const a = allAnimals.find((x) => x.id.toLowerCase() === id.toLowerCase());
   if (!a) return <div className="py-20 text-center"><p className="text-muted-foreground">{loading ? "Loading…" : `No animal with ID ${id}`}</p><Link to="/animals" className="mt-4 inline-block font-semibold text-primary">Back to animals</Link></div>;
   const owner = customers.find((c) => c.id === a.ownerId);
+  const mine = a.userId === uid;
   const overdue = a.vaccineDue !== "" && Date.parse(a.vaccineDue) < TODAY;
   const label = `${a.species}${a.sub ? " · " + a.sub : ""}`;
   return (
@@ -36,7 +37,7 @@ function Detail() {
           <p className="font-display text-3xl font-semibold">{a.id}</p>
           <p className="opacity-85">{label}</p>
           {a.breed && a.breed !== a.sub && <p className="text-sm opacity-75">{a.breed}</p>}
-          <p className="mt-1 text-sm opacity-75">Owner: {owner?.name ?? "—"}</p>
+          <p className="mt-1 text-sm opacity-75">Owner: {mine ? owner?.name ?? "—" : "Registered by another user"}</p>
           <span className="mt-2 inline-block rounded-full bg-primary-foreground/20 px-2.5 py-0.5 text-xs font-semibold">{a.status}{a.status === "Sold" && a.soldDate ? ` · ${fmtDate(a.soldDate)}` : ""}</span>
         </div>
       </section>
@@ -76,7 +77,7 @@ function Detail() {
           <ul className="divide-y text-sm">{a.vaccinations.map((v) => <li key={v.id} className="flex justify-between py-2"><span className="font-medium">{v.name}</span><span className="text-muted-foreground">{fmtDate(v.date)}</span></li>)}</ul>
         ) : <p className="text-sm text-muted-foreground">No vaccines recorded yet.</p>}
       </section>
-      {isAdmin ? <AdminPanel a={a} /> : <p className="text-center text-xs text-muted-foreground">Only an admin can update this record.</p>}
+      {mine ? <AdminPanel a={a} /> : <p className="text-center text-xs text-muted-foreground">Only the person who registered this animal can edit it.</p>}
     </div>
   );
 }
@@ -106,7 +107,7 @@ function AdminPanel({ a }: { a: Animal }) {
 
   return (
     <section className="card-soft animate-rise space-y-4 p-4">
-      <h2 className="flex items-center gap-2 text-lg font-semibold"><ShieldCheck className="h-5 w-5 text-primary" />Admin update</h2>
+      <h2 className="flex items-center gap-2 text-lg font-semibold"><ShieldCheck className="h-5 w-5 text-primary" />Update record</h2>
       <div className="flex gap-1.5 overflow-x-auto">
         {tabs.map((t) => <button key={t} type="button" onClick={() => setTab(t)} className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium ${tab === t ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{t}</button>)}
       </div>

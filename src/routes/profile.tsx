@@ -28,7 +28,7 @@ function Profile() {
         <div className="relative mx-auto grid h-20 w-20 place-items-center rounded-full border-4 border-primary-foreground/30 bg-accent font-display text-3xl font-semibold uppercase text-accent-foreground">{userName[0] ?? "F"}</div>
         <h1 className="relative mt-3 text-2xl font-semibold">{userName}</h1>
         <p className="relative text-sm opacity-80">{session?.user.email}</p>
-        <span className="relative mt-2 inline-flex items-center gap-1 rounded-full bg-primary-foreground/15 px-3 py-1 text-xs font-semibold"><ShieldCheck className="h-3.5 w-3.5" />{isAdmin ? "Admin" : "Staff (view only)"}</span>
+        <span className="relative mt-2 inline-flex items-center gap-1 rounded-full bg-primary-foreground/15 px-3 py-1 text-xs font-semibold"><ShieldCheck className="h-3.5 w-3.5" />My farm</span>
         <div className="relative mt-5 grid grid-cols-3 gap-2">
           {[{ i: PawPrint, v: `${active}/${animals.length}`, l: "Active" }, { i: Users, v: customers.length, l: "Customers" }, { i: IndianRupee, v: inr(payments.reduce((s, p) => s + p.amount, 0)), l: "Collected" }].map((s) => (
             <div key={s.l} className="rounded-2xl bg-primary-foreground/10 py-3"><s.i className="mx-auto h-4 w-4 opacity-80" /><p className="mt-1 font-semibold">{s.v}</p><p className="text-[11px] opacity-75">{s.l}</p></div>

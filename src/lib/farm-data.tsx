@@ -7,7 +7,7 @@ export const STATUSES: Status[] = ["Active", "Sold", "Discharged", "Dead"];
 export type Category = { id: string; name: string; parentId: string | null; code: string };
 export type Vaccination = { id: string; name: string; date: string; nextDue: string | null };
 export type Animal = {
-  id: string; categoryId: string; subcategoryId: string | null;
+  id: string; userId: string; categoryId: string; subcategoryId: string | null;
   species: string; sub: string; breed: string; ownerId: string; status: Status;
   arrival: string; monthlyCharge: number; notes: string;
   photoPath: string | null; photoUrl: string | null;
@@ -20,24 +20,26 @@ export type Payment = { id: string; customerId: string; amount: number; date: st
 
 const DAY = 86400000;
 
-type Data = { animals: Animal[]; customers: Customer[]; payments: Payment[]; categories: Category[] };
+type Data = { animals: Animal[]; allAnimals: Animal[]; customers: Customer[]; payments: Payment[]; categories: Category[] };
 type Store = Data & {
   loading: boolean;
   session: Session | null;
   authReady: boolean;
   isAdmin: boolean;
+  uid: string | null;
+  addCustomer: (c: Omit<Customer, "id">) => Promise<void>;
   userName: string;
   reload: () => Promise<void>;
   addPayment: (p: Omit<Payment, "id">) => Promise<void>;
 };
 const Ctx = createContext<Store | null>(null);
-const empty: Data = { animals: [], customers: [], payments: [], categories: [] };
+const empty: Data = { animals: [], allAnimals: [], customers: [], payments: [], categories: [] };
 
-async function fetchAll(): Promise<Data> {
+async function fetchAll(uid: string): Promise<Data> {
   const [a, c, p, cat, w, v] = await Promise.all([
     supabase.from("animals").select("*").order("created_at"),
-    supabase.from("customers").select("*").order("name"),
-    supabase.from("payments").select("*").order("date", { ascending: false }),
+    supabase.from("customers").select("*").eq("user_id", uid).order("name"),
+    supabase.from("payments").select("*").eq("user_id", uid).order("date", { ascending: false }),
     supabase.from("categories").select("*").order("name"),
     supabase.from("weights").select("*").order("date"),
     supabase.from("vaccinations").select("*").order("date", { ascending: false }),
@@ -53,7 +55,7 @@ async function fetchAll(): Promise<Data> {
     data?.forEach((d) => { if (d.path && d.signedUrl) urls.set(d.path, d.signedUrl); });
   }
   const animals: Animal[] = (a.data ?? []).map((x) => ({
-    id: x.id, categoryId: x.category_id, subcategoryId: x.subcategory_id,
+    id: x.id, userId: x.user_id, categoryId: x.category_id, subcategoryId: x.subcategory_id,
     species: catName(x.category_id), sub: catName(x.subcategory_id), breed: x.breed,
     ownerId: x.owner_id ?? "", status: x.status as Status, arrival: x.arrival,
     monthlyCharge: Number(x.monthly_charge), notes: x.notes,
@@ -63,7 +65,7 @@ async function fetchAll(): Promise<Data> {
     vaccinations: (v.data ?? []).filter((y) => y.animal_id === x.id).map((y) => ({ id: y.id, name: y.name, date: y.date, nextDue: y.next_due })),
   }));
   return {
-    animals, categories,
+    animals: animals.filter((x) => x.userId === uid), allAnimals: animals, categories,
     customers: (c.data ?? []).map((x) => ({ id: x.id, name: x.name, phone: x.phone, village: x.village })),
     payments: (p.data ?? []).map((x) => ({ id: x.id, customerId: x.customer_id, amount: Number(x.amount), date: x.date })),
   };
@@ -87,9 +89,8 @@ export function FarmProvider({ children }: { children: ReactNode }) {
     if (!uid) return;
     setLoading(true);
     try {
-      const [d, r] = await Promise.all([fetchAll(), supabase.from("user_roles").select("role").eq("user_id", uid)]);
-      setData(d);
-      setIsAdmin(!!r.data?.some((x) => x.role === "admin"));
+      setData(await fetchAll(uid));
+      setIsAdmin(true);
     } finally { setLoading(false); }
   }, [uid]);
 
@@ -100,9 +101,14 @@ export function FarmProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
     await reload();
   };
+  const addCustomer: Store["addCustomer"] = async (c) => {
+    const { error } = await supabase.from("customers").insert({ name: c.name, phone: c.phone, village: c.village });
+    if (error) throw error;
+    await reload();
+  };
   const meta = session?.user.user_metadata as { full_name?: string; name?: string } | undefined;
   const userName = meta?.full_name || meta?.name || session?.user.email?.split("@")[0] || "";
-  return <Ctx.Provider value={{ ...data, loading, session, authReady, isAdmin, userName, reload, addPayment }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ ...data, loading, session, authReady, isAdmin, uid: uid ?? null, addCustomer, userName, reload, addPayment }}>{children}</Ctx.Provider>;
 }
 export const useFarm = () => { const c = useContext(Ctx); if (!c) throw new Error("FarmProvider missing"); return c; };
 
