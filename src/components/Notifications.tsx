@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Bell, Syringe, Wallet, X } from "lucide-react";
 import { toast } from "sonner";
+import { syncPhoneAlerts } from "@/lib/local-alerts";
 import { useFarm, inr, chargesFor, TODAY, DAY_MS, fmtDate } from "@/lib/farm-data";
 
 type Alert = { key: string; kind: "vaccine" | "money"; title: string; sub: string; to: string; params?: { id: string }; urgent: boolean };
@@ -28,8 +29,22 @@ export function useAlerts(): Alert[] {
   }, [animals, customers, payments]);
 }
 
+function usePhoneAlerts() {
+  const { animals, customers, payments } = useFarm();
+  useEffect(() => {
+    const vaccines = animals.filter((a) => a.status === "Active" && a.vaccineDue && !isNaN(Date.parse(a.vaccineDue))).map((a) => ({ id: a.id, species: a.species, due: a.vaccineDue as string }));
+    const money = customers.map((c) => {
+      const due = animals.filter((a) => a.ownerId === c.id).reduce((s, a) => s + chargesFor(a), 0);
+      const paid = payments.filter((p) => p.customerId === c.id).reduce((s, p) => s + p.amount, 0);
+      return { name: c.name, bal: due - paid };
+    }).filter((m) => m.bal > 0);
+    if (animals.length || customers.length) void syncPhoneAlerts(vaccines, money);
+  }, [animals, customers, payments]);
+}
+
 export function NotificationBell() {
   const alerts = useAlerts();
+  usePhoneAlerts();
   const [open, setOpen] = useState(false);
   const shown = useRef(new Set<string>());
 
