@@ -48,7 +48,7 @@ function Scan() {
       </div>
       <form className="card-soft flex gap-2 p-3" onSubmit={(e) => { e.preventDefault(); if (id.trim()) nav({ to: "/animals/$id", params: { id: id.trim().toUpperCase() } }); }}>
         <span className="grid w-10 place-items-center text-muted-foreground"><QrCode className="h-5 w-5" /></span>
-        <input value={id} onChange={(e) => setId(e.target.value)} placeholder="Or type ID, e.g. G012" className="flex-1 bg-transparent outline-none" />
+        <input value={id} onChange={(e) => setId(e.target.value)} placeholder="Or type ID, e.g. U01-G0001" className="flex-1 bg-transparent outline-none" />
         <button className="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">Open</button>
       </form>
     </div>

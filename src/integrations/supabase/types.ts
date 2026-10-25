@@ -195,16 +195,19 @@ export type Database = {
           created_at: string
           full_name: string
           id: string
+          user_code: string | null
         }
         Insert: {
           created_at?: string
           full_name?: string
           id: string
+          user_code?: string | null
         }
         Update: {
           created_at?: string
           full_name?: string
           id?: string
+          user_code?: string | null
         }
         Relationships: []
       }
@@ -286,6 +289,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      animal_owner_info: {
+        Args: { _animal_id: string }
+        Returns: {
+          owner_name: string
+          registered_by: string
+          user_code: string
+        }[]
+      }
       owns_animal: { Args: { _animal_id: string }; Returns: boolean }
     }
     Enums: {

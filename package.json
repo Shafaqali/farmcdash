@@ -21,6 +21,8 @@
     "@capacitor/android": "6",
     "@capacitor/app": "6",
     "@capacitor/core": "6",
+    "@capacitor/filesystem": "6",
+    "@capacitor/share": "6",
     "@capacitor/status-bar": "6",
     "@hookform/resolvers": "^5.2.2",
     "@lovable.dev/cloud-auth-js": "^1.2.0",
