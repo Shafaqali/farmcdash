@@ -1,6 +1,8 @@
 import { useRef } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 import { Download } from "lucide-react";
+import { toast } from "sonner";
+import { isNativeApp } from "@/lib/native";
 
 /** QR tag for an animal; encodes the animal ID so the in-app scanner opens its record. */
 export function AnimalQR({ id, label, size = 92 }: { id: string; label: string; size?: number }) {
@@ -19,8 +21,21 @@ export function AnimalQR({ id, label, size = 92 }: { id: string; label: string; 
     ctx.fillStyle = "#111111"; ctx.textAlign = "center";
     ctx.font = "bold 48px sans-serif"; ctx.fillText(id, out.width / 2, qr + pad + 60);
     ctx.font = "26px sans-serif"; ctx.fillText(label, out.width / 2, qr + pad + 98);
+    const dataUrl = out.toDataURL("image/png");
+    const name = `FarmCare-${id}-QR.png`;
+    if (isNativeApp()) {
+      void (async () => {
+        try {
+          const { Filesystem, Directory } = await import("@capacitor/filesystem");
+          const { Share } = await import("@capacitor/share");
+          const res = await Filesystem.writeFile({ path: name, data: dataUrl.split(",")[1] ?? "", directory: Directory.Cache });
+          await Share.share({ title: `QR ${id}`, files: [res.uri], dialogTitle: "Save or share QR" });
+        } catch (e) { if (!String(e).includes("cancel")) toast.error("Could not save QR"); }
+      })();
+      return;
+    }
     const a = document.createElement("a");
-    a.href = out.toDataURL("image/png"); a.download = `FarmCare-${id}-QR.png`; a.click();
+    a.href = dataUrl; a.download = name; document.body.appendChild(a); a.click(); a.remove();
   };
   return (
     <div className="flex flex-col items-center gap-2">

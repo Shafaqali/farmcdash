@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, Syringe, Scale, CalendarDays, IndianRupee, Camera, ShieldCheck, Trash2, Loader2 } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { toast } from "sonner";
@@ -22,11 +22,18 @@ function Detail() {
   const { id } = Route.useParams();
   const { allAnimals, customers, uid, loading } = useFarm();
   const a = allAnimals.find((x) => x.id.toLowerCase() === id.toLowerCase());
+  const [info, setInfo] = useState<{ registered_by: string | null; user_code: string | null; owner_name: string | null } | null>(null);
+  useEffect(() => {
+    if (!a) return;
+    void supabase.rpc("animal_owner_info", { _animal_id: a.id }).then(({ data }) => setInfo(data?.[0] ?? null));
+  }, [a?.id]);
   if (!a) return <div className="py-20 text-center"><p className="text-muted-foreground">{loading ? "Loading…" : `No animal with ID ${id}`}</p><Link to="/animals" className="mt-4 inline-block font-semibold text-primary">Back to animals</Link></div>;
   const owner = customers.find((c) => c.id === a.ownerId);
   const mine = a.userId === uid;
   const overdue = a.vaccineDue !== "" && Date.parse(a.vaccineDue) < TODAY;
   const label = `${a.species}${a.sub ? " · " + a.sub : ""}`;
+  const ownerName = owner?.name ?? info?.owner_name ?? "—";
+  const regBy = info?.registered_by ? `${info.registered_by}${info.user_code ? ` (${info.user_code})` : ""}` : "—";
   return (
     <div className="space-y-4">
       <Link to="/animals" className="flex items-center gap-1 text-sm text-muted-foreground"><ArrowLeft className="h-4 w-4" />Animals</Link>
@@ -34,10 +41,11 @@ function Detail() {
       <section className="bg-hero animate-rise flex items-center gap-4 rounded-3xl p-5 text-primary-foreground shadow-float">
         <AnimalQR id={a.id} label={label} />
         <div className="min-w-0">
-          <p className="font-display text-3xl font-semibold">{a.id}</p>
+          <p className="font-display text-2xl font-semibold break-all">{a.id}</p>
           <p className="opacity-85">{label}</p>
           {a.breed && a.breed !== a.sub && <p className="text-sm opacity-75">{a.breed}</p>}
-          <p className="mt-1 text-sm opacity-75">Owner: {mine ? owner?.name ?? "—" : "Registered by another user"}</p>
+          <p className="mt-1 text-sm opacity-75">Owner: {ownerName}</p>
+          <p className="text-sm opacity-75">Registered by: {regBy}</p>
           <span className="mt-2 inline-block rounded-full bg-primary-foreground/20 px-2.5 py-0.5 text-xs font-semibold">{a.status}{a.status === "Sold" && a.soldDate ? ` · ${fmtDate(a.soldDate)}` : ""}</span>
         </div>
       </section>
