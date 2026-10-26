@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Phone, MapPin, Plus, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { useFarm, inr, chargesFor } from "@/lib/farm-data";
+import { CustomerPayments } from "@/components/CustomerPayments";
 import { PageTitle } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 
@@ -27,8 +28,6 @@ function Customers() {
   const { customers, animals, payments, addPayment, addCustomer, isAdmin } = useFarm();
   const [adding, setAdding] = useState(false);
   const [nc, setNc] = useState({ name: "", phone: "", village: "" });
-  const [open, setOpen] = useState<string | null>(null);
-  const [amt, setAmt] = useState("");
   return (
     <div>
       <PageTitle eyebrow={`${customers.length} customers`} title="Customers"
@@ -63,14 +62,7 @@ function Customers() {
               </div>
               <div className="mt-3 flex justify-between text-sm"><span className="text-muted-foreground">Paid {inr(paid)}</span><span className={due - paid > 0 ? "font-semibold text-destructive" : "font-semibold text-primary"}>{due - paid > 0 ? `Due ${inr(due - paid)}` : "Settled"}</span></div>
               <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted"><div className="bg-glow h-full rounded-full transition-all duration-1000" style={{ width: `${pct}%` }} /></div>
-              {open === c.id ? (
-                <form className="mt-3 flex gap-2" onSubmit={(e) => { e.preventDefault(); if (!Number(amt)) return; addPayment({ customerId: c.id, amount: Number(amt), date: new Date().toISOString().slice(0, 10) }).then(() => toast.success(`${inr(Number(amt))} recorded`), (er: Error) => toast.error(er.message)); setAmt(""); setOpen(null); }}>
-                  <input autoFocus type="number" value={amt} onChange={(e) => setAmt(e.target.value)} placeholder="Amount ₹" className="flex-1 rounded-xl border bg-background px-3 py-2 outline-none focus:border-primary" />
-                  <Button>Save</Button>
-                </form>
-              ) : (
-                isAdmin && <Button variant="link" onClick={() => setOpen(c.id)} className="mt-3 px-0"><Plus />Record payment</Button>
-              )}
+              {isAdmin && <div className="mt-3"><CustomerPayments customerId={c.id} /></div>}
             </li>
           );
         })}

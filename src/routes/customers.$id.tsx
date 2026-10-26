@@ -4,6 +4,7 @@ import { PageTitle } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { customerAccount } from "@/lib/customer-account";
 import { fmtDate, inr, useFarm } from "@/lib/farm-data";
+import { CustomerPayments } from "@/components/CustomerPayments";
 
 export const Route = createFileRoute("/customers/$id")({
   head: () => ({ meta: [
@@ -43,11 +44,21 @@ function CustomerDetails() {
           <div><dt className="text-muted-foreground">Payments received</dt><dd className="mt-1 break-words font-semibold">{inr(account.totalPaid)}</dd></div>
         </dl>
       </section>
+      <section aria-labelledby="next-collection">
+        <h2 id="next-collection" className="mb-3 text-lg font-semibold">Next collection</h2>
+        {!account.collections.length ? <p className="text-sm text-muted-foreground">No upcoming care charges.</p> : <><p className="mb-2 text-sm">Upcoming total <span className="font-semibold">{inr(account.collections.reduce((sum, item) => sum + item.amount, 0))}</span></p><ul className="divide-y">{account.collections.map((item) => <li key={item.animalId} className="flex flex-wrap justify-between gap-2 py-3 text-sm"><span>{item.animalId}<span className="ml-2 text-muted-foreground">{fmtDate(item.date)}</span></span><span className="font-semibold">{item.amount ? inr(item.amount) : "Paid in advance"}</span></li>)}</ul></>}
+      </section>
+      <section aria-labelledby="monthly-received">
+        <h2 id="monthly-received" className="mb-3 text-lg font-semibold">Monthly received</h2>
+        {!account.monthly.length ? <p className="text-sm text-muted-foreground">No payments received.</p> : <ul className="divide-y">{account.monthly.map(([month, amount]) => <li key={month} className="flex justify-between gap-3 py-3 text-sm"><span>{new Intl.DateTimeFormat("en-IN", { month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(`${month}-01T00:00:00Z`))}</span><span className="font-semibold text-primary">{inr(amount)}</span></li>)}</ul>}
+        {account.unassignedPaid > 0 && <p className="mt-3 text-sm text-muted-foreground">Unassigned received: {inr(account.unassignedPaid)} · Included in the customer balance; not marked against an animal.</p>}
+      </section>
+      <CustomerPayments key={customer.id} customerId={customer.id} />
       <section aria-labelledby="customer-animals">
         <h2 id="customer-animals" className="mb-3 text-lg font-semibold">Animals <span className="text-sm text-muted-foreground">({account.entries.length})</span></h2>
         {!account.entries.length && <p className="py-4 text-sm text-muted-foreground">No animals assigned to this customer.</p>}
         <ul className="space-y-3">
-          {account.entries.map(({ animal, charge }) => (
+          {account.entries.map(({ animal, charge, paid, remaining, periods }) => (
             <li key={animal.id} className="card-soft p-4">
               <Link to="/animals/$id" params={{ id: animal.id }} className="flex items-center gap-3">
                 {animal.photoUrl ? <img src={animal.photoUrl} alt={animal.species} className="h-12 w-12 shrink-0 rounded-lg object-cover" /> : <span className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-secondary text-primary"><PawPrint className="h-6 w-6" /></span>}
@@ -59,13 +70,15 @@ function CustomerDetails() {
                 <div><dt className="text-muted-foreground">Caring / month</dt><dd className="mt-1 break-words font-semibold">{inr(animal.monthlyCharge)}</dd></div>
                 <div><dt className="text-muted-foreground">Care charges to date</dt><dd className="mt-1 break-words font-semibold">{inr(charge)}</dd></div>
               </dl>
+              <div className="mt-3 flex flex-wrap justify-between gap-2 text-sm"><span>Assigned payments {inr(paid)}</span><span className={remaining > 0 ? "font-semibold text-destructive" : "font-semibold text-primary"}>{remaining > 0 ? `Unpaid ${inr(remaining)}` : "Paid"}</span></div>
+              <ul className="mt-3 divide-y border-t">{periods.slice().reverse().map((period) => <li key={period.start} className="flex flex-wrap justify-between gap-2 py-2 text-xs"><span>{fmtDate(period.start)} · {inr(period.charge)}</span><span className={period.remaining > 0 ? "text-destructive" : "text-primary"}>{period.remaining === 0 ? "Paid" : period.paid > 0 ? `Partial · ${inr(period.remaining)} due` : `Unpaid · ${inr(period.remaining)}`}</span></li>)}</ul>
             </li>
           ))}
         </ul>
       </section>
       <section aria-labelledby="customer-payments">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><h2 id="customer-payments" className="text-lg font-semibold">Payment history</h2><Button asChild variant="link" size="sm"><Link to="/customers">Record payment<ChevronRight /></Link></Button></div>
-        {!account.history.length ? <p className="py-4 text-sm text-muted-foreground">No payments recorded.</p> : <ul className="divide-y">{account.history.map((payment) => <li key={payment.id} className="flex items-center justify-between gap-3 py-3 text-sm"><span className="text-muted-foreground">{fmtDate(payment.date)}</span><span className="break-words font-semibold text-primary">{inr(payment.amount)}</span></li>)}</ul>}
+        <h2 id="customer-payments" className="mb-3 text-lg font-semibold">Payment history</h2>
+        {!account.history.length ? <p className="py-4 text-sm text-muted-foreground">No payments recorded.</p> : <ul className="divide-y">{account.history.map((payment) => <li key={payment.id} className="flex items-center justify-between gap-3 py-3 text-sm"><div><p className="text-muted-foreground">{fmtDate(payment.date)}</p><p className="mt-1 text-xs">{payment.animalId ? `${payment.animalId} · Care ${fmtDate(payment.periodStart ?? "")}` : "Unassigned payment"}</p></div><span className="break-words font-semibold text-primary">{inr(payment.amount)}</span></li>)}</ul>}
       </section>
     </div>
   );

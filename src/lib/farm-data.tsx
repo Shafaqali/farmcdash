@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { carePeriods } from "@/lib/care-billing";
 
 export type Status = "Active" | "Sold" | "Discharged" | "Dead";
 export const STATUSES: Status[] = ["Active", "Sold", "Discharged", "Dead"];
@@ -16,7 +17,7 @@ export type Animal = {
   vaccinations: Vaccination[];
 };
 export type Customer = { id: string; name: string; phone: string; village: string };
-export type Payment = { id: string; customerId: string; amount: number; date: string };
+export type Payment = { id: string; customerId: string; amount: number; date: string; animalId?: string | null; periodStart?: string | null };
 
 const DAY = 86400000;
 
@@ -67,7 +68,7 @@ async function fetchAll(uid: string): Promise<Data> {
   return {
     animals: animals.filter((x) => x.userId === uid), allAnimals: animals, categories,
     customers: (c.data ?? []).map((x) => ({ id: x.id, name: x.name, phone: x.phone, village: x.village })),
-    payments: (p.data ?? []).map((x) => ({ id: x.id, customerId: x.customer_id, amount: Number(x.amount), date: x.date })),
+    payments: (p.data ?? []).map((x) => ({ id: x.id, customerId: x.customer_id, amount: Number(x.amount), date: x.date, animalId: x.animal_id, periodStart: x.period_start })),
   };
 }
 
@@ -97,7 +98,8 @@ export function FarmProvider({ children }: { children: ReactNode }) {
   useEffect(() => { if (uid) void reload(); else { setData(empty); setIsAdmin(false); } }, [uid, reload]);
 
   const addPayment: Store["addPayment"] = async (p) => {
-    const { error } = await supabase.from("payments").insert({ customer_id: p.customerId, amount: p.amount, date: p.date });
+    if (!Number.isFinite(p.amount) || p.amount <= 0) throw new Error("Enter a positive payment amount");
+    const { error } = await supabase.from("payments").insert({ customer_id: p.customerId, amount: p.amount, date: p.date, animal_id: p.animalId ?? null, period_start: p.periodStart ?? null });
     if (error) throw error;
     await reload();
   };
@@ -125,12 +127,10 @@ export const TODAY = Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMont
 export const DAY_MS = DAY;
 export const isoToday = () => new Date().toISOString().slice(0, 10);
 export const inr = (v: number) => { const n = String(Math.abs(Math.round(v))); const last = n.slice(-3), rest = n.slice(0, -3); return (v < 0 ? "-₹" : "₹") + (rest ? rest.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + "," : "") + last; };
-/** Charges accrued: monthly charge × months in care (min 1), from arrival up to today (or sold date). */
+/** One monthly care charge is due on arrival and each calendar anniversary. */
 export function chargesFor(a: Pick<Animal, "arrival" | "monthlyCharge"> & { soldDate?: string | null }, from = 0, to = TODAY) {
-  const end = a.soldDate ? Math.min(to, Date.parse(a.soldDate)) : to;
-  const start = Math.max(Date.parse(a.arrival), from);
-  if (start > end) return 0;
-  return Math.max(1, Math.round((end - start) / (30 * DAY))) * a.monthlyCharge;
+  return carePeriods(a, new Date(to).toISOString().slice(0, 10))
+    .filter((date) => Date.parse(date) >= from).length * a.monthlyCharge;
 }
 
 const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];

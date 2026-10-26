@@ -158,29 +158,42 @@ export type Database = {
       payments: {
         Row: {
           amount: number
+          animal_id: string | null
           created_at: string
           customer_id: string
           date: string
           id: string
+          period_start: string | null
           user_id: string
         }
         Insert: {
           amount: number
+          animal_id?: string | null
           created_at?: string
           customer_id: string
           date?: string
           id?: string
+          period_start?: string | null
           user_id?: string
         }
         Update: {
           amount?: number
+          animal_id?: string | null
           created_at?: string
           customer_id?: string
           date?: string
           id?: string
+          period_start?: string | null
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "payments_animal_id_fkey"
+            columns: ["animal_id"]
+            isOneToOne: false
+            referencedRelation: "animals"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "payments_customer_id_fkey"
             columns: ["customer_id"]

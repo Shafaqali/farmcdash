@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 
 - Customer detail pages use only the current user's customers, animals and payments from the farm store, and reuse `chargesFor` for account totals; shared QR animal data must never supply financial details.
+- Calendar care periods are computed in `care-billing`; `chargesFor` and account views share these periods to keep balances and alerts consistent. Payments optionally link to an animal and exact period, validated by the database against user and customer ownership; unlinked payments affect only the customer total.
