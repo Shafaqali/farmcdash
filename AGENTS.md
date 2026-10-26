@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Customer detail pages use only the current user's customers, animals and payments from the farm store, and reuse `chargesFor` for account totals; shared QR animal data must never supply financial details.
