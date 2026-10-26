@@ -17,6 +17,7 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ScanRouteImport } from './routes/scan'
 import { Route as AnimalsIdRouteImport } from './routes/animals.$id'
 import { Route as AnimalsNewRouteImport } from './routes/animals.new'
+import { Route as CustomersIdRouteImport } from './routes/customers.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -58,37 +59,45 @@ const AnimalsNewRoute = AnimalsNewRouteImport.update({
   path: '/new',
   getParentRoute: () => AnimalsRoute,
 } as any)
+const CustomersIdRoute = CustomersIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => CustomersRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/animals': typeof AnimalsRouteWithChildren
   '/categories': typeof CategoriesRoute
-  '/customers': typeof CustomersRoute
+  '/customers': typeof CustomersRouteWithChildren
   '/profile': typeof ProfileRoute
   '/scan': typeof ScanRoute
   '/animals/$id': typeof AnimalsIdRoute
   '/animals/new': typeof AnimalsNewRoute
+  '/customers/$id': typeof CustomersIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/animals': typeof AnimalsRouteWithChildren
   '/categories': typeof CategoriesRoute
-  '/customers': typeof CustomersRoute
+  '/customers': typeof CustomersRouteWithChildren
   '/profile': typeof ProfileRoute
   '/scan': typeof ScanRoute
   '/animals/$id': typeof AnimalsIdRoute
   '/animals/new': typeof AnimalsNewRoute
+  '/customers/$id': typeof CustomersIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/animals': typeof AnimalsRouteWithChildren
   '/categories': typeof CategoriesRoute
-  '/customers': typeof CustomersRoute
+  '/customers': typeof CustomersRouteWithChildren
   '/profile': typeof ProfileRoute
   '/scan': typeof ScanRoute
   '/animals/$id': typeof AnimalsIdRoute
   '/animals/new': typeof AnimalsNewRoute
+  '/customers/$id': typeof CustomersIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -101,6 +110,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/animals/$id'
     | '/animals/new'
+    | '/customers/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -111,6 +121,7 @@ export interface FileRouteTypes {
     | '/scan'
     | '/animals/$id'
     | '/animals/new'
+    | '/customers/$id'
   id:
     | '__root__'
     | '/'
@@ -121,13 +132,14 @@ export interface FileRouteTypes {
     | '/scan'
     | '/animals/$id'
     | '/animals/new'
+    | '/customers/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnimalsRoute: typeof AnimalsRouteWithChildren
   CategoriesRoute: typeof CategoriesRoute
-  CustomersRoute: typeof CustomersRoute
+  CustomersRoute: typeof CustomersRouteWithChildren
   ProfileRoute: typeof ProfileRoute
   ScanRoute: typeof ScanRoute
 }
@@ -190,6 +202,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AnimalsNewRouteImport
       parentRoute: typeof AnimalsRoute
     }
+    '/customers/$id': {
+      id: '/customers/$id'
+      path: '/$id'
+      fullPath: '/customers/$id'
+      preLoaderRoute: typeof CustomersIdRouteImport
+      parentRoute: typeof CustomersRoute
+    }
   }
 }
 
@@ -206,11 +225,23 @@ const AnimalsRouteChildren: AnimalsRouteChildren = {
 const AnimalsRouteWithChildren =
   AnimalsRoute._addFileChildren(AnimalsRouteChildren)
 
+interface CustomersRouteChildren {
+  CustomersIdRoute: typeof CustomersIdRoute
+}
+
+const CustomersRouteChildren: CustomersRouteChildren = {
+  CustomersIdRoute: CustomersIdRoute,
+}
+
+const CustomersRouteWithChildren = CustomersRoute._addFileChildren(
+  CustomersRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnimalsRoute: AnimalsRouteWithChildren,
   CategoriesRoute: CategoriesRoute,
-  CustomersRoute: CustomersRoute,
+  CustomersRoute: CustomersRouteWithChildren,
   ProfileRoute: ProfileRoute,
   ScanRoute: ScanRoute,
 }
