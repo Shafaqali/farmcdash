@@ -10,6 +10,8 @@ export const Route = createFileRoute("/animals")({
     { name: "description", content: "Browse, search and filter every animal in your care." },
     { property: "og:title", content: "Animals — FarmCare" },
     { property: "og:description", content: "Browse, search and filter every animal in your care." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
   ] }),
   component: AnimalsLayout,
 });

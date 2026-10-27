@@ -12,6 +12,8 @@ export const Route = createFileRoute("/categories")({
     { name: "description", content: "Manage animal categories and sub-categories." },
     { property: "og:title", content: "Categories — FarmCare" },
     { property: "og:description", content: "Manage animal categories and sub-categories." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
   ] }),
   component: Categories,
 });

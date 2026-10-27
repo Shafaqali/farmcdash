@@ -11,6 +11,8 @@ export const Route = createFileRoute("/")({
     { name: "description", content: "Farm overview: animals, charges, collections and vaccines at a glance." },
     { property: "og:title", content: "Dashboard — FarmCare" },
     { property: "og:description", content: "Farm overview: animals, charges, collections and vaccines at a glance." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
   ] }),
   component: Dashboard,
 });
