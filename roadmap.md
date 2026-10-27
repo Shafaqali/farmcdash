@@ -1,4 +1,5 @@
 # Customer details
+- [ ] Package latest scanned-animal payments and payment corrections as Android version 1.6; verify APK and signing compatibility.
 - [x] Add private scanned-animal current care period and outstanding months.
 - [x] Allow own payment correction; signed-in scan-entry flow moved a future payment to the current month, persisted after reload, and restored the next collection on phone/desktop. Temporary verification records removed.
 - [x] Add arrival-anniversary monthly billing, animal/month payment recording and separate legacy payments.
