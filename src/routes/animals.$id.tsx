@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useFarm, inr, chargesFor, TODAY, fmtDate, monShort, uploadAnimalPhoto, isoToday, STATUSES, type Animal, type Status } from "@/lib/farm-data";
 import { AnimalQR } from "@/components/AnimalQR";
+import { AnimalPayments } from "@/components/AnimalPayments";
 import { field, F } from "@/components/form";
 
 export const Route = createFileRoute("/animals/$id")({
@@ -14,6 +15,8 @@ export const Route = createFileRoute("/animals/$id")({
     { name: "description", content: `Care record, weight trend and QR tag for animal ${params.id}.` },
     { property: "og:title", content: `${params.id} — FarmCare` },
     { property: "og:description", content: `Care record for animal ${params.id}.` },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
   ] }),
   component: Detail,
 });
@@ -53,7 +56,7 @@ function Detail() {
         {[
           { i: CalendarDays, l: "Arrived", v: fmtDate(a.arrival) },
           { i: IndianRupee, l: a.status === "Sold" ? "Sold for" : "Charges so far", v: !mine ? "—" : a.status === "Sold" && a.soldPrice != null ? inr(a.soldPrice) : inr(chargesFor(a)) },
-          { i: Scale, l: "Latest weight", v: a.weights.length ? `${a.weights.at(-1)!.kg} kg` : "—" },
+          { i: Scale, l: "Latest weight", v: a.weights.at(-1) ? `${a.weights.at(-1)?.kg} kg` : "—" },
           { i: Syringe, l: overdue ? "Vaccine overdue" : "Next vaccine", v: fmtDate(a.vaccineDue), bad: overdue },
         ].map((s, i) => (
           <div key={s.l} className="card-soft animate-rise p-4" style={{ animationDelay: `${i * 60}ms` }}>
@@ -62,6 +65,7 @@ function Detail() {
           </div>
         ))}
       </div>
+      {mine && <AnimalPayments animalId={a.id} />}
       {a.notes && <p className="card-soft p-4 text-sm text-muted-foreground">{a.notes}</p>}
       {a.weights.length > 1 && (
         <section className="card-soft animate-rise p-4">

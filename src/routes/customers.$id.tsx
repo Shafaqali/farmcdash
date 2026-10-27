@@ -38,7 +38,8 @@ function CustomerDetails() {
       <section className="border-y py-4" aria-label="Account balance">
         <p className="text-sm text-muted-foreground">{account.balance < 0 ? "Credit balance" : "Outstanding balance"}</p>
         <p className={`mt-1 break-words text-3xl font-semibold ${account.balance > 0 ? "text-destructive" : "text-primary"}`}>{inr(Math.abs(account.balance))}</p>
-        {account.balance === 0 && <p className="mt-1 text-sm text-primary">Settled</p>}
+        {account.balance === 0 && account.entries.every((entry) => entry.remaining === 0) && <p className="mt-1 text-sm text-primary">Settled</p>}
+        {account.entries.some((entry) => entry.remaining > 0) && <p className="mt-2 text-sm text-destructive">Unpaid care periods: {inr(account.entries.reduce((sum, entry) => sum + entry.remaining, 0))}</p>}
         <dl className="mt-4 grid grid-cols-2 gap-4 text-sm">
           <div><dt className="text-muted-foreground">Total care charges</dt><dd className="mt-1 break-words font-semibold">{inr(account.totalCharges)}</dd></div>
           <div><dt className="text-muted-foreground">Payments received</dt><dd className="mt-1 break-words font-semibold">{inr(account.totalPaid)}</dd></div>
@@ -78,7 +79,7 @@ function CustomerDetails() {
       </section>
       <section aria-labelledby="customer-payments">
         <h2 id="customer-payments" className="mb-3 text-lg font-semibold">Payment history</h2>
-        {!account.history.length ? <p className="py-4 text-sm text-muted-foreground">No payments recorded.</p> : <ul className="divide-y">{account.history.map((payment) => <li key={payment.id} className="flex items-center justify-between gap-3 py-3 text-sm"><div><p className="text-muted-foreground">{fmtDate(payment.date)}</p><p className="mt-1 text-xs">{payment.animalId ? `${payment.animalId} · Care ${fmtDate(payment.periodStart ?? "")}` : "Unassigned payment"}</p></div><span className="break-words font-semibold text-primary">{inr(payment.amount)}</span></li>)}</ul>}
+        {!account.history.length ? <p className="py-4 text-sm text-muted-foreground">No payments recorded.</p> : <ul className="divide-y">{account.history.map((payment) => <li key={payment.id} className="py-3 text-sm"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-muted-foreground">{fmtDate(payment.date)}</p><p className="mt-1 text-xs">{payment.animalId ? `${payment.animalId} · Care ${fmtDate(payment.periodStart ?? "")}${(payment.periodStart ?? "") > new Date().toISOString().slice(0, 10) ? " · Advance" : ""}` : "Unassigned payment"}</p></div><span className="break-words font-semibold text-primary">{inr(payment.amount)}</span><CustomerPayments customerId={customer.id} payment={payment} /></div></li>)}</ul>}
       </section>
     </div>
   );

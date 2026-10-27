@@ -10,6 +10,23 @@ function animal(id: string, ownerId: string, monthlyCharge: number): Animal {
 }
 
 describe("Customer account", () => {
+  it("keeps the current month unpaid when a receipt was assigned to next month", () => {
+    const goat = { ...animal("U01-G0001", "customer-one", 500), arrival: "2026-10-01" };
+    const account = customerAccount("customer-one", [goat], [{ id: "p1", customerId: "customer-one", animalId: goat.id, periodStart: "2026-11-01", amount: 500, date: "2026-10-27" }], "2026-10-27");
+    expect(account.entries[0]?.periods[0]?.remaining).toBe(500);
+    expect(account.collections[0]?.amount).toBe(0);
+  });
+  it("moving a receipt to the current month pays that month and restores the next collection", () => {
+    const goat = { ...animal("U01-G0001", "customer-one", 500), arrival: "2026-10-01" };
+    const payment = { id: "p1", customerId: "customer-one", animalId: goat.id, periodStart: "2026-11-01", amount: 500, date: "2026-10-27" };
+    const before = customerAccount("customer-one", [goat], [payment], "2026-10-27");
+    const after = customerAccount("customer-one", [goat], [{ ...payment, periodStart: "2026-10-01" }], "2026-10-27");
+    expect(before.entries[0]?.remaining).toBe(500);
+    expect(after.entries[0]?.remaining).toBe(0);
+    expect(after.collections[0]).toEqual({ animalId: goat.id, date: "2026-11-01", amount: 500 });
+    expect(after.totalPaid).toBe(500);
+    expect(after.history).toHaveLength(1);
+  });
   it("keeps old unlinked received money separate and never marks an animal paid", () => {
     const account = customerAccount("customer-one", [animal("U01-G0001", "customer-one", 500)], [{ id: "old", customerId: "customer-one", amount: 500, date: isoToday() }]);
     expect(account.unassignedPaid).toBe(500);
