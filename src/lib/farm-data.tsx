@@ -32,6 +32,7 @@ type Store = Data & {
   userName: string;
   reload: () => Promise<void>;
   addPayment: (p: Omit<Payment, "id">) => Promise<void>;
+  updatePayment: (p: Payment) => Promise<void>;
 };
 const Ctx = createContext<Store | null>(null);
 const empty: Data = { animals: [], allAnimals: [], customers: [], payments: [], categories: [] };
@@ -108,9 +109,17 @@ export function FarmProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
     await reload();
   };
+  const updatePayment: Store["updatePayment"] = async (p) => {
+    if (!uid || !data.payments.some((item) => item.id === p.id && item.customerId === p.customerId)) throw new Error("Payment is not in your account");
+    if (!Number.isFinite(p.amount) || p.amount <= 0) throw new Error("Enter a positive payment amount");
+    const { data: updated, error } = await supabase.from("payments").update({ amount: p.amount, date: p.date, animal_id: p.animalId ?? null, period_start: p.periodStart ?? null }).eq("id", p.id).eq("user_id", uid).select("id").single();
+    if (error) throw error;
+    if (!updated) throw new Error("Payment could not be updated");
+    await reload();
+  };
   const meta = session?.user.user_metadata as { full_name?: string; name?: string } | undefined;
   const userName = meta?.full_name || meta?.name || session?.user.email?.split("@")[0] || "";
-  return <Ctx.Provider value={{ ...data, loading, session, authReady, isAdmin, uid: uid ?? null, addCustomer, userName, reload, addPayment }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ ...data, loading, session, authReady, isAdmin, uid: uid ?? null, addCustomer, userName, reload, addPayment, updatePayment }}>{children}</Ctx.Provider>;
 }
 export const useFarm = () => { const c = useContext(Ctx); if (!c) throw new Error("FarmProvider missing"); return c; };
 

@@ -13,6 +13,8 @@ export const Route = createFileRoute("/animals/new")({
     { name: "description", content: "Add a new animal with category, photo and auto QR tag." },
     { property: "og:title", content: "Register animal — FarmCare" },
     { property: "og:description", content: "Add a new animal to your farm records." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
   ] }),
   component: NewAnimal,
 });

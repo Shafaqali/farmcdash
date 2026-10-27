@@ -9,6 +9,8 @@ export const Route = createFileRoute("/scan")({
     { name: "description", content: "Scan an animal's QR label to open its record." },
     { property: "og:title", content: "Scan tag — FarmCare" },
     { property: "og:description", content: "Scan an animal's QR label to open its record." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
   ] }),
   component: Scan,
 });

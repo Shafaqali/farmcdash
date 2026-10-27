@@ -1,4 +1,6 @@
 # Customer details
+- [x] Add private scanned-animal current care period and outstanding months.
+- [x] Allow own payment correction; signed-in scan-entry flow moved a future payment to the current month, persisted after reload, and restored the next collection on phone/desktop. Temporary verification records removed.
 - [x] Add arrival-anniversary monthly billing, animal/month payment recording and separate legacy payments.
 - [x] Test monthly dates, paid/unpaid status, totals and customer scoping; nine tests pass.
 - [x] Build and inspect updated Android APK; version 1.5, valid signature, locally bundled monthly customer page. Saved FarmCare_v5.apk. New debug signing key differs from v4, requiring uninstall/reinstall.

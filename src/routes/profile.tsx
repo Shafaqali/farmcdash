@@ -13,6 +13,8 @@ export const Route = createFileRoute("/profile")({
     { name: "description", content: "Your farm profile, settings and quick actions." },
     { property: "og:title", content: "Profile — FarmCare" },
     { property: "og:description", content: "Your farm profile, settings and quick actions." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
   ] }),
   component: Profile,
 });
