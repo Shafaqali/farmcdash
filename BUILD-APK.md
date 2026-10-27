@@ -11,8 +11,8 @@ Screens are bundled locally inside the APK; no published website URL is required
 2. APK: `android/app/build/outputs/apk/debug/app-debug.apk`
 3. Copy it to your phone, open it, allow "Install unknown apps".
 
-Use the same signing key for subsequent updates. Version 1.5 was built with a new debug key, so it cannot install over older APKs signed with the previous key: uninstall the old app first, then install and sign in again. Cloud records are retained; local sign-in and scheduled alerts are reset. Open the new app and allow notifications to reschedule alerts.
+Use the same signing key for subsequent updates. Version 1.6 (version code 6) includes scanned-animal care-payment status, outstanding periods, advance payment handling and corrections to the original receipt. Its debug certificate differs from version 1.5 because the previous key was unavailable: uninstall the old app first, then install and sign in again. Cloud records are retained; local sign-in and scheduled alerts are reset. Open the new app and allow notifications to reschedule alerts.
 
-Verified: Android compilation, APK signature, bundled monthly customer page, and signed-in web payment save/reload. Physical-device launch and background notification delivery have not been tested in this environment.
+Verified for version 1.6: Android compilation, APK signature, package/version, local assets and latest payment code, plus 13 billing/privacy/routing tests. The prior signed-in web flow verified payment correction and reload. Physical-device launch and background notification delivery have not been tested in this environment.
 
 Camera permission for QR scanning is already in `android/app/src/main/AndroidManifest.xml`.
