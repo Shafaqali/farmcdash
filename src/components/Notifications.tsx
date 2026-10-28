@@ -38,7 +38,15 @@ function usePhoneAlerts() {
       const paid = payments.filter((p) => p.customerId === c.id).reduce((s, p) => s + p.amount, 0);
       return { name: c.name, bal: due - paid };
     }).filter((m) => m.bal > 0);
-    if (animals.length || customers.length) void syncPhoneAlerts(vaccines, money);
+    if (!animals.length && !customers.length) return;
+    const sync = () => void syncPhoneAlerts(vaccines, money);
+    sync();
+    // Re-sync whenever the app comes back to the foreground so schedules stay fresh
+    let handle: { remove: () => void } | undefined;
+    void import("@capacitor/app").then(({ App }) =>
+      App.addListener("appStateChange", (s) => { if (s.isActive) sync(); }).then((h) => { handle = h; })
+    ).catch(() => {});
+    return () => handle?.remove();
   }, [animals, customers, payments]);
 }
 
