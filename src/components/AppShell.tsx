@@ -3,6 +3,7 @@ import { LayoutGrid, PawPrint, Users, ScanLine, UserRound, Sprout, Bell } from "
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
 import { NotificationBell } from "./Notifications";
+import logo from "@/assets/farmcare-logo.png";
 
 const left = [{ to: "/", label: "Home", icon: LayoutGrid }, { to: "/animals", label: "Animals", icon: PawPrint }] as const;
 const right = [{ to: "/customers", label: "Customers", icon: Users }, { to: "/profile", label: "Profile", icon: UserRound }] as const;
