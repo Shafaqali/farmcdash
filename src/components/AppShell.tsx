@@ -1,5 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { LayoutGrid, PawPrint, Users, ScanLine, UserRound, Sprout, Bell } from "lucide-react";
+import { LayoutGrid, PawPrint, Users, ScanLine, UserRound, Bell } from "lucide-react";
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
 import { NotificationBell } from "./Notifications";
