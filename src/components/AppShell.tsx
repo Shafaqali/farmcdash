@@ -25,7 +25,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="mx-auto min-h-screen max-w-2xl pb-28">
       <header className="glass sticky top-0 z-30 flex items-center justify-between border-b px-5 py-3">
         <Link to="/" className="flex items-center gap-2">
-          <span className="bg-glow grid h-9 w-9 place-items-center rounded-xl text-primary-foreground shadow-float"><Sprout className="h-5 w-5" /></span>
+          <img src={logo} alt="FarmCare logo" width={36} height={36} className="h-9 w-9 rounded-xl shadow-float" />
           <span className="font-display text-xl font-semibold">FarmCare</span>
         </Link>
         <NotificationBell />
