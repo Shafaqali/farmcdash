@@ -3,7 +3,7 @@ import { LayoutGrid, PawPrint, Users, ScanLine, UserRound, Bell } from "lucide-r
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
 import { NotificationBell } from "./Notifications";
-import logo from "@/assets/farmcare-logo.png";
+import logo from "@/assets/farmcare-header-logo.png.asset.json";
 
 const left = [{ to: "/", label: "Home", icon: LayoutGrid }, { to: "/animals", label: "Animals", icon: PawPrint }] as const;
 const right = [{ to: "/customers", label: "Customers", icon: Users }, { to: "/profile", label: "Profile", icon: UserRound }] as const;
@@ -24,9 +24,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="mx-auto min-h-screen max-w-2xl pb-28">
       <header className="glass sticky top-0 z-30 flex items-center justify-between border-b px-5 py-3">
-        <Link to="/" className="flex items-center gap-2">
-          <img src={logo} alt="FarmCare logo" width={36} height={36} className="h-9 w-9 rounded-xl shadow-float" />
-          <span className="font-display text-xl font-semibold">FarmCare</span>
+        <Link to="/" className="flex items-center">
+          <img src={logo.url} alt="FarmCare logo" height={40} width={120} className="h-10 w-auto" />
         </Link>
         <NotificationBell />
       </header>
