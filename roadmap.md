@@ -1,5 +1,7 @@
 # Customer details
-- [ ] Improve login/sign-up design and verify account creation, confirmation and login while preserving account names.
+- [x] Fix user-supplied logo loading: web logos visually verified; Android build now includes originals at the expected local paths. Updated APK not requested or generated in this task.
+- [x] Improve login/sign-up design, labels, password visibility, confirmation/password mismatch states and account-name preservation; account tests pass, phone/desktop logos verified.
+- [ ] Verify successful real-account signup, email confirmation and login — needs a real email/account signed into preview; placeholder email rejected by hosted auth, no account created.
 - [x] Apply user-supplied FarmCare logos: horizontal wordmark in header and login page, square illustration as app icon/favicon/launcher/splash; built Android v1.8 (FarmCare_v8.apk), login page verified in browser, signed-in header verified at build level only.
 - [x] Build Android 1.7 with farm goat logo (app icon, login, header, favicon), exact-alarm permission and foreground alert re-sync; APK compiled and login logo verified in browser.
 - [x] Package latest scanned-animal payments and payment corrections as Android version 1.6; compilation, signature, bundled code and 13 tests pass. Certificate differs from v5; uninstall/reinstall required.

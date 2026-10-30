@@ -13,3 +13,5 @@
 - Calendar care periods are computed in `care-billing`; `chargesFor` and account views share these periods to keep balances and alerts consistent. Payments optionally link to an animal and exact period, validated by the database against user and customer ownership; unlinked payments affect only the customer total.
 - Scanned-animal billing uses only the owner-scoped farm animals and payments, reuses customer account periods, and reuses the customer payment editor; payment corrections update the original record under owner RLS rather than adding a second receipt.
 - Android packages bundle the local SPA via `build:android`; increment the Android version and compare signing certificates on each delivery because Android requires the same certificate for in-place updates.
+- Android builds must package the original branding assets at their CDN-relative paths because Capacitor's local origin cannot serve hosted asset routes.
+- Signup preserves account names through the existing profile trigger and treats a missing session as pending email confirmation, never as a signed-in account.
