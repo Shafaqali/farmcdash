@@ -1,4 +1,5 @@
 # Customer details
+- [ ] Build Android version 1.9 with latest login/sign-up and locally bundled logos; verify APK and compare signature with v8.
 - [x] Fix user-supplied logo loading: web logos visually verified; Android build now includes originals at the expected local paths. Updated APK not requested or generated in this task.
 - [x] Improve login/sign-up design, labels, password visibility, confirmation/password mismatch states and account-name preservation; account tests pass, phone/desktop logos verified.
 - [ ] Verify successful real-account signup, email confirmation and login — needs a real email/account signed into preview; placeholder email rejected by hosted auth, no account created.
