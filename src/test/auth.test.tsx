@@ -8,7 +8,7 @@ vi.mock("@/lib/native", () => ({ isNativeApp: () => true, authRedirectUrl: () =>
 import { LoginScreen } from "@/components/LoginScreen";
 
 function fillSignup() {
-  fireEvent.click(screen.getByRole("button", { name: "Sign up", exact: true }));
+  fireEvent.click(screen.getByRole("button", { name: "Sign up" }));
   fireEvent.change(screen.getByLabelText("Full name"), { target: { value: "  Shafaq Ali  " } });
   fireEvent.change(screen.getByLabelText("Email address"), { target: { value: "shafaq@example.com" } });
   fireEvent.change(screen.getByLabelText("Password", { exact: true }), { target: { value: "FarmCare-test-123" } });
