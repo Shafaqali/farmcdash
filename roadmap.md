@@ -1,5 +1,5 @@
 # Customer details
-- [ ] Build Android version 1.9 with latest login/sign-up and locally bundled logos; verify APK and compare signature with v8.
+- [x] Built FarmCare_v9.apk (1.9/code 9); Android compilation, signature/package, both bundled original logos and 16 tests verified. Local APK screens show login/logo without page errors. Signing certificate differs from v8: uninstall/reinstall required. Physical-device and real-account auth checks remain blocked as noted below.
 - [x] Fix user-supplied logo loading: web logos visually verified; Android build now includes originals at the expected local paths. Updated APK not requested or generated in this task.
 - [x] Improve login/sign-up design, labels, password visibility, confirmation/password mismatch states and account-name preservation; account tests pass, phone/desktop logos verified.
 - [ ] Verify successful real-account signup, email confirmation and login — needs a real email/account signed into preview; placeholder email rejected by hosted auth, no account created.
