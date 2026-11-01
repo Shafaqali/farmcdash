@@ -3,6 +3,7 @@ import { LayoutGrid, PawPrint, Users, ScanLine, UserRound, Bell } from "lucide-r
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
 import { NotificationBell } from "./Notifications";
+import { FarmExport } from "./FarmExport";
 import logo from "@/assets/farmcare-header-logo.png.asset.json";
 
 const left = [{ to: "/", label: "Home", icon: LayoutGrid }, { to: "/animals", label: "Animals", icon: PawPrint }] as const;
@@ -27,7 +28,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Link to="/" className="flex items-center">
           <img src={logo.url} alt="FarmCare logo" height={40} width={120} className="h-10 w-auto" />
         </Link>
-        <NotificationBell />
+        <div className="flex items-center gap-2"><FarmExport /><NotificationBell /></div>
       </header>
       <motion.main key={path} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: [0.2, 0.8, 0.2, 1] }} className="px-5 pt-5">
         {children}
@@ -55,9 +56,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 export function PageTitle({ eyebrow, title, action }: { eyebrow?: string; title: string; action?: ReactNode }) {
   return (
     <div className="mb-5 flex items-end justify-between gap-3">
-      <div>
+      <div className="min-w-0">
         {eyebrow && <p className="text-sm text-muted-foreground">{eyebrow}</p>}
-        <h1 className="text-3xl font-semibold leading-tight">{title}</h1>
+        <h1 className="break-words text-3xl font-semibold leading-tight">{title}</h1>
       </div>
       {action}
     </div>
