@@ -4,6 +4,8 @@ import { Bell, Syringe, Wallet, X } from "lucide-react";
 import { toast } from "sonner";
 import { syncPhoneAlerts } from "@/lib/local-alerts";
 import { useFarm, inr, chargesFor, TODAY, DAY_MS, fmtDate } from "@/lib/farm-data";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 
 type Alert = { key: string; kind: "vaccine" | "money"; title: string; sub: string; to: string; params?: { id: string }; urgent: boolean };
 
@@ -54,48 +56,44 @@ export function NotificationBell() {
   const alerts = useAlerts();
   usePhoneAlerts();
   const [open, setOpen] = useState(false);
+  const [filter, setFilter] = useState<"all" | "vaccine" | "money">("all");
   const shown = useRef(new Set<string>());
 
   // Live alert: pop a message for each new vaccine due item
   useEffect(() => {
-    for (const a of alerts) {
-      if (a.kind !== "vaccine" || shown.current.has(a.key)) continue;
-      shown.current.add(a.key);
-      toast.warning(a.title, { description: a.sub });
-    }
+    const fresh = alerts.filter((a) => a.kind === "vaccine" && !shown.current.has(a.key));
+    fresh.forEach((a) => shown.current.add(a.key));
+    if (fresh.length) toast.warning(fresh.length === 1 ? fresh[0]?.title : `${fresh.length} vaccine reminders`, { id: "farm-vaccine-alert", description: fresh.length === 1 ? fresh[0]?.sub : "Check notifications for due animals.", action: { label: "View", onClick: () => { setFilter("vaccine"); setOpen(true); } } });
   }, [alerts]);
 
   return (
     <>
-      <button aria-label="Notifications" onClick={() => setOpen(true)} className="relative grid h-10 w-10 place-items-center rounded-full bg-muted">
+      <Button variant="ghost" size="icon" aria-label="Notifications" onClick={() => setOpen(true)} className="relative h-10 w-10 rounded-full bg-muted">
         <Bell className="h-5 w-5" />
         {alerts.length > 0 && (
           <span className="absolute -right-0.5 -top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">{alerts.length > 99 ? "99+" : alerts.length}</span>
         )}
-      </button>
-      {open && (
-        <div className="fixed inset-0 z-50 bg-foreground/30" onClick={() => setOpen(false)}>
-          <div className="mx-auto mt-16 max-h-[75vh] w-[92%] max-w-md overflow-y-auto rounded-3xl border bg-card p-4 shadow-float" onClick={(e) => e.stopPropagation()}>
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Notifications</h2>
-              <button aria-label="Close" onClick={() => setOpen(false)} className="grid h-8 w-8 place-items-center rounded-full bg-muted"><X className="h-4 w-4" /></button>
-            </div>
-            {alerts.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">Sab theek hai — koi alert nahi.</p>}
-            <ul className="space-y-2">
-              {alerts.map((a) => (
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+          <DialogContent className="max-w-md">
+            <DialogTitle>Notifications</DialogTitle>
+            <DialogDescription>{alerts.length} alerts · vaccines and pending payments</DialogDescription>
+            <div className="flex flex-wrap gap-2">{([['all', 'All'], ['vaccine', 'Vaccines'], ['money', 'Payments']] as const).map(([key, label]) => <Button key={key} size="sm" variant={filter === key ? "default" : "outline"} onClick={() => setFilter(key)} aria-pressed={filter === key}>{label}</Button>)}</div>
+            {!alerts.filter((a) => filter === "all" || a.kind === filter).length && <p className="py-8 text-center text-sm text-muted-foreground">Sab theek hai — koi alert nahi.</p>}
+            <ul className="max-h-[55svh] space-y-2 overflow-y-auto">
+              {alerts.filter((a) => filter === "all" || a.kind === filter).map((a) => (
                 <li key={a.key}>
-                  <Link to={a.to} params={a.params as never} onClick={() => setOpen(false)} className="flex items-start gap-3 rounded-2xl bg-muted/60 p-3">
+                  <Link to={a.to} params={a.params as never} onClick={() => setOpen(false)} className="flex items-start gap-3 rounded-lg border p-3 hover:bg-muted">
                     <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${a.kind === "vaccine" ? (a.urgent ? "bg-destructive/15 text-destructive" : "bg-accent/30 text-accent-foreground") : "bg-secondary text-primary"}`}>
                       {a.kind === "vaccine" ? <Syringe className="h-4 w-4" /> : <Wallet className="h-4 w-4" />}
                     </span>
-                    <span><span className="block text-sm font-semibold">{a.title}</span><span className="block text-xs text-muted-foreground">{a.sub}</span></span>
+                    <span className="min-w-0"><span className="block break-words text-sm font-semibold">{a.title}</span><span className="mt-1 block break-words text-xs text-muted-foreground">{a.sub}</span></span>
                   </Link>
                 </li>
               ))}
             </ul>
-          </div>
-        </div>
-      )}
+          </DialogContent>
+      </Dialog>
     </>
   );
 }

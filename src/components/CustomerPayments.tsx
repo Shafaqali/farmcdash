@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { customerAccount } from "@/lib/customer-account";
 import { anniversary } from "@/lib/care-billing";
 import { fmtDate, inr, isoToday, useFarm, type Payment } from "@/lib/farm-data";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 
 export function CustomerPayments({ customerId, payment, defaultAnimalId = "" }: { customerId: string; payment?: Payment; defaultAnimalId?: string }) {
   const { animals, payments, addPayment, updatePayment } = useFarm();
@@ -19,7 +20,7 @@ export function CustomerPayments({ customerId, payment, defaultAnimalId = "" }: 
   const options = entry ? [...new Set([...entry.periods.map((item) => item.start), ...Array.from({ length: 12 }, (_, i) => anniversary(entry.animal.arrival, entry.periods.length + i)).filter((start) => !entry.animal.soldDate && entry.animal.status === "Active" && !!start), ...(payment?.animalId === animalId && payment.periodStart ? [payment.periodStart] : [])])].sort() : [];
   return <section aria-label={payment ? "Edit payment" : "Record payment"}>
     <div className="flex items-center justify-between gap-2">{!payment && <h2 className="text-lg font-semibold">Record payment</h2>}<Button variant="ghost" size={payment ? "sm" : "icon"} aria-label={open ? "Close payment form" : payment ? "Edit payment" : "Add payment"} onClick={() => { if (!open && payment) { setAnimalId(payment.animalId ?? ""); setPeriod(payment.periodStart ?? ""); setAmount(String(payment.amount)); setDate(payment.date); } setOpen(!open); }}>{open ? <X /> : payment ? <Pencil /> : <Plus />}{payment && "Edit"}</Button></div>
-    {open && <form className="mt-3 space-y-3 border-y py-4" onSubmit={async (event) => {
+    <Dialog open={open} onOpenChange={setOpen}><DialogContent><DialogTitle>{payment ? "Correct payment" : "Record payment"}</DialogTitle><DialogDescription>Choose the animal and exact care period.</DialogDescription><form className="space-y-4" onSubmit={async (event) => {
       event.preventDefault();
       if ((!payment && !animalId) || (animalId && !period) || !Number.isFinite(Number(amount)) || Number(amount) <= 0) { toast.error("Choose animal, care period and a positive amount"); return; }
       setSaving(true);
@@ -32,6 +33,6 @@ export function CustomerPayments({ customerId, payment, defaultAnimalId = "" }: 
       {animalId && period && <p className="text-sm text-muted-foreground">Care payment for {fmtDate(period)}{period > isoToday() ? " · Advance payment" : ""}</p>}
       <div className="grid grid-cols-2 gap-3"><label className="block text-sm">Amount ₹<input required type="number" min="0.01" step="0.01" value={amount} onChange={(event) => setAmount(event.target.value)} className="mt-1 w-full min-w-0 rounded-lg border bg-background p-2.5" /></label><label className="block text-sm">Received on<input required type="date" value={date} max={isoToday()} onChange={(event) => setDate(event.target.value)} className="mt-1 w-full min-w-0 rounded-lg border bg-background p-2.5" /></label></div>
       <Button disabled={saving} type="submit" className="w-full">{saving ? "Saving…" : payment ? "Save correction" : "Save payment"}</Button>
-    </form>}
+    </form></DialogContent></Dialog>
   </section>;
 }
