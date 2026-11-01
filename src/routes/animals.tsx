@@ -1,8 +1,10 @@
 import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, Search, ChevronRight } from "lucide-react";
+import { Plus, Search, ChevronRight, PawPrint } from "lucide-react";
 import { useFarm, STATUSES } from "@/lib/farm-data";
 import { PageTitle } from "@/components/AppShell";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/animals")({
   head: () => ({ meta: [
@@ -21,7 +23,7 @@ function AnimalsLayout() {
   return path === "/animals" || path === "/animals/" ? <Animals /> : <Outlet />;
 }
 
-const chip = (on: boolean) => `shrink-0 rounded-full border px-4 py-1.5 text-sm font-medium transition-all ${on ? "border-primary bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`;
+const chip = (on: boolean) => `shrink-0 rounded-md px-4 text-sm ${on ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`;
 
 function Animals() {
   const { animals, customers, categories, isAdmin, loading } = useFarm();
@@ -37,38 +39,37 @@ function Animals() {
   return (
     <div>
       <PageTitle eyebrow={`${list.length} of ${animals.length} animals`} title="Animals"
-        action={isAdmin ? <Link to="/animals/new" className="bg-glow flex items-center gap-1 rounded-full px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-float active:scale-95"><Plus className="h-4 w-4" />Register</Link> : undefined} />
-      <label className="card-soft flex items-center gap-2 px-4 py-3">
-        <Search className="h-4 w-4 text-muted-foreground" />
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search ID, breed or owner" className="w-full bg-transparent outline-none" />
-      </label>
+        action={isAdmin ? <Button asChild className="shrink-0"><Link to="/animals/new"><Plus />Register</Link></Button> : undefined} />
+      <div className="relative"><Search className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" /><Input aria-label="Search animals" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search ID, breed or owner" className="h-11 bg-card pl-10" /></div>
       <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-        <button onClick={() => { setCat("All"); setSub("All"); }} className={chip(cat === "All")}>All</button>
-        {tops.map((c) => <button key={c.id} onClick={() => { setCat(c.id); setSub("All"); }} className={chip(cat === c.id)}>{c.name}</button>)}
+        <Button variant="outline" aria-pressed={cat === "All"} onClick={() => { setCat("All"); setSub("All"); }} className={chip(cat === "All")}>All</Button>
+        {tops.map((c) => <Button variant="outline" aria-pressed={cat === c.id} key={c.id} onClick={() => { setCat(c.id); setSub("All"); }} className={chip(cat === c.id)}>{c.name}</Button>)}
       </div>
       {subs.length > 0 && (
         <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
-          <button onClick={() => setSub("All")} className={chip(sub === "All")}>All types</button>
-          {subs.map((c) => <button key={c.id} onClick={() => setSub(c.id)} className={chip(sub === c.id)}>{c.name}</button>)}
+          <Button variant="outline" onClick={() => setSub("All")} className={chip(sub === "All")}>All types</Button>
+          {subs.map((c) => <Button variant="outline" key={c.id} onClick={() => setSub(c.id)} className={chip(sub === c.id)}>{c.name}</Button>)}
         </div>
       )}
       <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
-        {["All", ...STATUSES].map((s) => <button key={s} onClick={() => setSt(s)} className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${st === s ? "bg-secondary text-primary" : "text-muted-foreground"}`}>{s === "All" ? "Any status" : s}</button>)}
+        {["All", ...STATUSES].map((s) => <Button variant="ghost" size="sm" aria-pressed={st === s} key={s} onClick={() => setSt(s)} className={`shrink-0 ${st === s ? "bg-secondary text-primary" : "text-muted-foreground"}`}>{s === "All" ? "Any status" : s}</Button>)}
       </div>
       {loading && !animals.length && <p className="mt-6 text-center text-muted-foreground">Loading…</p>}
+      {!loading && !list.length && <p className="py-10 text-center text-sm text-muted-foreground">No animals found.</p>}
       <ul className="mt-4 space-y-2.5">
         {list.map((a, i) => (
           <li key={a.id} className="animate-rise" style={{ animationDelay: `${Math.min(i, 12) * 35}ms` }}>
-            <Link to="/animals/$id" params={{ id: a.id }} className="card-soft flex items-center gap-3 p-3 transition-transform active:scale-[.98]">
+            <Link to="/animals/$id" params={{ id: a.id }} className="flex items-start gap-3 rounded-lg border bg-card p-3 transition-colors hover:bg-secondary/20">
               {a.photoUrl
-                ? <img src={a.photoUrl} alt={a.id} className="h-12 w-12 rounded-2xl object-cover" />
-                : <span className="grid h-12 w-12 place-items-center rounded-2xl bg-secondary font-display text-xs font-semibold text-primary">{a.id}</span>}
+                ? <img src={a.photoUrl} alt={a.id} className="h-14 w-14 shrink-0 rounded-lg object-cover" />
+                : <span className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-secondary text-primary"><PawPrint className="h-6 w-6" /></span>}
               <div className="min-w-0 flex-1">
-                <p className="font-semibold">{a.id} · {a.species}{a.sub ? ` · ${a.sub}` : ""}</p>
-                <p className="truncate text-sm text-muted-foreground">{owner(a.ownerId) || "No owner"}</p>
+                <p className="break-all font-semibold">{a.id}</p>
+                <p className="break-words text-sm">{[a.species, a.sub || a.breed].filter(Boolean).join(" · ")}</p>
+                <p className="mt-1 break-words text-xs text-muted-foreground">{owner(a.ownerId) || "No customer assigned"}</p>
+                <span className={`mt-2 inline-block rounded-md px-2 py-0.5 text-xs font-medium ${a.status === "Active" ? "bg-success/15 text-primary" : a.status === "Sold" ? "bg-accent/30 text-accent-foreground" : "bg-muted text-muted-foreground"}`}>{a.status}</span>
               </div>
-              <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${a.status === "Active" ? "bg-success/15 text-primary" : a.status === "Sold" ? "bg-accent/30 text-accent-foreground" : "bg-muted text-muted-foreground"}`}>{a.status}</span>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              <ChevronRight className="mt-5 h-4 w-4 shrink-0 text-muted-foreground" />
             </Link>
           </li>
         ))}
