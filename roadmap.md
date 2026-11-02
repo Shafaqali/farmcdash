@@ -1,4 +1,5 @@
 # Customer details
+- [ ] Package latest Excel export, alert dialogs and animal/customer page improvements as Android v1.10; verify APK contents and compare signing certificate with v9.
 - [x] Add private all-data Excel download for the current account, with eight worksheets and Android save/share implementation.
 - [x] Improve notification popup, grouped dismissible vaccine alerts, animal list, customer list/detail and payment forms for phone layouts.
 - [x] Signed-in real account exported 10 animals, 3 customers and 9 receipts; Excel downloaded through UI, eight sheets and 32 formulas verified with no formula errors. Eleven focused tests passed; phone/desktop pages and dialogs verified without page errors or overflow. APK update not requested; native save/share and phone background alerts require device testing.
