@@ -1,4 +1,5 @@
 # Customer details
+- [ ] Add owner-private animal and customer Excel downloads and center the login screen; inspect Android Google sign-in support and explain available setup.
 - [x] Built FarmCare_v10.apk (1.10/code 10) with latest Excel export, alert dialogs and animal/customer layouts; Android compilation, APK signature/version, bundled features/logos, 19 tests and phone-size bundled login passed. Certificate differs from v9; uninstall/reinstall required. Physical-device Excel save/share and background alerts remain unverified.
 - [x] Add private all-data Excel download for the current account, with eight worksheets and Android save/share implementation.
 - [x] Improve notification popup, grouped dismissible vaccine alerts, animal list, customer list/detail and payment forms for phone layouts.
