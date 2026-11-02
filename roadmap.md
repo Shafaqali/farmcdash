@@ -1,7 +1,7 @@
 # Customer details
-- [ ] Add private all-data Excel download for the current account, including Android save/share.
-- [ ] Improve notification popup, animal list, customer list/detail and payment forms for phone layouts.
-- [ ] Verify export privacy, workbook contents and phone layouts; APK update not requested in this task.
+- [x] Add private all-data Excel download for the current account, with eight worksheets and Android save/share implementation.
+- [x] Improve notification popup, grouped dismissible vaccine alerts, animal list, customer list/detail and payment forms for phone layouts.
+- [x] Signed-in real account exported 10 animals, 3 customers and 9 receipts; Excel downloaded through UI, eight sheets and 32 formulas verified with no formula errors. Eleven focused tests passed; phone/desktop pages and dialogs verified without page errors or overflow. APK update not requested; native save/share and phone background alerts require device testing.
 - [x] Built FarmCare_v9.apk (1.9/code 9); Android compilation, signature/package, both bundled original logos and 16 tests verified. Local APK screens show login/logo without page errors. Signing certificate differs from v8: uninstall/reinstall required. Physical-device and real-account auth checks remain blocked as noted below.
 - [x] Fix user-supplied logo loading: web logos visually verified; Android build now includes originals at the expected local paths. Updated APK not requested or generated in this task.
 - [x] Improve login/sign-up design, labels, password visibility, confirmation/password mismatch states and account-name preservation; account tests pass, phone/desktop logos verified.
