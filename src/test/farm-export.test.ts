@@ -24,6 +24,6 @@ describe("Private Excel export", () => {
     expect(book.worksheets).toHaveLength(8);
     expect(book.getWorksheet("Animals")?.getCell("A2").value).toBe("U03-G0001");
     expect(book.getWorksheet("Payments")?.getCell("F2").value).toBe(3000);
-    expect(book.getWorksheet("Customer balances")?.getCell("E2").value).toEqual({ formula: "C2-D2" });
+    expect(book.getWorksheet("Customer balances")?.getCell("E2").value).toMatchObject({ formula: "C2-D2" });
   });
 });

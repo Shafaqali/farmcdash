@@ -6,6 +6,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner
       className="toaster group"
+      offset={80}
+      mobileOffset={{ top: 80, left: 16, right: 16 }}
+      closeButton
       toastOptions={{
         classNames: {
           toast:

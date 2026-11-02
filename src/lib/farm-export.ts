@@ -25,7 +25,7 @@ export async function createFarmWorkbook(data: ExportData) {
   book.creator = "FarmCare";
   book.created = new Date();
   book.calcProperties.fullCalcOnLoad = true;
-  const addSheet = (name: string, headers: string[], values: (string | number | null | { formula: string })[][]) => {
+  const addSheet = (name: string, headers: string[], values: (string | number | null | { formula: string; result: number })[][]) => {
     const sheet = book.addWorksheet(name, { views: [{ state: "frozen", ySplit: 1 }] });
     sheet.addRow(headers);
     values.forEach((value) => sheet.addRow(value));
@@ -43,18 +43,23 @@ export async function createFarmWorkbook(data: ExportData) {
   const lastPayment = Math.max(2, rows.payments.length + 1);
   addSheet("Care periods", ["Animal ID", "Customer ID", "Period start", "Charge (INR)", "Received (INR)", "Remaining (INR)"], rows.periods.map((p, i) => {
     const r = i + 2;
+    const paid = rows.payments.filter((payment) => payment.animalId === p.animalId && payment.periodStart === p.start).reduce((sum, payment) => sum + payment.amount, 0);
     return [p.animalId, p.customerId, p.start, p.charge,
-      { formula: `SUMIFS(Payments!F$2:F$${lastPayment},Payments!C$2:C$${lastPayment},A${r},Payments!D$2:D$${lastPayment},C${r})` },
-      { formula: `MAX(0,D${r}-E${r})` }];
+      { formula: `SUMIFS(Payments!F$2:F$${lastPayment},Payments!C$2:C$${lastPayment},A${r},Payments!D$2:D$${lastPayment},C${r})`, result: paid },
+      { formula: `MAX(0,D${r}-E${r})`, result: Math.max(0, p.charge - paid) }];
   }));
   const lastPeriod = Math.max(2, rows.periods.length + 1);
   addSheet("Customer balances", ["Customer ID", "Name", "Care charges (INR)", "Received (INR)", "Balance (INR)", "Unpaid periods (INR)"], rows.customers.map((c, i) => {
     const r = i + 2;
+    const periods = rows.periods.filter((p) => p.customerId === c.id);
+    const charge = periods.reduce((sum, p) => sum + p.charge, 0);
+    const paid = rows.payments.filter((p) => p.customerId === c.id).reduce((sum, p) => sum + p.amount, 0);
+    const remaining = periods.reduce((sum, p) => sum + Math.max(0, p.charge - rows.payments.filter((payment) => payment.animalId === p.animalId && payment.periodStart === p.start).reduce((total, payment) => total + payment.amount, 0)), 0);
     return [c.id, c.name,
-      { formula: `SUMIF('Care periods'!B$2:B$${lastPeriod},A${r},'Care periods'!D$2:D$${lastPeriod})` },
-      { formula: `SUMIF(Payments!B$2:B$${lastPayment},A${r},Payments!F$2:F$${lastPayment})` },
-      { formula: `C${r}-D${r}` },
-      { formula: `SUMIF('Care periods'!B$2:B$${lastPeriod},A${r},'Care periods'!F$2:F$${lastPeriod})` }];
+      { formula: `SUMIF('Care periods'!B$2:B$${lastPeriod},A${r},'Care periods'!D$2:D$${lastPeriod})`, result: charge },
+      { formula: `SUMIF(Payments!B$2:B$${lastPayment},A${r},Payments!F$2:F$${lastPayment})`, result: paid },
+      { formula: `C${r}-D${r}`, result: charge - paid },
+      { formula: `SUMIF('Care periods'!B$2:B$${lastPeriod},A${r},'Care periods'!F$2:F$${lastPeriod})`, result: remaining }];
   }));
   addSheet("Weights", ["Animal ID", "Record ID", "Date", "Weight (kg)"], rows.weights.map((w) => [w.animalId, w.id, w.date, w.kg]));
   addSheet("Vaccinations", ["Animal ID", "Record ID", "Vaccine", "Given on", "Next due"], rows.vaccinations.map((v) => [v.animalId, v.id, v.name, v.date, v.nextDue]));
