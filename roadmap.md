@@ -1,4 +1,5 @@
 # Customer details
+- [ ] Package individual Excel downloads and centered login as Android v1.11; verify signature/version and compare with v10.
 - [x] Add owner-private animal/customer Excel downloads through shared exporter; animal export includes only linked receipts, customer export includes its unassigned receipts. Scope/privacy/workbook tests pass. Native phone login centered and short signup scroll verified without page errors.
 - [ ] Verify individual Excel downloads through signed-in UI — self-session mint failed because requesting email has no matching app account; user must sign in to preview. New APK not requested for these changes.
 - [x] Inspect Android Google login: current managed helper documents browser-only broker flow; no supported native return-to-app session recipe verified. Existing web Google login preserved; Android Google login not enabled.
