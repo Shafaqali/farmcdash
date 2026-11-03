@@ -2,9 +2,25 @@ import type { Animal, Category, Customer, Payment } from "@/lib/farm-data";
 import { carePeriods } from "@/lib/care-billing";
 
 export type ExportData = { uid: string; animals: Animal[]; customers: Customer[]; payments: Payment[]; categories: Category[] };
+export type ExportScope = { kind: "animal" | "customer"; id: string };
+
+export function selectExportData(data: ExportData, scope?: ExportScope): ExportData {
+  if (!data.uid) throw new Error("Sign in to export your farm.");
+  const owned = data.animals.filter((animal) => animal.userId === data.uid);
+  if (!scope) return { ...data, animals: owned };
+  if (scope.kind === "animal" && !owned.some((animal) => animal.id === scope.id)) throw new Error("This animal isn't in your account.");
+  if (scope.kind === "customer" && !data.customers.some((customer) => customer.id === scope.id)) throw new Error("This customer isn't in your account.");
+  const animals = owned.filter((animal) => scope.kind === "animal" ? animal.id === scope.id : animal.ownerId === scope.id);
+  const customers = data.customers.filter((customer) => scope.kind === "customer" ? customer.id === scope.id : animals.some((animal) => animal.ownerId === customer.id));
+  const payments = data.payments.filter((payment) => scope.kind === "animal" ? payment.animalId === scope.id : payment.customerId === scope.id);
+  const categoryIds = new Set(animals.flatMap((animal) => [animal.categoryId, animal.subcategoryId]));
+  const categories = data.categories.filter((category) => categoryIds.has(category.id));
+  return { uid: data.uid, animals, customers, payments, categories };
+}
 
 /** Shared QR records must never enter an account backup. */
-export function exportRows(data: ExportData, today = new Date().toISOString().slice(0, 10)) {
+export function exportRows(input: ExportData, today = new Date().toISOString().slice(0, 10), scope?: ExportScope) {
+  const data = selectExportData(input, scope);
   if (!data.uid) throw new Error("Sign in to export your farm.");
   const animals = data.animals.filter((a) => a.userId === data.uid);
   const customers = data.customers;
@@ -18,9 +34,9 @@ export function exportRows(data: ExportData, today = new Date().toISOString().sl
   };
 }
 
-export async function createFarmWorkbook(data: ExportData) {
+export async function createFarmWorkbook(data: ExportData, scope?: ExportScope) {
   const { default: ExcelJS } = await import("exceljs");
-  const rows = exportRows(data);
+  const rows = exportRows(data, undefined, scope);
   const book = new ExcelJS.Workbook();
   book.creator = "FarmCare";
   book.created = new Date();
@@ -49,7 +65,7 @@ export async function createFarmWorkbook(data: ExportData) {
       { formula: `MAX(0,D${r}-E${r})`, result: Math.max(0, p.charge - paid) }];
   }));
   const lastPeriod = Math.max(2, rows.periods.length + 1);
-  addSheet("Customer balances", ["Customer ID", "Name", "Care charges (INR)", "Received (INR)", "Balance (INR)", "Unpaid periods (INR)"], rows.customers.map((c, i) => {
+  addSheet("Customer balances", ["Customer ID", "Name", "Care charges (INR)", "Received (INR)", scope?.kind === "animal" ? "Selected animal balance (INR)" : "Balance (INR)", "Unpaid periods (INR)"], rows.customers.map((c, i) => {
     const r = i + 2;
     const periods = rows.periods.filter((p) => p.customerId === c.id);
     const charge = periods.reduce((sum, p) => sum + p.charge, 0);

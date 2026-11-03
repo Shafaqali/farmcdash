@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { customerAccount } from "@/lib/customer-account";
 import { fmtDate, inr, useFarm } from "@/lib/farm-data";
 import { CustomerPayments } from "@/components/CustomerPayments";
+import { FarmExport } from "@/components/FarmExport";
 
 export const Route = createFileRoute("/customers/$id")({
   head: () => ({ meta: [
@@ -29,7 +30,7 @@ function CustomerDetails() {
     <div className="space-y-6">
       <Button asChild variant="ghost" className="-ml-3"><Link to="/customers"><ArrowLeft />Customers</Link></Button>
       <section>
-        <PageTitle eyebrow="Customer account" title={customer.name} />
+        <PageTitle eyebrow="Customer account" title={customer.name} action={<FarmExport scope={{ kind: "customer", id: customer.id }} />} />
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
           {customer.village && <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4" />{customer.village}</span>}
           {customer.phone && <a href={`tel:${customer.phone}`} className="flex items-center gap-1.5 text-primary"><Phone className="h-4 w-4" />{customer.phone}</a>}
