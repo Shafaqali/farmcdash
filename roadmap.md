@@ -1,7 +1,7 @@
 # Customer details
-- [ ] Package individual Excel downloads and centered login as Android v1.11; verify signature/version and compare with v10.
+- [x] Built FarmCare_v11.apk (1.11/code 11) with individual Excel downloads and centered login; Android compilation, APK signature/version, both original logos, scoped export code, 22 tests and packaged phone login verified. Signing key differs from v10; uninstall/reinstall required. Native Google login unchanged; signed-in downloads and physical-device checks remain unverified.
 - [x] Add owner-private animal/customer Excel downloads through shared exporter; animal export includes only linked receipts, customer export includes its unassigned receipts. Scope/privacy/workbook tests pass. Native phone login centered and short signup scroll verified without page errors.
-- [ ] Verify individual Excel downloads through signed-in UI — self-session mint failed because requesting email has no matching app account; user must sign in to preview. New APK not requested for these changes.
+- [ ] Verify individual Excel downloads through signed-in UI — self-session mint failed because requesting email has no matching app account; user must sign in to preview.
 - [x] Inspect Android Google login: current managed helper documents browser-only broker flow; no supported native return-to-app session recipe verified. Existing web Google login preserved; Android Google login not enabled.
 - [x] Built FarmCare_v10.apk (1.10/code 10) with latest Excel export, alert dialogs and animal/customer layouts; Android compilation, APK signature/version, bundled features/logos, 19 tests and phone-size bundled login passed. Certificate differs from v9; uninstall/reinstall required. Physical-device Excel save/share and background alerts remain unverified.
 - [x] Add private all-data Excel download for the current account, with eight worksheets and Android save/share implementation.

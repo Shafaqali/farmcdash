@@ -32,3 +32,11 @@ Includes current-account Excel download, improved notification/payment dialogs, 
 Verified Android compilation, APK signature/package/version, both bundled original logos, packaged Excel and notification features, 19 focused tests, and phone-sized bundled login with no page errors. Physical Android launch, native Excel save/share and background notification delivery remain unverified.
 
 The certificate differs from v9 because the prior signing key is unavailable. Uninstall the older app before installing v10; cloud records remain. Sign in again and allow notifications to restore reminders.
+
+## Version 1.11
+
+Includes individual owned-animal/customer Excel downloads and vertically centered login with scrolling on shorter screens. Delivered as `FarmCare_v11.apk`, version code 11. Native Google login is not enabled; the existing web option is unchanged.
+
+Verified Android compilation, APK signature/version, original bundled logos and scoped exports, 22 focused tests, and packaged phone login without page errors. Signed-in individual download flow, physical Android launch, native save/share and background alerts remain unverified.
+
+The certificate differs from v10 because the previous private key is unavailable. Uninstall the older app, install v11, sign in and allow notifications; cloud data remains.
