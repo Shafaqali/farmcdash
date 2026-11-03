@@ -12,7 +12,7 @@ export function FarmExport({ scope }: { scope?: ExportScope }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [ready, setReady] = useState<{ blob: Blob; uid: string } | null>(null);
+  const [ready, setReady] = useState<{ blob: Blob; uid: string; scopeKey: string } | null>(null);
   const scopeKey = scope ? `${scope.kind}:${scope.id}` : "all";
   useEffect(() => { setReady(null); setOpen(false); }, [scopeKey, uid]);
   useEffect(() => { setReady(null); }, [animals, customers, payments, categories]);
@@ -26,7 +26,7 @@ export function FarmExport({ scope }: { scope?: ExportScope }) {
       const { data, error } = await supabase.auth.getUser();
       if (error || !uid || data.user?.id !== uid) throw new Error("Please sign in again to export your data.");
       const blob = await createFarmWorkbook({ uid, animals, customers, payments, categories }, scope);
-      setReady({ blob, uid });
+      setReady({ blob, uid, scopeKey });
     } catch (e) { setError(e instanceof Error ? e.message : "Unable to prepare Excel."); }
     finally { setBusy(false); }
   };
@@ -38,7 +38,7 @@ export function FarmExport({ scope }: { scope?: ExportScope }) {
       <DialogDescription>{scope?.kind === "animal" ? `${scope.id} · Linked receipts, care periods, weight and vaccination records. Unassigned customer payments are excluded.` : scope?.kind === "customer" ? "This customer's animals, receipts, care periods, balances, weights and vaccinations." : "Animals, customers, payments, care periods, weights, vaccinations and categories."}</DialogDescription>
       <dl className="grid grid-cols-3 gap-3 border-y py-4 text-center text-sm">{[["Animals", counts.animals], ["Customers", counts.customers], ["Payments", counts.payments]].map(([label, count]) => <div key={label}><dd className="text-xl font-semibold">{count}</dd><dt className="text-muted-foreground">{label}</dt></div>)}</dl>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-      {ready && ready.uid === uid ? <Button onClick={() => { void saveExport(ready.blob, `FarmCare-${scope ? `${scope.kind}-${scope.id.replace(/[^a-zA-Z0-9_-]/g, "_")}-` : ""}${new Date().toISOString().slice(0, 10)}.xlsx`).catch((e) => { if (!String(e).toLowerCase().includes("cancel")) setError("Unable to save Excel. Please try again."); }); }}><Download />Save Excel</Button> : <Button disabled={busy || loading || !uid} onClick={prepare}>{busy ? <Loader2 className="animate-spin" /> : <FileSpreadsheet />}{busy ? "Preparing Excel…" : "Prepare Excel"}</Button>}
+      {ready && ready.uid === uid && ready.scopeKey === scopeKey ? <Button onClick={() => { void saveExport(ready.blob, `FarmCare-${scope ? `${scope.kind}-${scope.id.replace(/[^a-zA-Z0-9_-]/g, "_")}-` : ""}${new Date().toISOString().slice(0, 10)}.xlsx`).catch((e) => { if (!String(e).toLowerCase().includes("cancel")) setError("Unable to save Excel. Please try again."); }); }}><Download />Save Excel</Button> : <Button disabled={busy || loading || !uid} onClick={prepare}>{busy ? <Loader2 className="animate-spin" /> : <FileSpreadsheet />}{busy ? "Preparing Excel…" : "Prepare Excel"}</Button>}
     </DialogContent>
   </Dialog>;
 }
