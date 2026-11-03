@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useFarm, inr, chargesFor, TODAY, fmtDate, monShort, uploadAnimalPhoto, isoToday, STATUSES, type Animal, type Status } from "@/lib/farm-data";
 import { AnimalQR } from "@/components/AnimalQR";
 import { AnimalPayments } from "@/components/AnimalPayments";
+import { FarmExport } from "@/components/FarmExport";
 import { field, F } from "@/components/form";
 
 export const Route = createFileRoute("/animals/$id")({
@@ -39,7 +40,7 @@ function Detail() {
   const regBy = info?.registered_by ? `${info.registered_by}${info.user_code ? ` (${info.user_code})` : ""}` : "—";
   return (
     <div className="space-y-4">
-      <Link to="/animals" className="flex items-center gap-1 text-sm text-muted-foreground"><ArrowLeft className="h-4 w-4" />Animals</Link>
+      <div className="flex flex-wrap items-center justify-between gap-3"><Link to="/animals" className="flex items-center gap-1 text-sm text-muted-foreground"><ArrowLeft className="h-4 w-4" />Animals</Link>{mine && <FarmExport scope={{ kind: "animal", id: a.id }} />}</div>
       {a.photoUrl && <img src={a.photoUrl} alt={`Animal ${a.id}`} className="animate-rise aspect-[4/3] w-full rounded-3xl object-cover shadow-float" />}
       <section className="bg-hero animate-rise flex items-center gap-4 rounded-3xl p-5 text-primary-foreground shadow-float">
         <AnimalQR id={a.id} label={label} />

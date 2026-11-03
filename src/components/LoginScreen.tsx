@@ -72,9 +72,10 @@ export function LoginScreen() {
 
   return (
     <div className="min-h-svh bg-background lg:grid lg:grid-cols-2">
-      <main className="flex flex-col px-6 py-8 sm:px-10 lg:px-16 lg:py-12">
+      <main className="flex min-h-svh flex-col justify-center px-6 py-8 sm:px-10 lg:px-16 lg:py-12">
+        <div className="mx-auto w-full max-w-sm">
         <img src={logo.url} alt="FarmCare" width={264} height={88} className="h-16 w-48 object-contain object-left" />
-        <div className="mx-auto my-auto w-full max-w-sm py-8 lg:py-16">
+        <div className="mx-auto w-full max-w-sm py-6 lg:py-8">
           <p className="mb-2 text-xs font-semibold uppercase text-primary">Your farm. Your care.</p>
           <h1 className="text-3xl font-semibold">{confirmation ? "Check your email" : mode === "in" ? "Welcome back" : "A fresh start"}</h1>
           <p className="mt-2 text-sm text-muted-foreground">{confirmation ? "Confirm your account to get started." : mode === "in" ? "Good to have you back at FarmCare." : "Create your FarmCare account."}</p>
@@ -102,6 +103,7 @@ export function LoginScreen() {
           </>}
         </div>
         <div className="mx-auto flex max-w-sm items-start justify-center gap-2 text-center text-xs leading-5 text-muted-foreground"><LockKeyhole className="mt-0.5 h-4 w-4 shrink-0" /><p>Your customers and payments stay private to your account.</p></div>
+        </div>
       </main>
       <aside className="hidden items-center justify-center border-l border-border bg-secondary p-16 lg:flex"><img src={illustration.url} alt="FarmCare goats, buffalo and sheep on the farm" width={512} height={512} className="aspect-square w-full max-w-lg rounded-lg object-contain" /></aside>
     </div>

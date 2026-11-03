@@ -5,6 +5,24 @@ import type { Animal } from "@/lib/farm-data";
 const animal = { id: "U03-G0001", userId: "owner", ownerId: "customer", species: "Goat", sub: "Barbari", breed: "Barbari", categoryId: "goat", subcategoryId: null, arrival: "2026-10-01", monthlyCharge: 3000, status: "Active", vaccineDue: "2026-11-01", notes: "", photoPath: null, photoUrl: null, soldDate: null, soldPrice: null, weights: [{ id: "w1", date: "2026-10-01", kg: 25 }], vaccinations: [{ id: "v1", name: "Vaccine", date: "2026-10-01", nextDue: "2026-11-01" }] } satisfies Animal;
 const data = { uid: "owner", animals: [animal, { ...animal, id: "U02-G0001", userId: "other" }], customers: [{ id: "customer", name: "Mohd", phone: "", village: "Mumbra" }], payments: [{ id: "p1", customerId: "customer", animalId: animal.id, periodStart: "2026-10-01", amount: 3000, date: "2026-10-01" }, { id: "foreign", customerId: "other-customer", amount: 999, date: "2026-10-01" }], categories: [] };
 describe("Private Excel export", () => {
+  it("exports only the selected animal and its linked receipts, not sibling or unassigned payments", () => {
+    const input = { ...data, animals: [...data.animals, { ...animal, id: "U03-G0002" }], payments: [...data.payments, { id: "sibling", customerId: "customer", animalId: "U03-G0002", periodStart: "2026-10-01", amount: 3000, date: "2026-10-01" }, { id: "unassigned", customerId: "customer", amount: 500, date: "2026-10-01" }] };
+    const rows = exportRows(input, "2026-10-15", { kind: "animal", id: "U03-G0001" });
+    expect(rows.animals.map((a) => a.id)).toEqual(["U03-G0001"]);
+    expect(rows.payments.map((p) => p.id)).toEqual(["p1"]);
+    expect(rows.weights.map((w) => w.animalId)).toEqual(["U03-G0001"]);
+  });
+  it("exports the selected customer's animals and includes their unassigned receipts only", () => {
+    const input = { ...data, customers: [...data.customers, { id: "second", name: "Other", phone: "", village: "" }], animals: [...data.animals, { ...animal, id: "U03-B0001", ownerId: "second" }], payments: [...data.payments, { id: "unassigned", customerId: "customer", amount: 500, date: "2026-10-01" }, { id: "second-payment", customerId: "second", amount: 800, date: "2026-10-01" }] };
+    const rows = exportRows(input, "2026-10-15", { kind: "customer", id: "customer" });
+    expect(rows.customers.map((c) => c.id)).toEqual(["customer"]);
+    expect(rows.animals.map((a) => a.id)).toEqual(["U03-G0001"]);
+    expect(rows.payments.map((p) => p.id)).toEqual(["p1", "unassigned"]);
+  });
+  it("rejects shared QR animals and customers outside the current account", () => {
+    expect(() => exportRows(data, "2026-10-15", { kind: "animal", id: "U02-G0001" })).toThrow();
+    expect(() => exportRows(data, "2026-10-15", { kind: "customer", id: "other-customer" })).toThrow();
+  });
   it("exports only registered-owner animals and current-customer receipts", () => {
     const rows = exportRows(data, "2026-10-15");
     expect(rows.animals.map((a) => a.id)).toEqual(["U03-G0001"]);
