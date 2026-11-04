@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AnimalsRouteImport } from './routes/animals'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as CustomersRouteImport } from './routes/customers'
+import { Route as MyAnimalsRouteImport } from './routes/my-animals'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ScanRouteImport } from './routes/scan'
 import { Route as AnimalsIdRouteImport } from './routes/animals.$id'
@@ -37,6 +38,11 @@ const CategoriesRoute = CategoriesRouteImport.update({
 const CustomersRoute = CustomersRouteImport.update({
   id: '/customers',
   path: '/customers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyAnimalsRoute = MyAnimalsRouteImport.update({
+  id: '/my-animals',
+  path: '/my-animals',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -70,6 +76,7 @@ export interface FileRoutesByFullPath {
   '/animals': typeof AnimalsRouteWithChildren
   '/categories': typeof CategoriesRoute
   '/customers': typeof CustomersRouteWithChildren
+  '/my-animals': typeof MyAnimalsRoute
   '/profile': typeof ProfileRoute
   '/scan': typeof ScanRoute
   '/animals/$id': typeof AnimalsIdRoute
@@ -81,6 +88,7 @@ export interface FileRoutesByTo {
   '/animals': typeof AnimalsRouteWithChildren
   '/categories': typeof CategoriesRoute
   '/customers': typeof CustomersRouteWithChildren
+  '/my-animals': typeof MyAnimalsRoute
   '/profile': typeof ProfileRoute
   '/scan': typeof ScanRoute
   '/animals/$id': typeof AnimalsIdRoute
@@ -93,6 +101,7 @@ export interface FileRoutesById {
   '/animals': typeof AnimalsRouteWithChildren
   '/categories': typeof CategoriesRoute
   '/customers': typeof CustomersRouteWithChildren
+  '/my-animals': typeof MyAnimalsRoute
   '/profile': typeof ProfileRoute
   '/scan': typeof ScanRoute
   '/animals/$id': typeof AnimalsIdRoute
@@ -106,6 +115,7 @@ export interface FileRouteTypes {
     | '/animals'
     | '/categories'
     | '/customers'
+    | '/my-animals'
     | '/profile'
     | '/scan'
     | '/animals/$id'
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/animals'
     | '/categories'
     | '/customers'
+    | '/my-animals'
     | '/profile'
     | '/scan'
     | '/animals/$id'
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/animals'
     | '/categories'
     | '/customers'
+    | '/my-animals'
     | '/profile'
     | '/scan'
     | '/animals/$id'
@@ -140,6 +152,7 @@ export interface RootRouteChildren {
   AnimalsRoute: typeof AnimalsRouteWithChildren
   CategoriesRoute: typeof CategoriesRoute
   CustomersRoute: typeof CustomersRouteWithChildren
+  MyAnimalsRoute: typeof MyAnimalsRoute
   ProfileRoute: typeof ProfileRoute
   ScanRoute: typeof ScanRoute
 }
@@ -172,6 +185,13 @@ declare module '@tanstack/react-router' {
       path: '/customers'
       fullPath: '/customers'
       preLoaderRoute: typeof CustomersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-animals': {
+      id: '/my-animals'
+      path: '/my-animals'
+      fullPath: '/my-animals'
+      preLoaderRoute: typeof MyAnimalsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -242,6 +262,7 @@ const rootRouteChildren: RootRouteChildren = {
   AnimalsRoute: AnimalsRouteWithChildren,
   CategoriesRoute: CategoriesRoute,
   CustomersRoute: CustomersRouteWithChildren,
+  MyAnimalsRoute: MyAnimalsRoute,
   ProfileRoute: ProfileRoute,
   ScanRoute: ScanRoute,
 }
