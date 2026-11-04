@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useLocation,
   HeadContent,
   Scripts,
   type ErrorComponentProps,
@@ -135,9 +136,11 @@ function RootComponent() {
 }
 
 function AuthGate() {
+  const path = useLocation({ select: (l) => l.pathname });
   const { session, authReady } = useFarm();
   if (!authReady) return <div className="grid min-h-screen place-items-center text-muted-foreground">Loading…</div>;
   if (!session) return <LoginScreen />;
+  if (path === "/my-animals") return <Outlet />;
   return (
     <AppShell>
       <Outlet />

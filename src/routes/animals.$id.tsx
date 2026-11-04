@@ -8,6 +8,7 @@ import { useFarm, inr, chargesFor, TODAY, fmtDate, monShort, uploadAnimalPhoto, 
 import { AnimalQR } from "@/components/AnimalQR";
 import { AnimalPayments } from "@/components/AnimalPayments";
 import { FarmExport } from "@/components/FarmExport";
+import { CustomerAnimalPayments } from "@/components/CustomerAnimalPayments";
 import { field, F } from "@/components/form";
 
 export const Route = createFileRoute("/animals/$id")({
@@ -66,7 +67,7 @@ function Detail() {
           </div>
         ))}
       </div>
-      {mine && <AnimalPayments animalId={a.id} />}
+      {mine ? <AnimalPayments animalId={a.id} /> : <CustomerAnimalPayments animalId={a.id} />}
       {a.notes && <p className="card-soft p-4 text-sm text-muted-foreground">{a.notes}</p>}
       {a.weights.length > 1 && (
         <section className="card-soft animate-rise p-4">

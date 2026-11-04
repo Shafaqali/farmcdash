@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ArrowRight, CheckCircle2, Eye, EyeOff, Loader2, LockKeyhole, Mail, UserRound } from "lucide-react";
 import logo from "@/assets/farmcare-header-logo.png.asset.json";
-import illustration from "@/assets/farmcare-app-icon.png.asset.json";
+import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -71,14 +71,13 @@ export function LoginScreen() {
   };
 
   return (
-    <div className="min-h-svh bg-background lg:grid lg:grid-cols-2">
-      <main className="flex min-h-svh flex-col justify-center px-6 py-8 sm:px-10 lg:px-16 lg:py-12">
+    <div className="min-h-svh bg-background">
+      <main className="flex min-h-svh flex-col justify-center px-6 py-8 sm:px-10">
         <div className="mx-auto w-full max-w-sm">
-        <img src={logo.url} alt="FarmCare" width={264} height={88} className="h-16 w-48 object-contain object-left" />
+        <img src={logo.url} alt="FarmCare" width={264} height={88} className="mx-auto h-20 w-64 max-w-full object-contain" />
         <div className="mx-auto w-full max-w-sm py-6 lg:py-8">
-          <p className="mb-2 text-xs font-semibold uppercase text-primary">Your farm. Your care.</p>
-          <h1 className="text-3xl font-semibold">{confirmation ? "Check your email" : mode === "in" ? "Welcome back" : "A fresh start"}</h1>
-          <p className="mt-2 text-sm text-muted-foreground">{confirmation ? "Confirm your account to get started." : mode === "in" ? "Good to have you back at FarmCare." : "Create your FarmCare account."}</p>
+          <h1 className="text-center text-2xl font-semibold">{confirmation ? "Check your email" : mode === "in" ? "Welcome back" : "Create your account"}</h1>
+          <p className="mt-2 text-center text-sm text-muted-foreground">{confirmation ? "Confirm your account to get started." : "Your animals. Your farm. Always connected."}</p>
           {confirmation ? <div className="mt-8 space-y-5">
             <CheckCircle2 className="h-10 w-10 text-primary" />
             <p className="text-sm leading-relaxed">Open the confirmation link sent to <strong className="break-all">{email.trim()}</strong>, then return here and sign in. Check your spam folder too.</p>
@@ -103,9 +102,9 @@ export function LoginScreen() {
           </>}
         </div>
         <div className="mx-auto flex max-w-sm items-start justify-center gap-2 text-center text-xs leading-5 text-muted-foreground"><LockKeyhole className="mt-0.5 h-4 w-4 shrink-0" /><p>Your customers and payments stay private to your account.</p></div>
+        <Button asChild variant="link" className="mt-2 w-full"><Link to="/my-animals">Customer animal access</Link></Button>
         </div>
       </main>
-      <aside className="hidden items-center justify-center border-l border-border bg-secondary p-16 lg:flex"><img src={illustration.url} alt="FarmCare goats, buffalo and sheep on the farm" width={512} height={512} className="aspect-square w-full max-w-lg rounded-lg object-contain" /></aside>
     </div>
   );
 }

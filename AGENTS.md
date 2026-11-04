@@ -17,3 +17,4 @@
 - Signup preserves account names through the existing profile trigger and treats a missing session as pending email confirmation, never as a signed-in account.
 - Excel exports use current-account store data, never shared QR records; reuse the shared exporter for account/customer/animal scopes, reject unowned selections and exclude unassigned receipts from animal exports so they cannot settle animal periods. Verify identity before preparation and use a second save action to preserve browser download activation.
 - Notification and payment popups use the shared accessible dialog so focus, dismissal, scroll locking and phone bounds stay consistent.
+- Customer viewing uses separate read-only portal RPCs and an email-bound, hashed, expiring one-use invitation; owner payment RLS and editing remain unchanged. Never derive customer finance from shared QR records; the customer portal RPC scopes every query to its protected owner/customer access mapping.

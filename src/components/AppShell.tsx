@@ -26,7 +26,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="mx-auto min-h-screen max-w-2xl pb-28">
       <header className="glass sticky top-0 z-30 flex items-center justify-between border-b px-5 py-3">
         <Link to="/" className="flex items-center">
-          <img src={logo.url} alt="FarmCare logo" height={40} width={120} className="h-10 w-auto" />
+          <img src={logo.url} alt="FarmCare logo" height={56} width={208} className="h-14 w-52 max-w-full object-contain object-left" />
         </Link>
         <div className="flex items-center gap-2"><FarmExport /><NotificationBell /></div>
       </header>

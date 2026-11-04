@@ -128,6 +128,67 @@ export type Database = {
           },
         ]
       }
+      customer_access: {
+        Row: {
+          customer_id: string
+          owner_id: string
+          viewer_id: string
+        }
+        Insert: {
+          customer_id: string
+          owner_id: string
+          viewer_id: string
+        }
+        Update: {
+          customer_id?: string
+          owner_id?: string
+          viewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_access_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_invites: {
+        Row: {
+          customer_id: string
+          email: string
+          expires_at: string
+          owner_id: string
+          token_hash: string
+          used_at: string | null
+        }
+        Insert: {
+          customer_id: string
+          email: string
+          expires_at: string
+          owner_id: string
+          token_hash: string
+          used_at?: string | null
+        }
+        Update: {
+          customer_id?: string
+          email?: string
+          expires_at?: string
+          owner_id?: string
+          token_hash?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_invites_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: true
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           created_at: string
@@ -310,7 +371,17 @@ export type Database = {
           user_code: string
         }[]
       }
+      connect_customer: { Args: { _code: string }; Returns: undefined }
+      customer_portal: { Args: never; Returns: Json }
+      invite_customer: {
+        Args: { _customer_id: string; _email: string }
+        Returns: string
+      }
       owns_animal: { Args: { _animal_id: string }; Returns: boolean }
+      revoke_customer_access: {
+        Args: { _customer_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

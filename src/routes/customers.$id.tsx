@@ -6,6 +6,7 @@ import { customerAccount } from "@/lib/customer-account";
 import { fmtDate, inr, useFarm } from "@/lib/farm-data";
 import { CustomerPayments } from "@/components/CustomerPayments";
 import { FarmExport } from "@/components/FarmExport";
+import { CustomerAccess } from "@/components/CustomerAccess";
 
 export const Route = createFileRoute("/customers/$id")({
   head: () => ({ meta: [
@@ -36,6 +37,7 @@ function CustomerDetails() {
           {customer.phone && <a href={`tel:${customer.phone}`} className="flex items-center gap-1.5 text-primary"><Phone className="h-4 w-4" />{customer.phone}</a>}
         </div>
       </section>
+      <CustomerAccess customerId={customer.id} />
       <section className="border-y py-4" aria-label="Account balance">
         <p className="text-sm text-muted-foreground">{account.balance < 0 ? "Credit balance" : "Outstanding balance"}</p>
         <p className={`mt-1 break-words text-3xl font-semibold ${account.balance > 0 ? "text-destructive" : "text-primary"}`}>{inr(Math.abs(account.balance))}</p>
