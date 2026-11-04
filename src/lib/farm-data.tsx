@@ -81,7 +81,7 @@ export function FarmProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => { setSession(s); setAuthReady(true); });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => { setData(empty); setSession(s); setAuthReady(true); });
     supabase.auth.getSession().then(({ data }) => { setSession(data.session); setAuthReady(true); });
     return () => sub.subscription.unsubscribe();
   }, []);
