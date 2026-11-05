@@ -139,7 +139,7 @@ function AuthGate() {
   const path = useLocation({ select: (l) => l.pathname });
   const { session, authReady } = useFarm();
   if (!authReady) return <div className="grid min-h-screen place-items-center text-muted-foreground">Loading…</div>;
-  if (!session) return <LoginScreen />;
+  if (!session) return <LoginScreen key={path === "/my-animals" ? "customer" : "farmer"} customer={path === "/my-animals"} />;
   if (path === "/my-animals") return <Outlet />;
   return (
     <AppShell>
