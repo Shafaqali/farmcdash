@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ScanLine, RefreshCw, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,13 +19,15 @@ function CustomerPortal() {
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const request = useRef(0);
   const refresh = async (connect = false) => {
+    const current = ++request.current;
     setBusy(true); setError(""); setData(null);
-    try { if (connect) { const r = await supabase.rpc("connect_customer", { _code: code }); if (r.error) throw r.error; setCode(""); } setData(await loadCustomerPortal()); }
-    catch (e) { setError(e instanceof Error ? e.message : "Unable to load customer records."); }
-    finally { setBusy(false); }
+    try { if (connect) { const r = await supabase.rpc("connect_customer", { _code: code }); if (r.error) throw r.error; if (current === request.current) setCode(""); } const result = await loadCustomerPortal(); if (current === request.current) setData(result); }
+    catch (e) { if (current === request.current) setError(e instanceof Error ? e.message : "Unable to load customer records."); }
+    finally { if (current === request.current) setBusy(false); }
   };
-  useEffect(() => { setData(null); void refresh(); }, [uid]);
+  useEffect(() => { setData(null); void refresh(); return () => { request.current++; }; }, [uid]);
   return <div className="mx-auto min-h-svh max-w-2xl px-5 pb-10">
     <header className="flex flex-wrap items-center justify-between gap-3 border-b py-4"><img src={logo.url} alt="FarmCare" className="h-14 w-52 object-contain object-left" /><div className="flex gap-1"><Button asChild variant="ghost" size="icon" title="Scan animal QR"><Link to="/scan"><ScanLine /></Link></Button><Button variant="ghost" size="icon" title="Refresh records" disabled={busy} onClick={() => void refresh()}><RefreshCw /></Button><Button variant="ghost" size="icon" title="Sign out" onClick={() => { setData(null); void supabase.auth.signOut(); }}><LogOut /></Button></div></header>
     <h1 className="mt-6 text-3xl font-semibold">My animals</h1>
