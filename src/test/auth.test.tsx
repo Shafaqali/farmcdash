@@ -43,4 +43,15 @@ describe("FarmCare account access", () => {
     await waitFor(() => expect(auth.signInWithPassword).toHaveBeenCalledTimes(2));
     expect(auth.signInWithPassword).toHaveBeenLastCalledWith({ email: "shafaq@example.com", password: "FarmCare-test-123" });
   });
+  it("uses the invited customer's email for customer login without auto-connecting", async () => {
+    window.history.replaceState(null, "", `/my-animals#code=${"a".repeat(64)}&email=customer%40example.com`);
+    auth.signInWithPassword.mockResolvedValue({ error: null });
+    render(<LoginScreen customer />);
+    expect(screen.getByLabelText("Email address")).toHaveValue("customer@example.com");
+    fireEvent.change(screen.getByLabelText("Password", { exact: true }), { target: { value: "Customer-test-123" } });
+    fireEvent.click(screen.getByRole("button", { name: "Sign in to my animals" }));
+    await waitFor(() => expect(auth.signInWithPassword).toHaveBeenCalledWith({ email: "customer@example.com", password: "Customer-test-123" }));
+    window.sessionStorage.clear();
+    window.history.replaceState(null, "", "/");
+  });
 });
