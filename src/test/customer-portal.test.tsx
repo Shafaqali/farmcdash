@@ -1,5 +1,5 @@
 import { render, screen, waitFor, cleanup } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Animal } from "@/lib/farm-data";
 const mocks = vi.hoisted(() => ({ rpc: vi.fn() }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { rpc: mocks.rpc } }));
@@ -7,7 +7,8 @@ vi.mock("@/lib/farm-data", async (original) => ({ ...await original<typeof impor
 import { loadCustomerPortal } from "@/lib/customer-portal";
 import { CustomerAnimalPayments } from "@/components/CustomerAnimalPayments";
 const animal = { id: "U01-G0001", userId: "farmer", ownerId: "linked-customer", arrival: "2026-11-01", monthlyCharge: 1000, status: "Active", weights: [], vaccinations: [] } as unknown as Animal;
-afterEach(() => { cleanup(); vi.resetAllMocks(); });
+beforeEach(() => { vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(new Date("2026-11-04T00:00:00Z")); });
+afterEach(() => { cleanup(); vi.useRealTimers(); vi.resetAllMocks(); });
 describe("Customer financial access", () => {
   it("requests the authenticated portal without trusting a client customer identifier", async () => {
     mocks.rpc.mockResolvedValue({ data: { animals: [], customers: [], payments: [] }, error: null });

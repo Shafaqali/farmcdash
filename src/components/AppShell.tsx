@@ -25,10 +25,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="mx-auto min-h-screen max-w-2xl pb-28">
       <header className="glass sticky top-0 z-30 flex items-center justify-between border-b px-5 py-3">
-        <Link to="/" className="flex items-center">
+        <Link to="/" className="flex min-w-0 items-center">
           <img src={logo.url} alt="FarmCare logo" height={56} width={208} className="h-14 w-52 max-w-full object-contain object-left" />
         </Link>
-        <div className="flex items-center gap-2"><FarmExport /><NotificationBell /></div>
+        <div className="flex shrink-0 items-center gap-2"><FarmExport /><NotificationBell /></div>
       </header>
       <motion.main key={path} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: [0.2, 0.8, 0.2, 1] }} className="px-5 pt-5">
         {children}
