@@ -1,4 +1,6 @@
 # Customer details
+- [ ] Add explicit customer sign-in, visible animal connection, and shareable owner invitation with assigned animal summary.
+- [ ] Verify customer login/connection changes with focused tests and phone/desktop checks.
 - [x] Refresh login UI, enlarge official header logo, and add email-bound owner-invited customer login/QR read-only animal, vaccine and payment access; migration applied, focused tests and public phone/desktop login checks passed.
 - [ ] Verify owner invitation, customer connection and QR/payment access end-to-end with signed-in real accounts — requesting account session unavailable; database-only check could not execute protected invitation function through sandbox connection. User must sign into preview. APK update not included in this task.
 - [x] Built FarmCare_v11.apk (1.11/code 11) with individual Excel downloads and centered login; Android compilation, APK signature/version, both original logos, scoped export code, 22 tests and packaged phone login verified. Signing key differs from v10; uninstall/reinstall required. Native Google login unchanged; signed-in downloads and physical-device checks remain unverified.
