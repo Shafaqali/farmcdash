@@ -1,8 +1,8 @@
 # Customer details
-- [ ] Add explicit customer sign-in, visible animal connection, and shareable owner invitation with assigned animal summary.
-- [ ] Verify customer login/connection changes with focused tests and phone/desktop checks.
+- [x] Add explicit customer sign-in, visible animal connection, and shareable owner invitation with assigned animal summary.
+- [x] Verify invitation creation, explicit connection, assigned animal visibility and reload persistence through signed-in UI using temporary customer/animal records; both cleaned up. Phone/desktop screenshots, no overflow/page errors and 17 focused tests passed. This check used the existing session's invited email, not a separate customer account.
 - [x] Refresh login UI, enlarge official header logo, and add email-bound owner-invited customer login/QR read-only animal, vaccine and payment access; migration applied, focused tests and public phone/desktop login checks passed.
-- [ ] Verify owner invitation, customer connection and QR/payment access end-to-end with signed-in real accounts — requesting account session unavailable; database-only check could not execute protected invitation function through sandbox connection. User must sign into preview. APK update not included in this task.
+- [ ] Verify separate customer-account QR/payment access end-to-end — requires an invited customer's authenticated session. Owner invitation and connection to assigned animal verified with current session; APK update not included in this task.
 - [x] Built FarmCare_v11.apk (1.11/code 11) with individual Excel downloads and centered login; Android compilation, APK signature/version, both original logos, scoped export code, 22 tests and packaged phone login verified. Signing key differs from v10; uninstall/reinstall required. Native Google login unchanged; signed-in downloads and physical-device checks remain unverified.
 - [x] Add owner-private animal/customer Excel downloads through shared exporter; animal export includes only linked receipts, customer export includes its unassigned receipts. Scope/privacy/workbook tests pass. Native phone login centered and short signup scroll verified without page errors.
 - [ ] Verify individual Excel downloads through signed-in UI — self-session mint failed because requesting email has no matching app account; user must sign in to preview.
