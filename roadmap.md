@@ -1,4 +1,9 @@
 # Customer details
+- [ ] Enforce persistent customer/owner roles and role-aware QR navigation without losing records.
+- [ ] Add private persistent health, medicine, treatment and recovery histories with customer update notifications.
+- [ ] Separate personal animals from customer animals while preserving existing growth/payment tools.
+- [ ] Rename visible branding to STAR GOATS FARM; official replacement logo awaits upload.
+- [ ] Verify role separation, customer QR/payments and health update notifications with separate accounts.
 - [x] Package latest customer login and connection as Android 1.12; Android compilation, signature/version/code 12, original logos, customer features and 28 tests verified. Packaged phone login/signup checked with simulated Android bridge; physical device checks remain unavailable. Certificate differs from v11; reinstall required. Delivered FarmCare_v12.apk.
 - [x] Add explicit customer sign-in, visible animal connection, and shareable owner invitation with assigned animal summary.
 - [x] Verify invitation creation, explicit connection, assigned animal visibility and reload persistence through signed-in UI using temporary customer/animal records; both cleaned up. Phone/desktop screenshots, no overflow/page errors and 17 focused tests passed. This check used the existing session's invited email, not a separate customer account.
