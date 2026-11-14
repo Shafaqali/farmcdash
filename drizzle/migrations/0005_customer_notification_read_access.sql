@@ -1,0 +1,1 @@
+ALTER POLICY "customer reads assigned notifications" ON public.customer_notifications USING(viewer_id=auth.uid() AND public.can_read_animal_care(animal_id));

@@ -36,6 +36,20 @@
       "when": 1794685382701,
       "tag": "0004_separate_accounts_health_history",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794685968645,
+      "tag": "0005_customer_notification_read_access",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794686031854,
+      "tag": "0006_validate_health_history_and_portal_role",
+      "breakpoints": true
     }
   ]
 }

@@ -1,14 +1,15 @@
 # Customer details
-- [ ] Enforce persistent customer/owner roles and role-aware QR navigation without losing records.
-- [ ] Add private persistent health, medicine, treatment and recovery histories with customer update notifications.
-- [ ] Separate personal animals from customer animals while preserving existing growth/payment tools.
-- [ ] Rename visible branding to STAR GOATS FARM; official replacement logo awaits upload.
-- [ ] Verify role separation, customer QR/payments and health update notifications with separate accounts.
+- [x] Enforce persistent customer/owner roles and role-aware QR navigation without losing records.
+- [x] Add private persistent health, medicine, treatment and recovery histories with automatic in-app customer notifications.
+- [x] Separate personal animals from customer animals while preserving existing growth/payment tools; personal registration and list verified.
+- [x] Rename visible branding and Android display name to STAR GOATS FARM without changing package identity.
+- [ ] Integrate official replacement logo and app icon — awaiting the user's logo upload.
+- [x] Verify owner health saves, separate customer invitation acceptance, QR manual-entry flow, private payments, health history, automatic notification receipt, customer management-write rejection and phone bounds; temporary records removed. All 35 tests pass. Camera/device testing and updated APK not included.
 - [x] Package latest customer login and connection as Android 1.12; Android compilation, signature/version/code 12, original logos, customer features and 28 tests verified. Packaged phone login/signup checked with simulated Android bridge; physical device checks remain unavailable. Certificate differs from v11; reinstall required. Delivered FarmCare_v12.apk.
 - [x] Add explicit customer sign-in, visible animal connection, and shareable owner invitation with assigned animal summary.
 - [x] Verify invitation creation, explicit connection, assigned animal visibility and reload persistence through signed-in UI using temporary customer/animal records; both cleaned up. Phone/desktop screenshots, no overflow/page errors and 17 focused tests passed. This check used the existing session's invited email, not a separate customer account.
 - [x] Refresh login UI, enlarge official header logo, and add email-bound owner-invited customer login/QR read-only animal, vaccine and payment access; migration applied, focused tests and public phone/desktop login checks passed.
-- [ ] Verify separate customer-account QR/payment access end-to-end — requires an invited customer's authenticated session. Owner invitation and connection to assigned animal verified with current session; APK update not included in this task.
+- [x] Verify separate customer-account QR/payment access end-to-end using two temporary accounts; private billing and histories appear read-only and owner URLs redirect to the customer portal.
 - [x] Built FarmCare_v11.apk (1.11/code 11) with individual Excel downloads and centered login; Android compilation, APK signature/version, both original logos, scoped export code, 22 tests and packaged phone login verified. Signing key differs from v10; uninstall/reinstall required. Native Google login unchanged; signed-in downloads and physical-device checks remain unverified.
 - [x] Add owner-private animal/customer Excel downloads through shared exporter; animal export includes only linked receipts, customer export includes its unassigned receipts. Scope/privacy/workbook tests pass. Native phone login centered and short signup scroll verified without page errors.
 - [ ] Verify individual Excel downloads through signed-in UI — self-session mint failed because requesting email has no matching app account; user must sign in to preview.

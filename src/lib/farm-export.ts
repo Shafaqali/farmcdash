@@ -38,7 +38,7 @@ export async function createFarmWorkbook(data: ExportData, scope?: ExportScope) 
   const { default: ExcelJS } = await import("exceljs");
   const rows = exportRows(data, undefined, scope);
   const book = new ExcelJS.Workbook();
-  book.creator = "FarmCare";
+  book.creator = "STAR GOATS FARM";
   book.created = new Date();
   book.calcProperties.fullCalcOnLoad = true;
   const addSheet = (name: string, headers: string[], values: (string | number | null | { formula: string; result: number })[][]) => {
