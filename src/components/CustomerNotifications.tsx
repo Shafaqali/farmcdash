@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Bell } from "lucide-react";
+import { Bell, BellOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useFarm, fmtDate } from "@/lib/farm-data";
 import type { Database } from "@/integrations/supabase/types";
@@ -23,5 +23,15 @@ export function CustomerNotifications() {
     return () => { active = false; window.clearInterval(timer); void supabase.removeChannel(channel); };
   }, [uid]);
   const unread = items.filter((item) => !item.read_at).length;
-  return <><Button variant="ghost" size="icon" aria-label={`Customer notifications${unread ? ` (${unread} unread)` : ""}`} title="Customer notifications" className="relative" onClick={() => setOpen(true)}><Bell />{unread > 0 && <span className="absolute right-0 top-0 rounded-full bg-destructive px-1 text-xs text-destructive-foreground">{unread}</span>}</Button><Dialog open={open} onOpenChange={setOpen}><DialogContent><DialogTitle>Animal updates</DialogTitle><DialogDescription>Health, growth and vaccination updates</DialogDescription>{error && <p role="alert" className="text-sm text-destructive">{error}</p>}{!items.length && <p className="text-sm text-muted-foreground">No updates yet.</p>}<ul className="divide-y">{items.map((n) => <li key={n.id} className="space-y-1 py-3"><Link to="/animals/$id" params={{ id: n.animal_id }} onClick={() => setOpen(false)} className="break-words font-semibold text-primary">{n.animal_id} · {n.title}</Link><p className="break-words text-sm">{n.message}</p><p className="text-xs text-muted-foreground">{fmtDate(n.created_at)}</p>{!n.read_at && <Button variant="ghost" size="sm" onClick={async () => { const read_at = new Date().toISOString(); const { error } = await supabase.from("customer_notifications").update({ read_at }).eq("id", n.id); if (error) { setError(error.message); return; } setItems((items) => items.map((i) => i.id === n.id ? { ...i, read_at } : i)); }}>Mark read</Button>}</li>)}</ul></DialogContent></Dialog></>;
+  return <><Button variant="ghost" size="icon" aria-label={`Customer notifications${unread ? ` (${unread} unread)` : ""}`} title="Customer notifications" className="relative" onClick={() => setOpen(true)}><Bell />{unread > 0 && <span className="absolute -right-0.5 -top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">{unread > 99 ? "99+" : unread}</span>}</Button>
+    <Dialog open={open} onOpenChange={setOpen}><DialogContent className="max-w-md">
+      <DialogTitle>Animal updates</DialogTitle><DialogDescription>Health, growth and vaccination updates</DialogDescription>
+      {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+      {!items.length && <div className="flex flex-col items-center gap-3 py-8 text-center text-muted-foreground"><BellOff className="h-8 w-8" /><p className="text-sm">No updates yet.</p></div>}
+      <ul className="max-h-[50svh] min-h-0 space-y-2 overflow-y-auto overscroll-contain">{items.map((n) => <li key={n.id} className={`space-y-2 rounded-lg border p-3 ${n.read_at ? "bg-card" : "bg-secondary/40"}`}>
+        <Link to="/animals/$id" params={{ id: n.animal_id }} onClick={() => setOpen(false)} className="block break-words font-semibold text-primary">{n.animal_id} · {n.title}</Link>
+        <p className="break-words text-sm">{n.message}</p><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-xs text-muted-foreground">{fmtDate(n.created_at)}</p>
+        {!n.read_at && <Button variant="outline" size="sm" onClick={async () => { const read_at = new Date().toISOString(); const { error } = await supabase.from("customer_notifications").update({ read_at }).eq("id", n.id); if (error) { setError(error.message); return; } setItems((items) => items.map((i) => i.id === n.id ? { ...i, read_at } : i)); }}>Mark read</Button>}</div>
+      </li>)}</ul>
+    </DialogContent></Dialog></>;
 }

@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useFarm } from "@/lib/farm-data";
 import { PageTitle } from "@/components/AppShell";
+import { Button } from "@/components/ui/button";
+import { DeleteConfirmation } from "@/components/DeleteConfirmation";
 
 export const Route = createFileRoute("/categories")({
   head: () => ({ meta: [
@@ -21,17 +23,17 @@ export const Route = createFileRoute("/categories")({
 function Categories() {
   const { categories, animals, isAdmin, reload } = useFarm();
   const [name, setName] = useState("");
+  const [deleting, setDeleting] = useState<{ id: string; name: string } | null>(null);
   const [subName, setSubName] = useState<Record<string, string>>({});
   const tops = categories.filter((c) => !c.parentId);
   const add = async (n: string, parentId: string | null) => {
     if (!n.trim()) return;
-    const { error } = await supabase.from("categories").insert({ name: n.trim(), parent_id: parentId, code: parentId ? "" : n.trim()[0]!.toUpperCase() });
+    const { error } = await supabase.from("categories").insert({ name: n.trim(), parent_id: parentId, code: parentId ? "" : n.trim().charAt(0).toUpperCase() });
     if (error) { toast.error(error.message); return; }
     await reload(); toast.success(`${n.trim()} added`);
   };
   const del = async (id: string, n: string) => {
     if (animals.some((a) => a.categoryId === id || a.subcategoryId === id)) { toast.error(`${n} has animals — move them first`); return; }
-    if (!confirm(`Delete ${n}?`)) return;
     const { error } = await supabase.from("categories").delete().eq("id", id);
     if (error) { toast.error(error.message); return; }
     await reload();
@@ -55,12 +57,12 @@ function Categories() {
               <div className="flex items-center gap-3">
                 <span className="bg-glow grid h-10 w-10 place-items-center rounded-xl font-display font-semibold text-primary-foreground">{c.code || c.name[0]}</span>
                 <div className="flex-1"><p className="font-semibold">{c.name}</p><p className="text-xs text-muted-foreground">{count} animals · {subs.length} sub-categories</p></div>
-                {isAdmin && <button aria-label="Delete" onClick={() => void del(c.id, c.name)}><Trash2 className="h-4 w-4 text-destructive" /></button>}
+                {isAdmin && <Button variant="ghost" size="icon" aria-label={`Delete ${c.name}`} title={`Delete ${c.name}`} onClick={() => setDeleting({ id: c.id, name: c.name })}><Trash2 className="h-4 w-4 text-destructive" /></Button>}
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
                 {subs.map((s) => (
                   <span key={s.id} className="flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-sm text-primary"><Tag className="h-3 w-3" />{s.name}
-                    {isAdmin && <button aria-label={`Delete ${s.name}`} onClick={() => void del(s.id, s.name)} className="ml-1 opacity-60">×</button>}
+                    {isAdmin && <Button variant="ghost" size="icon" aria-label={`Delete ${s.name}`} title={`Delete ${s.name}`} onClick={() => setDeleting({ id: s.id, name: s.name })} className="ml-1 h-7 w-7"><Trash2 className="h-3 w-3 text-destructive" /></Button>}
                   </span>
                 ))}
               </div>
@@ -74,6 +76,7 @@ function Categories() {
           );
         })}
       </ul>
+      <DeleteConfirmation open={!!deleting} onOpenChange={(open) => { if (!open) setDeleting(null); }} title={`Delete ${deleting?.name ?? "category"}?`} description="This category will be permanently removed. Categories assigned to animals cannot be deleted." onConfirm={async () => { if (deleting) await del(deleting.id, deleting.name); }} />
     </div>
   );
 }

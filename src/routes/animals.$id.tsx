@@ -13,6 +13,8 @@ import { AnimalHealth } from "@/components/AnimalHealth";
 import { canManageAnimal } from "@/lib/account-access";
 import { loadCustomerPortal } from "@/lib/customer-portal";
 import { field, F } from "@/components/form";
+import { Button } from "@/components/ui/button";
+import { DeleteConfirmation } from "@/components/DeleteConfirmation";
 
 export const Route = createFileRoute("/animals/$id")({
   head: ({ params }) => ({ meta: [
@@ -121,6 +123,7 @@ function AdminPanel({ a }: { a: Animal }) {
   const nav = useNavigate();
   const [tab, setTab] = useState<(typeof tabs)[number]>("Weight");
   const [busy, setBusy] = useState(false);
+  const [deleting, setDeleting] = useState<{ title: string; action: () => Promise<void> } | null>(null);
   const [kg, setKg] = useState(""); const [wDate, setWDate] = useState(isoToday());
   const [vName, setVName] = useState(""); const [vDate, setVDate] = useState(isoToday()); const [vNext, setVNext] = useState("");
   const [status, setStatus] = useState<Status>(a.status); const [soldDate, setSoldDate] = useState(a.soldDate ?? isoToday()); const [soldPrice, setSoldPrice] = useState(a.soldPrice?.toString() ?? "");
@@ -147,7 +150,7 @@ function AdminPanel({ a }: { a: Animal }) {
       {tab === "Weight" && <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (!Number(kg)) { toast.error("Enter weight"); return; } void run(async () => { chk(await supabase.from("weights").insert({ animal_id: a.id, kg: Number(kg), date: wDate })); setKg(""); }, "Weight added"); }}>
         <div className="grid grid-cols-2 gap-3"><F label="Weight (kg)"><input type="number" step="0.1" className={field} value={kg} onChange={(e) => setKg(e.target.value)} /></F><F label="Date"><input type="date" className={field} value={wDate} onChange={(e) => setWDate(e.target.value)} /></F></div>
         {btn}
-        {a.weights.length > 0 && <ul className="divide-y text-sm">{[...a.weights].reverse().map((w) => <li key={w.id} className="flex items-center justify-between py-2"><span>{fmtDate(w.date)}</span><span className="flex items-center gap-3 font-medium">{w.kg} kg<button type="button" aria-label="Delete" onClick={() => void run(async () => chk(await supabase.from("weights").delete().eq("id", w.id)), "Removed")}><Trash2 className="h-4 w-4 text-destructive" /></button></span></li>)}</ul>}
+        {a.weights.length > 0 && <ul className="divide-y text-sm">{[...a.weights].reverse().map((w) => <li key={w.id} className="flex items-center justify-between py-2"><span>{fmtDate(w.date)}</span><span className="flex items-center gap-3 font-medium">{w.kg} kg<Button type="button" variant="ghost" size="icon" aria-label="Delete weight" title="Delete weight" disabled={busy} onClick={() => setDeleting({ title: "Delete weight record?", action: () => run(async () => chk(await supabase.from("weights").delete().eq("id", w.id)), "Removed") })}><Trash2 className="h-4 w-4 text-destructive" /></Button></span></li>)}</ul>}
       </form>}
 
       {tab === "Vaccine" && <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (!vName.trim()) { toast.error("Enter vaccine name"); return; } void run(async () => {
@@ -179,7 +182,7 @@ function AdminPanel({ a }: { a: Animal }) {
         </div>
         <F label="Notes"><textarea rows={3} className={field} value={d.notes} onChange={(e) => setD({ ...d, notes: e.target.value })} /></F>
         {btn}
-        <button type="button" disabled={busy} onClick={() => { if (!confirm(`Delete ${a.id} permanently?`)) return; void run(async () => { chk(await supabase.from("animals").delete().eq("id", a.id)); nav({ to: "/animals" }); }, "Animal deleted"); }} className="w-full rounded-2xl border border-destructive/30 py-3 text-sm font-semibold text-destructive">Delete animal</button>
+        <Button type="button" variant="outline" disabled={busy} onClick={() => setDeleting({ title: `Delete ${a.id}?`, action: () => run(async () => { chk(await supabase.from("animals").delete().eq("id", a.id)); await nav({ to: "/animals" }); }, "Animal deleted") })} className="w-full border-destructive/30 text-destructive"><Trash2 className="h-4 w-4" />Delete animal</Button>
       </form>}
 
       {tab === "Photo" && <label className="flex cursor-pointer flex-col items-center gap-3 rounded-2xl border border-dashed p-6 text-center">
@@ -188,6 +191,7 @@ function AdminPanel({ a }: { a: Animal }) {
         <span className="text-xs text-muted-foreground">Take a picture or choose from gallery</span>
         <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (!file) return; void run(async () => { const path = await uploadAnimalPhoto(a.id, file); chk(await supabase.from("animals").update({ photo_url: path }).eq("id", a.id)); }, "Photo updated"); }} />
       </label>}
+      <DeleteConfirmation open={!!deleting} onOpenChange={(open) => { if (!open) setDeleting(null); }} title={deleting?.title ?? "Delete record?"} description="This record will be permanently removed. This cannot be undone." onConfirm={async () => { if (deleting) await deleting.action(); }} />
     </section>
   );
 }

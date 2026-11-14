@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Bell, Syringe, Wallet, X } from "lucide-react";
+import { Bell, BellOff, Syringe, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { syncPhoneAlerts } from "@/lib/local-alerts";
 import { useFarm, inr, chargesFor, TODAY, DAY_MS, fmtDate } from "@/lib/farm-data";
@@ -79,12 +79,12 @@ export function NotificationBell() {
             <DialogTitle>Notifications</DialogTitle>
             <DialogDescription>{alerts.length} alerts · vaccines and pending payments</DialogDescription>
             <div className="flex flex-wrap gap-2">{([['all', 'All'], ['vaccine', 'Vaccines'], ['money', 'Payments']] as const).map(([key, label]) => <Button key={key} size="sm" variant={filter === key ? "default" : "outline"} onClick={() => setFilter(key)} aria-pressed={filter === key}>{label}</Button>)}</div>
-            {!alerts.filter((a) => filter === "all" || a.kind === filter).length && <p className="py-8 text-center text-sm text-muted-foreground">Sab theek hai — koi alert nahi.</p>}
-            <ul className="max-h-[55svh] space-y-2 overflow-y-auto">
+            {!alerts.filter((a) => filter === "all" || a.kind === filter).length && <div className="flex flex-col items-center gap-3 py-8 text-center text-muted-foreground"><BellOff className="h-8 w-8" /><p className="text-sm">Sab theek hai — koi alert nahi.</p></div>}
+            <ul className="max-h-[50svh] min-h-0 space-y-2 overflow-y-auto overscroll-contain">
               {alerts.filter((a) => filter === "all" || a.kind === filter).map((a) => (
                 <li key={a.key}>
                   <Link to={a.to} params={a.params as never} onClick={() => setOpen(false)} className="flex items-start gap-3 rounded-lg border p-3 hover:bg-muted">
-                    <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${a.kind === "vaccine" ? (a.urgent ? "bg-destructive/15 text-destructive" : "bg-accent/30 text-accent-foreground") : "bg-secondary text-primary"}`}>
+                    <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${a.kind === "vaccine" ? (a.urgent ? "bg-destructive/15 text-destructive" : "bg-accent/30 text-accent-foreground") : "bg-secondary text-primary"}`}>
                       {a.kind === "vaccine" ? <Syringe className="h-4 w-4" /> : <Wallet className="h-4 w-4" />}
                     </span>
                     <span className="min-w-0"><span className="block break-words text-sm font-semibold">{a.title}</span><span className="mt-1 block break-words text-xs text-muted-foreground">{a.sub}</span></span>
