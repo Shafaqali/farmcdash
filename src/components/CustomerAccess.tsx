@@ -19,9 +19,9 @@ export function CustomerAccess({ customerId }: { customerId: string }) {
   const [busy, setBusy] = useState(false);
   const invitation = code ? customerInvitationUrl(PUBLIC_URL, code, email) : "";
   const share = async () => {
-    const text = `FarmCare: ${customer?.name ?? "Your"} animal account. Sign in or sign up with ${email.trim()}, then confirm Connect my animals. This invitation expires in 7 days.`;
+    const text = `STAR GOATS FARM: ${customer?.name ?? "Your"} animal account. Sign in or sign up with ${email.trim()}, then confirm Connect my animals. This invitation expires in 7 days.`;
     try {
-      if (navigator.share) await navigator.share({ title: "FarmCare customer invitation", text, url: invitation });
+      if (navigator.share) await navigator.share({ title: "STAR GOATS FARM customer invitation", text, url: invitation });
       else { await navigator.clipboard.writeText(`${text}\n${invitation}`); setMessage("Invitation copied. Send it to your customer."); }
     } catch { setMessage("Unable to share. Use Copy invitation or copy the link below."); }
   };

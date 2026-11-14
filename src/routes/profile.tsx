@@ -9,9 +9,9 @@ const field = "w-full rounded-xl border bg-background px-4 py-3 outline-none tra
 
 export const Route = createFileRoute("/profile")({
   head: () => ({ meta: [
-    { title: "Profile — FarmCare" },
+    { title: "Profile — STAR GOATS FARM" },
     { name: "description", content: "Your farm profile, settings and quick actions." },
-    { property: "og:title", content: "Profile — FarmCare" },
+    { property: "og:title", content: "Profile — STAR GOATS FARM" },
     { property: "og:description", content: "Your farm profile, settings and quick actions." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },

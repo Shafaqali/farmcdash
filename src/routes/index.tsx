@@ -7,9 +7,9 @@ import { useFarm, inr, chargesFor, TODAY, DAY_MS, fmtLong, monShort } from "@/li
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
-    { title: "Dashboard — FarmCare" },
+    { title: "Dashboard — STAR GOATS FARM" },
     { name: "description", content: "Farm overview: animals, charges, collections and vaccines at a glance." },
-    { property: "og:title", content: "Dashboard — FarmCare" },
+    { property: "og:title", content: "Dashboard — STAR GOATS FARM" },
     { property: "og:description", content: "Farm overview: animals, charges, collections and vaccines at a glance." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },

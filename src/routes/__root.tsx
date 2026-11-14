@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
+  Navigate,
   Link,
   createRootRouteWithContext,
   useRouter,
@@ -17,6 +18,8 @@ import { FarmProvider, useFarm } from "@/lib/farm-data";
 import { LoginScreen } from "@/components/LoginScreen";
 import { AppShell } from "@/components/AppShell";
 import { Toaster } from "@/components/ui/sonner";
+import { CustomerShell } from "@/components/CustomerShell";
+import { customerRouteAllowed } from "@/lib/account-access";
 import { NativeBridge } from "@/lib/native";
 
 function NotFoundComponent() {
@@ -85,9 +88,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "theme-color", content: "#2d5a3b" },
-      { title: "FarmCare — Animal care management" },
+      { title: "STAR GOATS FARM — Animal care management" },
       { name: "description", content: "Track animals, customers, care charges and vaccines on your farm." },
-      { property: "og:title", content: "FarmCare — Animal care management" },
+      { property: "og:title", content: "STAR GOATS FARM — Animal care management" },
       { property: "og:description", content: "Track animals, customers, care charges and vaccines on your farm." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -137,10 +140,16 @@ function RootComponent() {
 
 function AuthGate() {
   const path = useLocation({ select: (l) => l.pathname });
-  const { session, authReady } = useFarm();
+  const { session, authReady, role, roleReady, roleError } = useFarm();
   if (!authReady) return <div className="grid min-h-screen place-items-center text-muted-foreground">Loading…</div>;
   if (!session) return <LoginScreen key={path === "/my-animals" ? "customer" : "farmer"} customer={path === "/my-animals"} />;
-  if (path === "/my-animals") return <Outlet />;
+  if (!roleReady) return <div className="grid min-h-screen place-items-center text-muted-foreground">Loading account…</div>;
+  if (roleError || !role) return <div role="alert" className="p-8 text-center text-destructive">{roleError || "Account permissions unavailable"}</div>;
+  if (role === "customer") {
+    if (!customerRouteAllowed(path)) return <Navigate to="/my-animals" replace />;
+    return <CustomerShell><Outlet /></CustomerShell>;
+  }
+  if (path === "/my-animals") return <Navigate to="/" replace />;
   return (
     <AppShell>
       <Outlet />

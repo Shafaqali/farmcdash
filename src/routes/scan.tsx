@@ -1,13 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { QrCode, CameraOff } from "lucide-react";
+import { scannedAnimalId } from "@/lib/account-access";
 import { PageTitle } from "@/components/AppShell";
 
 export const Route = createFileRoute("/scan")({
   head: () => ({ meta: [
-    { title: "Scan tag — FarmCare" },
+    { title: "Scan tag — STAR GOATS FARM" },
     { name: "description", content: "Scan an animal's QR label to open its record." },
-    { property: "og:title", content: "Scan tag — FarmCare" },
+    { property: "og:title", content: "Scan tag — STAR GOATS FARM" },
     { property: "og:description", content: "Scan an animal's QR label to open its record." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },
@@ -29,7 +30,7 @@ function Scan() {
       scanner = s;
       s.start({ facingMode: "environment" }, { fps: 10, qrbox: 220 }, (text) => {
         if (done.current) return; done.current = true;
-        s.stop().finally(() => nav({ to: "/animals/$id", params: { id: text.trim().toUpperCase() } }));
+        s.stop().finally(() => nav({ to: "/animals/$id", params: { id: scannedAnimalId(text) } }));
       }, () => {}).catch(() => setErr(true));
     });
     return () => { cancelled = true; if (scanner?.isScanning) scanner.stop().catch(() => {}); };
@@ -48,7 +49,7 @@ function Scan() {
           </div>
         )}
       </div>
-      <form className="card-soft flex gap-2 p-3" onSubmit={(e) => { e.preventDefault(); if (id.trim()) nav({ to: "/animals/$id", params: { id: id.trim().toUpperCase() } }); }}>
+      <form className="card-soft flex gap-2 p-3" onSubmit={(e) => { e.preventDefault(); if (id.trim()) nav({ to: "/animals/$id", params: { id: scannedAnimalId(id) } }); }}>
         <span className="grid w-10 place-items-center text-muted-foreground"><QrCode className="h-5 w-5" /></span>
         <input value={id} onChange={(e) => setId(e.target.value)} placeholder="Or type ID, e.g. U01-G0001" className="flex-1 bg-transparent outline-none" />
         <button className="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">Open</button>

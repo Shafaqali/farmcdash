@@ -8,9 +8,9 @@ import { PageTitle } from "@/components/AppShell";
 
 export const Route = createFileRoute("/categories")({
   head: () => ({ meta: [
-    { title: "Categories — FarmCare" },
+    { title: "Categories — STAR GOATS FARM" },
     { name: "description", content: "Manage animal categories and sub-categories." },
-    { property: "og:title", content: "Categories — FarmCare" },
+    { property: "og:title", content: "Categories — STAR GOATS FARM" },
     { property: "og:description", content: "Manage animal categories and sub-categories." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },

@@ -11,9 +11,9 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/compone
 
 export const Route = createFileRoute("/customers")({
   head: () => ({ meta: [
-    { title: "Customers — FarmCare" },
+    { title: "Customers — STAR GOATS FARM" },
     { name: "description", content: "Customer balances, payments and animals in care." },
-    { property: "og:title", content: "Customers — FarmCare" },
+    { property: "og:title", content: "Customers — STAR GOATS FARM" },
     { property: "og:description", content: "Customer balances, payments and animals in care." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },

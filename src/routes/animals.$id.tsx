@@ -9,13 +9,16 @@ import { AnimalQR } from "@/components/AnimalQR";
 import { AnimalPayments } from "@/components/AnimalPayments";
 import { FarmExport } from "@/components/FarmExport";
 import { CustomerAnimalPayments } from "@/components/CustomerAnimalPayments";
+import { AnimalHealth } from "@/components/AnimalHealth";
+import { canManageAnimal } from "@/lib/account-access";
+import { loadCustomerPortal } from "@/lib/customer-portal";
 import { field, F } from "@/components/form";
 
 export const Route = createFileRoute("/animals/$id")({
   head: ({ params }) => ({ meta: [
-    { title: `${params.id} — FarmCare` },
+    { title: `${params.id} — STAR GOATS FARM` },
     { name: "description", content: `Care record, weight trend and QR tag for animal ${params.id}.` },
-    { property: "og:title", content: `${params.id} — FarmCare` },
+    { property: "og:title", content: `${params.id} — STAR GOATS FARM` },
     { property: "og:description", content: `Care record for animal ${params.id}.` },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },
@@ -25,23 +28,37 @@ export const Route = createFileRoute("/animals/$id")({
 
 function Detail() {
   const { id } = Route.useParams();
-  const { allAnimals, customers, uid, loading } = useFarm();
-  const a = allAnimals.find((x) => x.id.toLowerCase() === id.toLowerCase());
+  const { allAnimals, customers, uid, loading, role } = useFarm();
+  const [remote, setRemote] = useState<Animal | null>(null);
+  const [pending, setPending] = useState(true);
+  const [linkedName, setLinkedName] = useState("");
+  const own = allAnimals.find((x) => x.id.toLowerCase() === id.toLowerCase());
+  const a = own ?? remote;
+  useEffect(() => { let active = true; setRemote(null); setPending(true); setLinkedName(""); void (async () => {
+    try {
+      if (role === "customer") {
+        const portal = await loadCustomerPortal();
+        const linked = portal.animals.find((x) => x.id.toLowerCase() === id.toLowerCase());
+        if (linked) { if (active) { setRemote(linked); setLinkedName(portal.customers.find((c) => c.id === linked.ownerId)?.name ?? ""); } return; }
+      }
+      if (!own) { const { data, error } = await supabase.rpc("shared_animal", { _animal_id: id }); if (error) throw error; if (active) setRemote(data as unknown as Animal | null); }
+    } finally { if (active) setPending(false); }
+  })().catch(() => { if (active) setPending(false); }); return () => { active = false; }; }, [id, uid, role, own]);
   const [info, setInfo] = useState<{ registered_by: string | null; user_code: string | null; owner_name: string | null } | null>(null);
   useEffect(() => {
     if (!a) return;
     void supabase.rpc("animal_owner_info", { _animal_id: a.id }).then(({ data }) => setInfo(data?.[0] ?? null));
   }, [a?.id]);
-  if (!a) return <div className="py-20 text-center"><p className="text-muted-foreground">{loading ? "Loading…" : `No animal with ID ${id}`}</p><Link to="/animals" className="mt-4 inline-block font-semibold text-primary">Back to animals</Link></div>;
+  if (!a) return <div className="py-20 text-center"><p className="text-muted-foreground">{loading || pending ? "Loading…" : `No animal with ID ${id}`}</p><Link to={role === "customer" ? "/my-animals" : "/animals"} className="mt-4 inline-block font-semibold text-primary">Back to animals</Link></div>;
   const owner = customers.find((c) => c.id === a.ownerId);
-  const mine = a.userId === uid;
+  const mine = canManageAnimal(role, uid, a.userId);
   const overdue = a.vaccineDue !== "" && Date.parse(a.vaccineDue) < TODAY;
   const label = `${a.species}${a.sub ? " · " + a.sub : ""}`;
-  const ownerName = owner?.name ?? info?.owner_name ?? "—";
+  const ownerName = linkedName || owner?.name || info?.owner_name || "Personal farm animal";
   const regBy = info?.registered_by ? `${info.registered_by}${info.user_code ? ` (${info.user_code})` : ""}` : "—";
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3"><Link to="/animals" className="flex items-center gap-1 text-sm text-muted-foreground"><ArrowLeft className="h-4 w-4" />Animals</Link>{mine && <FarmExport scope={{ kind: "animal", id: a.id }} />}</div>
+      <div className="flex flex-wrap items-center justify-between gap-3"><Link to={role === "customer" ? "/my-animals" : "/animals"} className="flex items-center gap-1 text-sm text-muted-foreground"><ArrowLeft className="h-4 w-4" />{role === "customer" ? "My animals" : "Animals"}</Link>{mine && <FarmExport scope={{ kind: "animal", id: a.id }} />}</div>
       {a.photoUrl && <img src={a.photoUrl} alt={`Animal ${a.id}`} className="animate-rise aspect-[4/3] w-full rounded-3xl object-cover shadow-float" />}
       <section className="bg-hero animate-rise flex items-center gap-4 rounded-3xl p-5 text-primary-foreground shadow-float">
         <AnimalQR id={a.id} label={label} />
@@ -68,6 +85,7 @@ function Detail() {
         ))}
       </div>
       {mine ? <AnimalPayments animalId={a.id} /> : <CustomerAnimalPayments animalId={a.id} />}
+      <AnimalHealth animalId={a.id} editable={mine} />
       {a.notes && <p className="card-soft p-4 text-sm text-muted-foreground">{a.notes}</p>}
       {a.weights.length > 1 && (
         <section className="card-soft animate-rise p-4">
@@ -154,7 +172,7 @@ function AdminPanel({ a }: { a: Animal }) {
           <F label="Sub-category"><select className={field} value={d.subcategoryId} onChange={(e) => setD({ ...d, subcategoryId: e.target.value })}><option value="">—</option>{subs.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></F>
         </div>
         <F label="Breed / details"><input className={field} value={d.breed} onChange={(e) => setD({ ...d, breed: e.target.value })} /></F>
-        <F label="Owner"><select className={field} value={d.ownerId} onChange={(e) => setD({ ...d, ownerId: e.target.value })}><option value="">— No owner —</option>{customers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></F>
+        <F label="Owner"><select className={field} value={d.ownerId} onChange={(e) => setD({ ...d, ownerId: e.target.value })}><option value="">Personal farm animal</option>{customers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></F>
         <div className="grid grid-cols-2 gap-3">
           <F label="Monthly charge (₹)"><input type="number" className={field} value={d.monthlyCharge} onChange={(e) => setD({ ...d, monthlyCharge: e.target.value })} /></F>
           <F label="Next vaccine"><input type="date" className={field} value={d.vaccineDue} onChange={(e) => setD({ ...d, vaccineDue: e.target.value })} /></F>

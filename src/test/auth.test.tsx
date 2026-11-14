@@ -22,7 +22,7 @@ describe("FarmCare account access", () => {
     auth.signUp.mockResolvedValue({ data: { session: null }, error: null });
     render(<LoginScreen />); fillSignup();
     fireEvent.click(screen.getByRole("button", { name: "Create account" }));
-    await waitFor(() => expect(auth.signUp).toHaveBeenCalledWith({ email: "shafaq@example.com", password: "FarmCare-test-123", options: { emailRedirectTo: "https://farmcdash.lovable.app", data: { full_name: "Shafaq Ali" } } }));
+    await waitFor(() => expect(auth.signUp).toHaveBeenCalledWith({ email: "shafaq@example.com", password: "FarmCare-test-123", options: { emailRedirectTo: "https://farmcdash.lovable.app", data: { full_name: "Shafaq Ali", account_type: "owner" } } }));
     await screen.findByRole("button", { name: "Back to sign in" });
     expect(auth.signInWithPassword).not.toHaveBeenCalled();
   });
@@ -37,9 +37,9 @@ describe("FarmCare account access", () => {
     render(<LoginScreen />);
     fireEvent.change(screen.getByLabelText("Email address"), { target: { value: "shafaq@example.com" } });
     fireEvent.change(screen.getByLabelText("Password", { exact: true }), { target: { value: "FarmCare-test-123" } });
-    fireEvent.click(screen.getByRole("button", { name: "Sign in to FarmCare" }));
-    await waitFor(() => expect(screen.getByRole("button", { name: "Sign in to FarmCare" })).not.toBeDisabled());
-    fireEvent.click(screen.getByRole("button", { name: "Sign in to FarmCare" }));
+    fireEvent.click(screen.getByRole("button", { name: "Sign in to STAR GOATS FARM" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Sign in to STAR GOATS FARM" })).not.toBeDisabled());
+    fireEvent.click(screen.getByRole("button", { name: "Sign in to STAR GOATS FARM" }));
     await waitFor(() => expect(auth.signInWithPassword).toHaveBeenCalledTimes(2));
     expect(auth.signInWithPassword).toHaveBeenLastCalledWith({ email: "shafaq@example.com", password: "FarmCare-test-123" });
   });
@@ -53,5 +53,11 @@ describe("FarmCare account access", () => {
     await waitFor(() => expect(auth.signInWithPassword).toHaveBeenCalledWith({ email: "customer@example.com", password: "Customer-test-123" }));
     window.sessionStorage.clear();
     window.history.replaceState(null, "", "/");
+  });
+  it("creates customer accounts with the customer signup type", async () => {
+    auth.signUp.mockResolvedValue({ data: { session: null }, error: null });
+    render(<LoginScreen customer />); fillSignup();
+    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
+    await waitFor(() => expect(auth.signUp).toHaveBeenCalledWith(expect.objectContaining({ options: expect.objectContaining({ data: { full_name: "Shafaq Ali", account_type: "customer" } }) })));
   });
 });

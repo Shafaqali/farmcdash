@@ -8,10 +8,10 @@ import { useFarm, fmtDate, inr } from "@/lib/farm-data";
 import { connectCustomer, loadCustomerPortal, pendingCustomerInvitation, type PortalData } from "@/lib/customer-portal";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { customerAccount } from "@/lib/customer-account";
-import logo from "@/assets/farmcare-header-logo.png.asset.json";
+
 
 export const Route = createFileRoute("/my-animals")({
-  head: () => ({ meta: [{ title: "My animals — FarmCare" }, { name: "description", content: "Private customer animal, vaccine and payment records." }, { property: "og:title", content: "My animals — FarmCare" }, { property: "og:description", content: "View your linked animal care records securely." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
+  head: () => ({ meta: [{ title: "My animals — STAR GOATS FARM" }, { name: "description", content: "Private customer animal, vaccine and payment records." }, { property: "og:title", content: "My animals — STAR GOATS FARM" }, { property: "og:description", content: "View your linked animal care records securely." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: CustomerPortal,
 });
 export function CustomerPortal() {
@@ -35,8 +35,8 @@ export function CustomerPortal() {
     const invitation = pendingCustomerInvitation();
     if (invitation) { setCode(invitation.code); setConnectOpen(true); }
   }, []);
-  return <div className="mx-auto min-h-svh max-w-2xl px-5 pb-10">
-    <header className="flex flex-wrap items-center justify-between gap-3 border-b py-4"><img src={logo.url} alt="FarmCare" className="h-14 w-52 max-w-full object-contain object-left" /><div className="flex gap-1"><Button asChild variant="ghost" size="icon" title="Scan animal QR" aria-label="Scan animal QR"><Link to="/scan"><ScanLine /></Link></Button><Button variant="ghost" size="icon" title="Refresh records" aria-label="Refresh records" disabled={busy} onClick={() => void refresh()}><RefreshCw /></Button><Button variant="ghost" size="icon" title="Sign out" aria-label="Sign out" onClick={() => { setData(null); void supabase.auth.signOut(); }}><LogOut /></Button></div></header>
+  return <div className="space-y-4">
+    <div className="flex justify-end"><Button variant="ghost" size="icon" title="Refresh records" aria-label="Refresh records" disabled={busy} onClick={() => void refresh()}><RefreshCw /></Button></div>
     <div className="mt-6 flex flex-wrap items-start justify-between gap-4"><div><p className="text-sm text-muted-foreground">Customer account</p><h1 className="mt-1 text-3xl font-semibold">My animals</h1></div><Button onClick={() => { setError(""); setConnectOpen(true); }}><Link2 />Connect animals</Button></div>
     <p className="mt-3 break-all text-sm text-muted-foreground">{session?.user.email}</p>
     {connected && <p role="status" className="mt-4 flex items-center gap-2 text-sm text-primary"><CheckCircle2 className="h-5 w-5" />Your customer account is connected.</p>}

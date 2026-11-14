@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import type { AccountRole } from "@/lib/account-access";
 import { carePeriods } from "@/lib/care-billing";
 
 export type Status = "Active" | "Sold" | "Discharged" | "Dead";
@@ -27,6 +28,9 @@ type Store = Data & {
   session: Session | null;
   authReady: boolean;
   isAdmin: boolean;
+  role: AccountRole | null;
+  roleReady: boolean;
+  roleError: string;
   uid: string | null;
   addCustomer: (c: Omit<Customer, "id">) => Promise<void>;
   userName: string;
@@ -39,7 +43,7 @@ const empty: Data = { animals: [], allAnimals: [], customers: [], payments: [], 
 
 async function fetchAll(uid: string): Promise<Data> {
   const [a, c, p, cat, w, v] = await Promise.all([
-    supabase.from("animals").select("*").order("created_at"),
+    supabase.from("animals").select("*").eq("user_id", uid).order("created_at"),
     supabase.from("customers").select("*").eq("user_id", uid).order("name"),
     supabase.from("payments").select("*").eq("user_id", uid).order("date", { ascending: false }),
     supabase.from("categories").select("*").order("name"),
@@ -76,12 +80,15 @@ async function fetchAll(uid: string): Promise<Data> {
 export function FarmProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [authReady, setAuthReady] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(true);
+  const [role, setRole] = useState<AccountRole | null>(null);
+  const [roleReady, setRoleReady] = useState(false);
+  const [roleError, setRoleError] = useState("");
+  const isAdmin = role === "owner";
   const [data, setData] = useState<Data>(empty);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => { setData(empty); setSession(s); setAuthReady(true); });
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => { if (event === "SIGNED_OUT") setData(empty); setSession(s); setAuthReady(true); });
     supabase.auth.getSession().then(({ data }) => { setSession(data.session); setAuthReady(true); });
     return () => sub.subscription.unsubscribe();
   }, []);
@@ -91,20 +98,33 @@ export function FarmProvider({ children }: { children: ReactNode }) {
     if (!uid) return;
     setLoading(true);
     try {
-      setData(await fetchAll(uid));
-      setIsAdmin(true);
+      if (role === "owner") setData(await fetchAll(uid));
+      else setData(empty);
     } finally { setLoading(false); }
-  }, [uid]);
+  }, [uid, role]);
 
-  useEffect(() => { if (uid) void reload(); else { setData(empty); setIsAdmin(false); } }, [uid, reload]);
+  useEffect(() => {
+    let active = true; setRole(null); setRoleReady(false); setRoleError("");
+    if (!uid) { setRoleReady(true); return; }
+    void supabase.from("user_roles").select("role").eq("user_id", uid).single().then(({ data, error }) => {
+      if (!active) return;
+      if (error || !data) setRoleError("Your account permissions could not be loaded. Please sign in again.");
+      else setRole(data.role);
+      setRoleReady(true);
+    });
+    return () => { active = false; };
+  }, [uid]);
+  useEffect(() => { if (uid && roleReady) void reload().catch((e) => setRoleError(e.message)); else setData(empty); }, [uid, roleReady, reload]);
 
   const addPayment: Store["addPayment"] = async (p) => {
+    if (!isAdmin) throw new Error("Only farm owners can manage payments");
     if (!Number.isFinite(p.amount) || p.amount <= 0) throw new Error("Enter a positive payment amount");
     const { error } = await supabase.from("payments").insert({ customer_id: p.customerId, amount: p.amount, date: p.date, animal_id: p.animalId ?? null, period_start: p.periodStart ?? null });
     if (error) throw error;
     await reload();
   };
   const addCustomer: Store["addCustomer"] = async (c) => {
+    if (!isAdmin) throw new Error("Only farm owners can manage customers");
     const { error } = await supabase.from("customers").insert({ name: c.name, phone: c.phone, village: c.village });
     if (error) throw error;
     await reload();
@@ -119,7 +139,7 @@ export function FarmProvider({ children }: { children: ReactNode }) {
   };
   const meta = session?.user.user_metadata as { full_name?: string; name?: string } | undefined;
   const userName = meta?.full_name || meta?.name || session?.user.email?.split("@")[0] || "";
-  return <Ctx.Provider value={{ ...data, loading, session, authReady, isAdmin, uid: uid ?? null, addCustomer, userName, reload, addPayment, updatePayment }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ ...data, loading, session, authReady, isAdmin, role, roleReady, roleError, uid: uid ?? null, addCustomer, userName, reload, addPayment, updatePayment }}>{children}</Ctx.Provider>;
 }
 export const useFarm = () => { const c = useContext(Ctx); if (!c) throw new Error("FarmProvider missing"); return c; };
 

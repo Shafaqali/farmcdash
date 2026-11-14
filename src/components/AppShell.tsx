@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import type { ReactNode } from "react";
 import { NotificationBell } from "./Notifications";
 import { FarmExport } from "./FarmExport";
-import logo from "@/assets/farmcare-header-logo.png.asset.json";
+import { Brand } from "./Brand";
 
 const left = [{ to: "/", label: "Home", icon: LayoutGrid }, { to: "/animals", label: "Animals", icon: PawPrint }] as const;
 const right = [{ to: "/customers", label: "Customers", icon: Users }, { to: "/profile", label: "Profile", icon: UserRound }] as const;
@@ -26,7 +26,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="mx-auto min-h-screen max-w-2xl pb-28">
       <header className="glass sticky top-0 z-30 flex items-center justify-between border-b px-5 py-3">
         <Link to="/" className="flex min-w-0 items-center">
-          <img src={logo.url} alt="FarmCare logo" height={56} width={208} className="h-14 w-52 max-w-full object-contain object-left" />
+          <Brand />
         </Link>
         <div className="flex shrink-0 items-center gap-2"><FarmExport /><NotificationBell /></div>
       </header>

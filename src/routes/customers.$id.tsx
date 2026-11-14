@@ -10,9 +10,9 @@ import { CustomerAccess } from "@/components/CustomerAccess";
 
 export const Route = createFileRoute("/customers/$id")({
   head: () => ({ meta: [
-    { title: "Customer account — FarmCare" },
+    { title: "Customer account — STAR GOATS FARM" },
     { name: "description", content: "View a customer's animals, individual care charges, payment history and outstanding balance." },
-    { property: "og:title", content: "Customer account — FarmCare" },
+    { property: "og:title", content: "Customer account — STAR GOATS FARM" },
     { property: "og:description", content: "Customer animals, care charges, payments and outstanding balance." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },

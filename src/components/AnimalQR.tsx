@@ -22,7 +22,7 @@ export function AnimalQR({ id, label, size = 92 }: { id: string; label: string; 
     ctx.font = "bold 48px sans-serif"; ctx.fillText(id, out.width / 2, qr + pad + 60);
     ctx.font = "26px sans-serif"; ctx.fillText(label, out.width / 2, qr + pad + 98);
     const dataUrl = out.toDataURL("image/png");
-    const name = `FarmCare-${id}-QR.png`;
+    const name = `STAR-GOATS-FARM-${id}-QR.png`;
     if (isNativeApp()) {
       void (async () => {
         try {

@@ -9,9 +9,9 @@ import { PageTitle } from "@/components/AppShell";
 
 export const Route = createFileRoute("/animals/new")({
   head: () => ({ meta: [
-    { title: "Register animal — FarmCare" },
+    { title: "Register animal — STAR GOATS FARM" },
     { name: "description", content: "Add a new animal with category, photo and auto QR tag." },
-    { property: "og:title", content: "Register animal — FarmCare" },
+    { property: "og:title", content: "Register animal — STAR GOATS FARM" },
     { property: "og:description", content: "Add a new animal to your farm records." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary_large_image" },
@@ -73,7 +73,7 @@ function NewAnimal() {
         </F>
         {subs.length > 0 && <F label="Sub-category"><select className={field} value={f.subcategoryId} onChange={set("subcategoryId")}><option value="">— Choose —</option>{subs.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></F>}
         <F label="Breed / details"><input className={field} value={f.breed} onChange={set("breed")} placeholder="Optional" /></F>
-        <F label="Owner"><select className={field} value={f.ownerId} onChange={set("ownerId")}><option value="">— No owner —</option>{customers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></F>
+        <F label="Owner"><select className={field} value={f.ownerId} onChange={set("ownerId")}><option value="">Personal farm animal</option>{customers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></F>
       </section>
       <section className="card-soft animate-rise space-y-4 p-4" style={{ animationDelay: "80ms" }}>
         <h2 className="text-lg font-semibold">Care</h2>

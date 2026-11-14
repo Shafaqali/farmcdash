@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      animal_health: {
+        Row: {
+          animal_id: string
+          condition: string
+          date: string
+          details: string
+          id: string
+          medicine: string
+          recovery: string
+          status: string
+          treatment: string
+          user_id: string
+        }
+        Insert: {
+          animal_id: string
+          condition: string
+          date?: string
+          details?: string
+          id?: string
+          medicine?: string
+          recovery?: string
+          status?: string
+          treatment?: string
+          user_id?: string
+        }
+        Update: {
+          animal_id?: string
+          condition?: string
+          date?: string
+          details?: string
+          id?: string
+          medicine?: string
+          recovery?: string
+          status?: string
+          treatment?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "animal_health_animal_id_fkey"
+            columns: ["animal_id"]
+            isOneToOne: false
+            referencedRelation: "animals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       animals: {
         Row: {
           arrival: string
@@ -189,6 +236,57 @@ export type Database = {
           },
         ]
       }
+      customer_notifications: {
+        Row: {
+          animal_id: string
+          created_at: string
+          customer_id: string
+          id: string
+          message: string
+          owner_id: string
+          read_at: string | null
+          title: string
+          viewer_id: string
+        }
+        Insert: {
+          animal_id: string
+          created_at?: string
+          customer_id: string
+          id?: string
+          message: string
+          owner_id: string
+          read_at?: string | null
+          title: string
+          viewer_id: string
+        }
+        Update: {
+          animal_id?: string
+          created_at?: string
+          customer_id?: string
+          id?: string
+          message?: string
+          owner_id?: string
+          read_at?: string | null
+          title?: string
+          viewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_notifications_animal_id_fkey"
+            columns: ["animal_id"]
+            isOneToOne: false
+            referencedRelation: "animals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_notifications_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           created_at: string
@@ -285,6 +383,21 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          role: Database["public"]["Enums"]["farm_account_role"]
+          user_id: string
+        }
+        Insert: {
+          role: Database["public"]["Enums"]["farm_account_role"]
+          user_id: string
+        }
+        Update: {
+          role?: Database["public"]["Enums"]["farm_account_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       vaccinations: {
         Row: {
           animal_id: string
@@ -371,20 +484,23 @@ export type Database = {
           user_code: string
         }[]
       }
+      can_read_animal_care: { Args: { _animal_id: string }; Returns: boolean }
       connect_customer: { Args: { _code: string }; Returns: undefined }
       customer_portal: { Args: never; Returns: Json }
       invite_customer: {
         Args: { _customer_id: string; _email: string }
         Returns: string
       }
+      is_farm_owner: { Args: never; Returns: boolean }
       owns_animal: { Args: { _animal_id: string }; Returns: boolean }
       revoke_customer_access: {
         Args: { _customer_id: string }
         Returns: undefined
       }
+      shared_animal: { Args: { _animal_id: string }; Returns: Json }
     }
     Enums: {
-      [_ in never]: never
+      farm_account_role: "owner" | "customer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -511,6 +627,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      farm_account_role: ["owner", "customer"],
+    },
   },
 } as const
