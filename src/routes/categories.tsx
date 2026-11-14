@@ -33,9 +33,9 @@ function Categories() {
     await reload(); toast.success(`${n.trim()} added`);
   };
   const del = async (id: string, n: string) => {
-    if (animals.some((a) => a.categoryId === id || a.subcategoryId === id)) { toast.error(`${n} has animals — move them first`); return; }
+    if (animals.some((a) => a.categoryId === id || a.subcategoryId === id)) throw new Error(`${n} has animals — move them first`);
     const { error } = await supabase.from("categories").delete().eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    if (error) throw new Error(error.message);
     await reload();
   };
   return (

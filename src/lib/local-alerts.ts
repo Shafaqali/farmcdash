@@ -11,23 +11,48 @@ const at = (dateStr: string, hour: number, offsetDays = 0) => {
 };
 
 let lastSig = "";
+let queue = Promise.resolve();
+
+async function clearFarmNotifications() {
+  const { LocalNotifications } = await import("@capacitor/local-notifications");
+  const pending = await LocalNotifications.getPending();
+  const farm = pending.notifications.filter((n) => n.id === 1 || n.id === 2 || (n.id >= 1000 && n.id <= 1401));
+  if (farm.length) await LocalNotifications.cancel({ notifications: farm.map(({ id }) => ({ id })) });
+  const delivered = await LocalNotifications.getDeliveredNotifications();
+  const notices = delivered.notifications.filter((n) => n.id === 1 || n.id === 2 || (n.id >= 1000 && n.id <= 1401));
+  if (notices.length) await LocalNotifications.removeDeliveredNotifications({ notifications: notices });
+}
+
+export function clearPhoneAlerts() {
+  if (!Capacitor.isNativePlatform()) return Promise.resolve();
+  queue = queue.then(async () => { await clearFarmNotifications(); lastSig = ""; }).catch((e) => { console.warn("phone alerts failed", e); });
+  return queue;
+}
 
 /** Schedules phone notifications that fire even when the app is closed (Android only). */
-export async function syncPhoneAlerts(vaccines: VaccineItem[], money: MoneyItem[]) {
+export function syncPhoneAlerts(vaccines: VaccineItem[], money: MoneyItem[]) {
+  queue = queue.then(() => schedulePhoneAlerts(vaccines, money));
+  return queue;
+}
+
+async function schedulePhoneAlerts(vaccines: VaccineItem[], money: MoneyItem[]) {
   if (!Capacitor.isNativePlatform()) return;
   const sig = JSON.stringify([vaccines, money]);
   if (sig === lastSig) return;
-  lastSig = sig;
   try {
     const { LocalNotifications } = await import("@capacitor/local-notifications");
+    if (!vaccines.length && !money.length) {
+      await clearFarmNotifications();
+      lastSig = sig;
+      return;
+    }
     const perm = await LocalNotifications.checkPermissions();
     if (perm.display !== "granted") {
       const r = await LocalNotifications.requestPermissions();
       if (r.display !== "granted") return;
     }
     await LocalNotifications.createChannel({ id: "farm", name: "Farm alerts", importance: 5, vibration: true }).catch(() => {});
-    const pending = await LocalNotifications.getPending();
-    if (pending.notifications.length) await LocalNotifications.cancel({ notifications: pending.notifications.map((n) => ({ id: n.id })) });
+    await clearFarmNotifications();
 
     const now = Date.now();
     const list: Parameters<typeof LocalNotifications.schedule>[0]["notifications"] = [];
@@ -49,6 +74,7 @@ export async function syncPhoneAlerts(vaccines: VaccineItem[], money: MoneyItem[
       list.push({ id: 2, channelId: "farm", title: "Paisa baki hai", body: `${money.length} customer ka kul ₹${total.toLocaleString("en-IN")} baki hai — ${money.slice(0, 3).map((m) => m.name).join(", ")}`, schedule: { on: { hour: 10, minute: 0 }, allowWhileIdle: true } });
     }
     if (list.length) await LocalNotifications.schedule({ notifications: list });
+    lastSig = sig;
   } catch (e) {
     console.warn("phone alerts failed", e);
   }

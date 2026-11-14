@@ -1,4 +1,5 @@
 # Customer details
+- [ ] Sweep login/signup, both headers, owner/customer notifications, phone reminder scheduling, sign-out, animal/weight/category deletion and data/QR/portal reads for reset and popup consistency.
 - [x] Clear all existing farm records and verify zero animals, customers, payments, health, weights, vaccines, invitations, connections and notifications.
 - [ ] Remove all login users and stored animal photos — blocked by unavailable supported account/storage deletion tools; five login accounts and one stored photo remain.
 - [x] Improve official white-logo contrast and delete/notification popups only; phone login, signed-in empty notifications and delete cancellation verified with no horizontal overflow; all 35 existing tests pass. Animal-category settings retained; APK not rebuilt.

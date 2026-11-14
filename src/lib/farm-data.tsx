@@ -3,6 +3,7 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { AccountRole } from "@/lib/account-access";
 import { carePeriods } from "@/lib/care-billing";
+import { clearPhoneAlerts } from "@/lib/local-alerts";
 
 export type Status = "Active" | "Sold" | "Discharged" | "Dead";
 export const STATUSES: Status[] = ["Active", "Sold", "Discharged", "Dead"];
@@ -115,6 +116,9 @@ export function FarmProvider({ children }: { children: ReactNode }) {
     return () => { active = false; };
   }, [uid]);
   useEffect(() => { if (uid && roleReady) void reload().catch((e) => setRoleError(e.message)); else setData(empty); }, [uid, roleReady, reload]);
+  useEffect(() => {
+    if (authReady && (!uid || (roleReady && role !== "owner"))) void clearPhoneAlerts();
+  }, [authReady, uid, roleReady, role]);
 
   const addPayment: Store["addPayment"] = async (p) => {
     if (!isAdmin) throw new Error("Only farm owners can manage payments");

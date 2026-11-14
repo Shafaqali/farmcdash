@@ -129,10 +129,10 @@ function AdminPanel({ a }: { a: Animal }) {
   const [status, setStatus] = useState<Status>(a.status); const [soldDate, setSoldDate] = useState(a.soldDate ?? isoToday()); const [soldPrice, setSoldPrice] = useState(a.soldPrice?.toString() ?? "");
   const [d, setD] = useState({ categoryId: a.categoryId, subcategoryId: a.subcategoryId ?? "", breed: a.breed, ownerId: a.ownerId, monthlyCharge: String(a.monthlyCharge), notes: a.notes, vaccineDue: a.vaccineDue });
 
-  const run = async (fn: () => Promise<unknown>, msg: string) => {
+  const run = async (fn: () => Promise<unknown>, msg: string, propagate = false) => {
     setBusy(true);
     try { await fn(); await reload(); toast.success(msg); }
-    catch (err) { toast.error(err instanceof Error ? err.message : "Update failed"); }
+    catch (err) { if (propagate) throw err; toast.error(err instanceof Error ? err.message : "Update failed"); }
     finally { setBusy(false); }
   };
   const chk = <T,>(r: { error: unknown } & T) => { if (r.error) throw r.error; return r; };
@@ -150,7 +150,7 @@ function AdminPanel({ a }: { a: Animal }) {
       {tab === "Weight" && <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (!Number(kg)) { toast.error("Enter weight"); return; } void run(async () => { chk(await supabase.from("weights").insert({ animal_id: a.id, kg: Number(kg), date: wDate })); setKg(""); }, "Weight added"); }}>
         <div className="grid grid-cols-2 gap-3"><F label="Weight (kg)"><input type="number" step="0.1" className={field} value={kg} onChange={(e) => setKg(e.target.value)} /></F><F label="Date"><input type="date" className={field} value={wDate} onChange={(e) => setWDate(e.target.value)} /></F></div>
         {btn}
-        {a.weights.length > 0 && <ul className="divide-y text-sm">{[...a.weights].reverse().map((w) => <li key={w.id} className="flex items-center justify-between py-2"><span>{fmtDate(w.date)}</span><span className="flex items-center gap-3 font-medium">{w.kg} kg<Button type="button" variant="ghost" size="icon" aria-label="Delete weight" title="Delete weight" disabled={busy} onClick={() => setDeleting({ title: "Delete weight record?", action: () => run(async () => chk(await supabase.from("weights").delete().eq("id", w.id)), "Removed") })}><Trash2 className="h-4 w-4 text-destructive" /></Button></span></li>)}</ul>}
+        {a.weights.length > 0 && <ul className="divide-y text-sm">{[...a.weights].reverse().map((w) => <li key={w.id} className="flex items-center justify-between py-2"><span>{fmtDate(w.date)}</span><span className="flex items-center gap-3 font-medium">{w.kg} kg<Button type="button" variant="ghost" size="icon" aria-label="Delete weight" title="Delete weight" disabled={busy} onClick={() => setDeleting({ title: "Delete weight record?", action: () => run(async () => chk(await supabase.from("weights").delete().eq("id", w.id)), "Removed", true) })}><Trash2 className="h-4 w-4 text-destructive" /></Button></span></li>)}</ul>}
       </form>}
 
       {tab === "Vaccine" && <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (!vName.trim()) { toast.error("Enter vaccine name"); return; } void run(async () => {
@@ -182,7 +182,7 @@ function AdminPanel({ a }: { a: Animal }) {
         </div>
         <F label="Notes"><textarea rows={3} className={field} value={d.notes} onChange={(e) => setD({ ...d, notes: e.target.value })} /></F>
         {btn}
-        <Button type="button" variant="outline" disabled={busy} onClick={() => setDeleting({ title: `Delete ${a.id}?`, action: () => run(async () => { chk(await supabase.from("animals").delete().eq("id", a.id)); await nav({ to: "/animals" }); }, "Animal deleted") })} className="w-full border-destructive/30 text-destructive"><Trash2 className="h-4 w-4" />Delete animal</Button>
+        <Button type="button" variant="outline" disabled={busy} onClick={() => setDeleting({ title: `Delete ${a.id}?`, action: () => run(async () => { chk(await supabase.from("animals").delete().eq("id", a.id)); await nav({ to: "/animals" }); }, "Animal deleted", true) })} className="w-full border-destructive/30 text-destructive"><Trash2 className="h-4 w-4" />Delete animal</Button>
       </form>}
 
       {tab === "Photo" && <label className="flex cursor-pointer flex-col items-center gap-3 rounded-2xl border border-dashed p-6 text-center">
