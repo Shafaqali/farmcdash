@@ -48,3 +48,7 @@ Includes the refreshed login, larger official header wordmark, explicit customer
 Verified Android compilation, APK signature/package/version, both bundled original logos, packaged customer connection features, 28 tests, and packaged phone login/signup rendering. The browser Android simulation lacks a real App bridge; physical-device launch, notification delivery, native sharing, and a separate customer's authenticated QR/payment flow remain unverified. The prior web check verified invitation, connection, assigned animal visibility and reload with the existing session.
 
 The signing certificate differs from v11 because the previous key is unavailable. Uninstall the older app before installing v12, then sign in again and allow notifications. Cloud records remain; local sign-in and reminders reset. Native Google login remains disabled. Customer invitations open the website; customers may also select Customer in the APK and enter their connection code manually.
+
+## Version 1.13
+
+Rebuilt with the latest app. Delivered as `FarmCare_v13.apk`, version code 13. Signing certificate differs from v12; future builds reuse the saved key. Physical-device testing not done.
