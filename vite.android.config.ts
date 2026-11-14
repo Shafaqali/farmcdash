@@ -10,10 +10,10 @@ export default defineConfig({
       async closeBundle() {
         // CDN paths are not served by Capacitor's localhost. Package the same
         // original assets at their existing paths so images also work offline.
-        for (const name of ["farmcare-header-logo.png", "farmcare-app-icon.png"]) {
+        for (const name of ["star-goats-farm-header-logo.png", "star-goats-farm-header-compact.png", "star-goats-farm-app-logo.png"]) {
           const asset = JSON.parse(await readFile(`src/assets/${name}.asset.json`, "utf8")) as { url: string };
           const response = await fetch(new URL(asset.url, "https://farmcdash.lovable.app"));
-          if (!response.ok || !response.headers.get("content-type")?.startsWith("image/")) throw new Error(`Could not bundle FarmCare asset: ${name}`);
+          if (!response.ok || !response.headers.get("content-type")?.startsWith("image/")) throw new Error(`Could not bundle Star Goats Farm asset: ${name}`);
           const destination = join("dist/client", asset.url);
           await mkdir(dirname(destination), { recursive: true });
           await writeFile(destination, new Uint8Array(await response.arrayBuffer()));

@@ -3,7 +3,8 @@
 - [x] Add private persistent health, medicine, treatment and recovery histories with automatic in-app customer notifications.
 - [x] Separate personal animals from customer animals while preserving existing growth/payment tools; personal registration and list verified.
 - [x] Rename visible branding and Android display name to STAR GOATS FARM without changing package identity.
-- [ ] Integrate official replacement logo and app icon — awaiting the user's logo upload.
+- [x] Integrate supplied Star Goats Farm header/app logos, favicon and Android icons; login/signup and signed-in headers verified at 360/432/1280 widths.
+- [x] Build updated Android 1.14/code 14 using saved signing key; valid certificate matches v13, original logo assets packaged, 35 tests passed. Physical-device checks remain unavailable.
 - [x] Verify owner health saves, separate customer invitation acceptance, QR manual-entry flow, private payments, health history, automatic notification receipt, customer management-write rejection and phone bounds; temporary records removed. All 35 tests pass. Camera/device testing and updated APK not included.
 - [x] Package latest customer login and connection as Android 1.12; Android compilation, signature/version/code 12, original logos, customer features and 28 tests verified. Packaged phone login/signup checked with simulated Android bridge; physical device checks remain unavailable. Certificate differs from v11; reinstall required. Delivered FarmCare_v12.apk.
 - [x] Add explicit customer sign-in, visible animal connection, and shareable owner invitation with assigned animal summary.

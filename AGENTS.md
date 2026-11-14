@@ -14,6 +14,7 @@
 - Scanned-animal billing uses only the owner-scoped farm animals and payments, reuses customer account periods, and reuses the customer payment editor; payment corrections update the original record under owner RLS rather than adding a second receipt.
 - Android packages bundle the local SPA via `build:android`; increment the Android version and compare signing certificates on each delivery because Android requires the same certificate for in-place updates.
 - Android builds must package the original branding assets at their CDN-relative paths because Capacitor's local origin cannot serve hosted asset routes.
+- The shared Brand component displays the official header image with a concise name for login and both account shells; Android icons and favicon derive from the official square app image, preserving its proportions.
 - Signup preserves account names through the existing profile trigger and treats a missing session as pending email confirmation, never as a signed-in account.
 - Excel exports use current-account store data, never shared QR records; reuse the shared exporter for account/customer/animal scopes, reject unowned selections and exclude unassigned receipts from animal exports so they cannot settle animal periods. Verify identity before preparation and use a second save action to preserve browser download activation.
 - Notification and payment popups use the shared accessible dialog so focus, dismissal, scroll locking and phone bounds stay consistent.

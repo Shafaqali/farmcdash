@@ -52,3 +52,11 @@ The signing certificate differs from v11 because the previous key is unavailable
 ## Version 1.13
 
 Rebuilt with the latest app. Delivered as `FarmCare_v13.apk`, version code 13. Signing certificate differs from v12; future builds reuse the saved key. Physical-device testing not done.
+
+## Version 1.14 — Star Goats Farm
+
+Delivered as `Star-Goats-Farm_v14.apk`, version 1.14/code 14. Includes the supplied header logo beside the concise Star Goats Farm name, supplied square app icon, favicon and splash images, plus the latest separate customer/owner views, health histories and in-app customer updates.
+
+The signing certificate matches v13 and the package ID remains unchanged, allowing an in-place update from that version. Open the APK on the phone and choose Update; allow installation from the download source if Android asks. Older differently signed versions may require uninstalling first; cloud records remain.
+
+Verified Android compilation, valid signing, version/package/display name, all three packaged logo assets, 35 existing tests, signed-in web header at phone and desktop widths, and local packaged login/signup logo rendering. Physical-device launch, camera scanning, native sharing, notification delivery and Google sign-in remain unverified; no Google login change was made in this branding update.
