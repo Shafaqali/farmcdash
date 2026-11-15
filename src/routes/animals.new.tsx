@@ -42,7 +42,7 @@ function NewAnimal() {
         const sub = categories.find((c) => c.id === f.subcategoryId);
         const { data, error } = await supabase.from("animals").insert({
           id: "", category_id: catId, subcategory_id: f.subcategoryId || null, breed: f.breed.trim() || sub?.name || "",
-          owner_id: f.ownerId || null, arrival: f.arrival, monthly_charge: Number(f.monthlyCharge) || 0, status: f.status,
+          owner_id: f.ownerId || null, arrival: f.arrival, monthly_charge: f.ownerId ? Number(f.monthlyCharge) || 0 : 0, status: f.status,
           vaccine_due: f.vaccineDue || null, notes: f.notes, sold_date: f.status === "Sold" ? isoToday() : null,
         }).select("id").single();
         if (error) throw error;
@@ -77,8 +77,8 @@ function NewAnimal() {
       </section>
       <section className="card-soft animate-rise space-y-4 p-4" style={{ animationDelay: "80ms" }}>
         <h2 className="text-lg font-semibold">Care</h2>
-        <F label="Arrival date"><input type="date" className={field} value={f.arrival} onChange={set("arrival")} /></F>
-        <F label="Monthly care charge (₹)"><input type="number" inputMode="numeric" className={field} value={f.monthlyCharge} onChange={set("monthlyCharge")} /></F>
+        <F label="Caring started on"><input type="date" required className={field} value={f.arrival} onChange={set("arrival")} /></F>
+        {f.ownerId && <F label="Monthly care charge (₹)"><input type="number" inputMode="numeric" className={field} value={f.monthlyCharge} min="0" onChange={set("monthlyCharge")} /></F>}
         <div className="grid grid-cols-2 gap-3">
           <F label="Status"><select className={field} value={f.status} onChange={set("status")}>{STATUSES.map((s) => <option key={s}>{s}</option>)}</select></F>
           <F label="Weight (kg)"><input type="number" className={field} value={f.weight} onChange={set("weight")} placeholder="Optional" /></F>

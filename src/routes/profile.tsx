@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Plus, LogOut, ChevronRight, PawPrint, Users, IndianRupee, Tags, ScanLine, ShieldCheck, KeyRound, Mail, Loader2, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,9 +50,18 @@ function Profile() {
         ))}
       </ul>
       <AccountSettings />
+      <FarmPhone />
       <button onClick={async () => { await supabase.auth.signOut(); toast("Signed out"); }} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-destructive/30 py-3.5 font-semibold text-destructive"><LogOut className="h-4 w-4" />Sign out</button>
     </div>
   );
+}
+
+function FarmPhone() {
+  const { uid } = useFarm();
+  const [phone, setPhone] = useState("");
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { if (uid) void supabase.from("profiles").select("phone").eq("id", uid).single().then(({ data }) => setPhone(data?.phone ?? "")); }, [uid]);
+  return <form className="space-y-3 border-y py-4" onSubmit={async (e) => { e.preventDefault(); if (!uid) return; setBusy(true); try { const { error } = await supabase.from("profiles").update({ phone: phone.trim() }).eq("id", uid); if (error) throw error; toast.success("Farm phone saved"); } catch (e) { toast.error(e instanceof Error ? e.message : "Could not save phone"); } finally { setBusy(false); } }}><label className="block space-y-2 text-sm">Farm phone<Input type="tel" required pattern="[+0-9 ()-]{7,20}" autoComplete="tel" value={phone} onChange={(e) => setPhone(e.target.value)} /></label><Button disabled={busy}>{busy ? "Saving…" : "Save phone"}</Button></form>;
 }
 
 function AccountSettings() {

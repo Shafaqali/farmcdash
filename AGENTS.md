@@ -26,3 +26,8 @@
 - Append health history through owner-scoped animal_health; database triggers create durable customer notifications for health, weights and vaccines, and customer notification reads recheck the current animal association.
 - Shared animal QR reads use a narrow shared_animal RPC, never bulk animal reads or private financial/health columns; linked customer finance continues through customer_portal.
 - Animals without a customer association are personal farm animals; preserve their growth/health history and exclude them from customer balances.
+
+- Care start uses the existing arrival date throughout billing and registration, avoiding divergent anniversary schedules.
+- Customer portal returns server-computed per-animal period statuses with no receipt amounts or account totals; owner finance stays in the private farm store.
+- Animal deletion uses the ownership-checked atomic delete_owned_animal RPC; health/notifications are removed and receipts retained as unassigned.
+- Owner phone is saved in the owner profile and shared only through the connected customer portal; customer address/email use additive fields.

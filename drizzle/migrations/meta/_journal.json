@@ -50,6 +50,13 @@
       "when": 1794686031854,
       "tag": "0006_validate_health_history_and_portal_role",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794745732452,
+      "tag": "0007_animal_daily_health_contacts_and_safe_delete",
+      "breakpoints": true
     }
   ]
 }

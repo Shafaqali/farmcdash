@@ -33,30 +33,12 @@ function CustomerDetails() {
       <section>
         <PageTitle eyebrow="Customer account" title={customer.name} action={<FarmExport scope={{ kind: "customer", id: customer.id }} />} />
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
-          {customer.village && <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4" />{customer.village}</span>}
+          {(customer.address || customer.village) && <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4" />{(customer.address || customer.village)}</span>}
           {customer.phone && <a href={`tel:${customer.phone}`} className="flex items-center gap-1.5 text-primary"><Phone className="h-4 w-4" />{customer.phone}</a>}
         </div>
       </section>
+      {customer.email && <p className="break-all text-sm text-muted-foreground">{customer.email}</p>}
       <CustomerAccess customerId={customer.id} />
-      <section className="border-y py-4" aria-label="Account balance">
-        <p className="text-sm text-muted-foreground">{account.balance < 0 ? "Credit balance" : "Outstanding balance"}</p>
-        <p className={`mt-1 break-words text-3xl font-semibold ${account.balance > 0 ? "text-destructive" : "text-primary"}`}>{inr(Math.abs(account.balance))}</p>
-        {account.balance === 0 && account.entries.every((entry) => entry.remaining === 0) && <p className="mt-1 text-sm text-primary">Settled</p>}
-        {account.entries.some((entry) => entry.remaining > 0) && <p className="mt-2 text-sm text-destructive">Unpaid care periods: {inr(account.entries.reduce((sum, entry) => sum + entry.remaining, 0))}</p>}
-        <dl className="mt-4 grid grid-cols-2 gap-4 text-sm">
-          <div><dt className="text-muted-foreground">Total care charges</dt><dd className="mt-1 break-words font-semibold">{inr(account.totalCharges)}</dd></div>
-          <div><dt className="text-muted-foreground">Payments received</dt><dd className="mt-1 break-words font-semibold">{inr(account.totalPaid)}</dd></div>
-        </dl>
-      </section>
-      <section aria-labelledby="next-collection">
-        <h2 id="next-collection" className="mb-3 text-lg font-semibold">Next collection</h2>
-        {!account.collections.length ? <p className="text-sm text-muted-foreground">No upcoming care charges.</p> : <><p className="mb-2 text-sm">Upcoming total <span className="font-semibold">{inr(account.collections.reduce((sum, item) => sum + item.amount, 0))}</span></p><ul className="divide-y">{account.collections.map((item) => <li key={item.animalId} className="flex flex-wrap justify-between gap-2 py-3 text-sm"><span>{item.animalId}<span className="ml-2 text-muted-foreground">{fmtDate(item.date)}</span></span><span className="font-semibold">{item.amount ? inr(item.amount) : "Paid in advance"}</span></li>)}</ul></>}
-      </section>
-      <section aria-labelledby="monthly-received">
-        <h2 id="monthly-received" className="mb-3 text-lg font-semibold">Monthly received</h2>
-        {!account.monthly.length ? <p className="text-sm text-muted-foreground">No payments received.</p> : <ul className="divide-y">{account.monthly.map(([month, amount]) => <li key={month} className="flex justify-between gap-3 py-3 text-sm"><span>{new Intl.DateTimeFormat("en-IN", { month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(`${month}-01T00:00:00Z`))}</span><span className="font-semibold text-primary">{inr(amount)}</span></li>)}</ul>}
-        {account.unassignedPaid > 0 && <p className="mt-3 text-sm text-muted-foreground">Unassigned received: {inr(account.unassignedPaid)} · Included in the customer balance; not marked against an animal.</p>}
-      </section>
       <CustomerPayments key={customer.id} customerId={customer.id} />
       <section aria-labelledby="customer-animals">
         <h2 id="customer-animals" className="mb-3 text-lg font-semibold">Animals <span className="text-sm text-muted-foreground">({account.entries.length})</span></h2>

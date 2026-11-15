@@ -42,10 +42,10 @@ describe("Customer financial access", () => {
     await waitFor(() => expect(mocks.rpc).toHaveBeenCalled());
     expect(screen.queryByRole("region", { name: "Customer care payments" })).toBeNull();
   });
-  it("shows linked animal payment balance without any payment editor", async () => {
-    mocks.rpc.mockResolvedValue({ data: { animals: [animal], customers: [{ id: "linked-customer", name: "Customer", phone: "", village: "" }], payments: [{ id: "receipt", customerId: "linked-customer", animalId: "U01-G0001", periodStart: "2026-11-01", date: "2026-11-01", amount: 400 }] }, error: null });
+  it("uses server animal-period statuses without exposing receipt amounts", async () => {
+    mocks.rpc.mockResolvedValue({ data: { animals: [animal], customers: [{ id: "linked-customer", name: "Customer", phone: "", village: "" }], payments: [], paymentStatuses: [{ animalId: "U01-G0001", periodStart: "2026-11-01", status: "Payment due" }] }, error: null });
     render(<CustomerAnimalPayments animalId="U01-G0001" />);
-    expect(await screen.findByText("₹600 due")).toBeTruthy();
+    expect(await screen.findByText("Payment due")).toBeTruthy();
     expect(screen.queryAllByRole("button")).toHaveLength(0);
   });
 });

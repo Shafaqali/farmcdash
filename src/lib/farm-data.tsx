@@ -18,7 +18,7 @@ export type Animal = {
   weights: { id: string; date: string; kg: number }[];
   vaccinations: Vaccination[];
 };
-export type Customer = { id: string; name: string; phone: string; village: string };
+export type Customer = { id: string; name: string; phone: string; village: string; address?: string; email?: string; farmName?: string; farmPhone?: string };
 export type Payment = { id: string; customerId: string; amount: number; date: string; animalId?: string | null; periodStart?: string | null };
 
 const DAY = 86400000;
@@ -65,7 +65,7 @@ async function fetchAll(uid: string): Promise<Data> {
     id: x.id, userId: x.user_id, categoryId: x.category_id, subcategoryId: x.subcategory_id,
     species: catName(x.category_id), sub: catName(x.subcategory_id), breed: x.breed,
     ownerId: x.owner_id ?? "", status: x.status as Status, arrival: x.arrival,
-    monthlyCharge: Number(x.monthly_charge), notes: x.notes,
+    monthlyCharge: x.owner_id ? Number(x.monthly_charge) : 0, notes: x.notes,
     photoPath: x.photo_url, photoUrl: x.photo_url ? urls.get(x.photo_url) ?? null : null,
     vaccineDue: x.vaccine_due ?? "", soldDate: x.sold_date, soldPrice: x.sold_price == null ? null : Number(x.sold_price),
     weights: (w.data ?? []).filter((y) => y.animal_id === x.id).map((y) => ({ id: y.id, date: y.date, kg: Number(y.kg) })),
@@ -73,7 +73,7 @@ async function fetchAll(uid: string): Promise<Data> {
   }));
   return {
     animals: animals.filter((x) => x.userId === uid), allAnimals: animals, categories,
-    customers: (c.data ?? []).map((x) => ({ id: x.id, name: x.name, phone: x.phone, village: x.village })),
+    customers: (c.data ?? []).map((x) => ({ id: x.id, name: x.name, phone: x.phone, village: x.village, address: x.address, email: x.email })),
     payments: (p.data ?? []).map((x) => ({ id: x.id, customerId: x.customer_id, amount: Number(x.amount), date: x.date, animalId: x.animal_id, periodStart: x.period_start })),
   };
 }
@@ -129,7 +129,7 @@ export function FarmProvider({ children }: { children: ReactNode }) {
   };
   const addCustomer: Store["addCustomer"] = async (c) => {
     if (!isAdmin) throw new Error("Only farm owners can manage customers");
-    const { error } = await supabase.from("customers").insert({ name: c.name, phone: c.phone, village: c.village });
+    const { error } = await supabase.from("customers").insert({ name: c.name, phone: c.phone, address: c.address?.trim() ?? "", email: c.email?.trim().toLowerCase() ?? "" });
     if (error) throw error;
     await reload();
   };
@@ -161,7 +161,8 @@ export const DAY_MS = DAY;
 export const isoToday = () => new Date().toISOString().slice(0, 10);
 export const inr = (v: number) => { const n = String(Math.abs(Math.round(v))); const last = n.slice(-3), rest = n.slice(0, -3); return (v < 0 ? "-₹" : "₹") + (rest ? rest.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + "," : "") + last; };
 /** One monthly care charge is due on arrival and each calendar anniversary. */
-export function chargesFor(a: Pick<Animal, "arrival" | "monthlyCharge"> & { soldDate?: string | null }, from = 0, to = TODAY) {
+export function chargesFor(a: Pick<Animal, "arrival" | "monthlyCharge"> & { soldDate?: string | null; ownerId?: string }, from = 0, to = TODAY) {
+  if (a.ownerId === "") return 0;
   return carePeriods(a, new Date(to).toISOString().slice(0, 10))
     .filter((date) => Date.parse(date) >= from).length * a.monthlyCharge;
 }

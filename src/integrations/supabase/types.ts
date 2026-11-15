@@ -21,9 +21,11 @@ export type Database = {
           date: string
           details: string
           id: string
+          illness_started: string | null
           medicine: string
           recovery: string
           status: string
+          temperature_c: number | null
           treatment: string
           user_id: string
         }
@@ -33,9 +35,11 @@ export type Database = {
           date?: string
           details?: string
           id?: string
+          illness_started?: string | null
           medicine?: string
           recovery?: string
           status?: string
+          temperature_c?: number | null
           treatment?: string
           user_id?: string
         }
@@ -45,9 +49,11 @@ export type Database = {
           date?: string
           details?: string
           id?: string
+          illness_started?: string | null
           medicine?: string
           recovery?: string
           status?: string
+          temperature_c?: number | null
           treatment?: string
           user_id?: string
         }
@@ -289,7 +295,9 @@ export type Database = {
       }
       customers: {
         Row: {
+          address: string
           created_at: string
+          email: string
           id: string
           name: string
           phone: string
@@ -297,7 +305,9 @@ export type Database = {
           village: string
         }
         Insert: {
+          address?: string
           created_at?: string
+          email?: string
           id?: string
           name: string
           phone?: string
@@ -305,7 +315,9 @@ export type Database = {
           village?: string
         }
         Update: {
+          address?: string
           created_at?: string
+          email?: string
           id?: string
           name?: string
           phone?: string
@@ -367,18 +379,21 @@ export type Database = {
           created_at: string
           full_name: string
           id: string
+          phone: string
           user_code: string | null
         }
         Insert: {
           created_at?: string
           full_name?: string
           id: string
+          phone?: string
           user_code?: string | null
         }
         Update: {
           created_at?: string
           full_name?: string
           id?: string
+          phone?: string
           user_code?: string | null
         }
         Relationships: []
@@ -487,6 +502,7 @@ export type Database = {
       can_read_animal_care: { Args: { _animal_id: string }; Returns: boolean }
       connect_customer: { Args: { _code: string }; Returns: undefined }
       customer_portal: { Args: never; Returns: Json }
+      delete_owned_animal: { Args: { _animal_id: string }; Returns: undefined }
       invite_customer: {
         Args: { _customer_id: string; _email: string }
         Returns: string

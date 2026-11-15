@@ -34,7 +34,7 @@ export function CustomerAccess({ customerId }: { customerId: string }) {
     finally { setBusy(false); }
   };
   return <Dialog open={open} onOpenChange={(value) => { setOpen(value); setCode(""); setMessage(""); }}>
-    <Button variant="outline" onClick={() => setOpen(true)}><UserRound />Connect customer</Button>
+    <Button variant="outline" onClick={() => { setEmail(customer?.email ?? ""); setOpen(true); }}><UserRound />Connect customer</Button>
     <DialogContent><DialogTitle>Connect {customer?.name ?? "customer"}</DialogTitle><DialogDescription>Only the invited email can accept. Access expires in 7 days until accepted; connected records are read-only.</DialogDescription>
       <div className="border-y py-3"><p className="text-sm font-semibold">Animals assigned to this customer · {assigned.length}</p><ul className="mt-2 space-y-1 text-sm text-muted-foreground">{assigned.map((animal) => <li key={animal.id}>{animal.id} · {animal.species}</li>)}</ul>{!assigned.length && <p className="mt-2 text-sm text-muted-foreground">No animals assigned yet. Select this customer in the animal's Owner field first.</p>}</div>
       <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); void run(); }}>

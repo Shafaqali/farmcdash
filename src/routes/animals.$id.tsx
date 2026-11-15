@@ -75,7 +75,7 @@ function Detail() {
       </section>
       <div className="grid grid-cols-2 gap-3">
         {[
-          { i: CalendarDays, l: "Arrived", v: fmtDate(a.arrival) },
+          { i: CalendarDays, l: "Caring started", v: fmtDate(a.arrival) },
           { i: IndianRupee, l: a.status === "Sold" ? "Sold for" : "Charges so far", v: !mine ? "—" : a.status === "Sold" && a.soldPrice != null ? inr(a.soldPrice) : inr(chargesFor(a)) },
           { i: Scale, l: "Latest weight", v: a.weights.at(-1) ? `${a.weights.at(-1)?.kg} kg` : "—" },
           { i: Syringe, l: overdue ? "Vaccine overdue" : "Next vaccine", v: fmtDate(a.vaccineDue), bad: overdue },
@@ -127,7 +127,7 @@ function AdminPanel({ a }: { a: Animal }) {
   const [kg, setKg] = useState(""); const [wDate, setWDate] = useState(isoToday());
   const [vName, setVName] = useState(""); const [vDate, setVDate] = useState(isoToday()); const [vNext, setVNext] = useState("");
   const [status, setStatus] = useState<Status>(a.status); const [soldDate, setSoldDate] = useState(a.soldDate ?? isoToday()); const [soldPrice, setSoldPrice] = useState(a.soldPrice?.toString() ?? "");
-  const [d, setD] = useState({ categoryId: a.categoryId, subcategoryId: a.subcategoryId ?? "", breed: a.breed, ownerId: a.ownerId, monthlyCharge: String(a.monthlyCharge), notes: a.notes, vaccineDue: a.vaccineDue });
+  const [d, setD] = useState({ categoryId: a.categoryId, subcategoryId: a.subcategoryId ?? "", breed: a.breed, ownerId: a.ownerId, monthlyCharge: String(a.monthlyCharge), arrival: a.arrival, notes: a.notes, vaccineDue: a.vaccineDue });
 
   const run = async (fn: () => Promise<unknown>, msg: string, propagate = false) => {
     setBusy(true);
@@ -169,7 +169,7 @@ function AdminPanel({ a }: { a: Animal }) {
         {btn}
       </form>}
 
-      {tab === "Details" && <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); void run(async () => chk(await supabase.from("animals").update({ category_id: d.categoryId, subcategory_id: d.subcategoryId || null, breed: d.breed, owner_id: d.ownerId || null, monthly_charge: Number(d.monthlyCharge) || 0, notes: d.notes, vaccine_due: d.vaccineDue || null }).eq("id", a.id)), "Details saved"); }}>
+      {tab === "Details" && <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); void run(async () => chk(await supabase.from("animals").update({ category_id: d.categoryId, subcategory_id: d.subcategoryId || null, breed: d.breed, owner_id: d.ownerId || null, arrival: d.arrival, monthly_charge: d.ownerId ? Number(d.monthlyCharge) || 0 : 0, notes: d.notes, vaccine_due: d.vaccineDue || null }).eq("id", a.id)), "Details saved"); }}>
         <div className="grid grid-cols-2 gap-3">
           <F label="Category"><select className={field} value={d.categoryId} onChange={(e) => setD({ ...d, categoryId: e.target.value, subcategoryId: "" })}>{tops.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></F>
           <F label="Sub-category"><select className={field} value={d.subcategoryId} onChange={(e) => setD({ ...d, subcategoryId: e.target.value })}><option value="">—</option>{subs.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></F>
@@ -177,12 +177,13 @@ function AdminPanel({ a }: { a: Animal }) {
         <F label="Breed / details"><input className={field} value={d.breed} onChange={(e) => setD({ ...d, breed: e.target.value })} /></F>
         <F label="Owner"><select className={field} value={d.ownerId} onChange={(e) => setD({ ...d, ownerId: e.target.value })}><option value="">Personal farm animal</option>{customers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></F>
         <div className="grid grid-cols-2 gap-3">
-          <F label="Monthly charge (₹)"><input type="number" className={field} value={d.monthlyCharge} onChange={(e) => setD({ ...d, monthlyCharge: e.target.value })} /></F>
+          {d.ownerId && <F label="Monthly charge (₹)"><input type="number" className={field} value={d.monthlyCharge} onChange={(e) => setD({ ...d, monthlyCharge: e.target.value })} /></F>}
           <F label="Next vaccine"><input type="date" className={field} value={d.vaccineDue} onChange={(e) => setD({ ...d, vaccineDue: e.target.value })} /></F>
         </div>
+        <F label="Caring started on"><input type="date" required className={field} value={d.arrival} onChange={(e) => setD({ ...d, arrival: e.target.value })} /></F>
         <F label="Notes"><textarea rows={3} className={field} value={d.notes} onChange={(e) => setD({ ...d, notes: e.target.value })} /></F>
         {btn}
-        <Button type="button" variant="outline" disabled={busy} onClick={() => setDeleting({ title: `Delete ${a.id}?`, action: () => run(async () => { chk(await supabase.from("animals").delete().eq("id", a.id)); await nav({ to: "/animals" }); }, "Animal deleted", true) })} className="w-full border-destructive/30 text-destructive"><Trash2 className="h-4 w-4" />Delete animal</Button>
+        <Button type="button" variant="outline" disabled={busy} onClick={() => setDeleting({ title: `Delete ${a.id}?`, action: () => run(async () => { chk(await supabase.rpc("delete_owned_animal", { _animal_id: a.id })); await nav({ to: "/animals" }); }, "Animal deleted", true) })} className="w-full border-destructive/30 text-destructive"><Trash2 className="h-4 w-4" />Delete animal</Button>
       </form>}
 
       {tab === "Photo" && <label className="flex cursor-pointer flex-col items-center gap-3 rounded-2xl border border-dashed p-6 text-center">

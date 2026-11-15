@@ -1,7 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Animal, Customer, Payment } from "@/lib/farm-data";
 
-export type PortalData = { animals: Animal[]; customers: Customer[]; payments: Payment[] };
+export type PaymentStatus = { animalId: string; periodStart: string; status: "Paid" | "Payment due" };
+export type PortalData = { animals: Animal[]; customers: Customer[]; payments: Payment[]; paymentStatuses?: PaymentStatus[] };
 const invitationKey = "farmcare-customer-invitation";
 
 export function customerInvitationUrl(base: string, code: string, email: string) {
