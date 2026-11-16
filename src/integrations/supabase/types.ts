@@ -299,6 +299,7 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          login_user_id: string | null
           name: string
           phone: string
           user_id: string
@@ -309,6 +310,7 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          login_user_id?: string | null
           name: string
           phone?: string
           user_id?: string
@@ -319,10 +321,58 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          login_user_id?: string | null
           name?: string
           phone?: string
           user_id?: string
           village?: string
+        }
+        Relationships: []
+      }
+      login_aliases: {
+        Row: {
+          alias: string
+          display_value: string
+          kind: string
+          user_id: string
+        }
+        Insert: {
+          alias: string
+          display_value: string
+          kind: string
+          user_id: string
+        }
+        Update: {
+          alias?: string
+          display_value?: string
+          kind?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "login_aliases_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      login_attempts: {
+        Row: {
+          attempts: number
+          key: string
+          started_at: string
+        }
+        Insert: {
+          attempts?: number
+          key: string
+          started_at?: string
+        }
+        Update: {
+          attempts?: number
+          key?: string
+          started_at?: string
         }
         Relationships: []
       }
@@ -376,6 +426,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          contact_email: string
           created_at: string
           full_name: string
           id: string
@@ -383,6 +434,7 @@ export type Database = {
           user_code: string | null
         }
         Insert: {
+          contact_email?: string
           created_at?: string
           full_name?: string
           id: string
@@ -390,6 +442,7 @@ export type Database = {
           user_code?: string | null
         }
         Update: {
+          contact_email?: string
           created_at?: string
           full_name?: string
           id?: string
@@ -508,9 +561,30 @@ export type Database = {
         Returns: string
       }
       is_farm_owner: { Args: never; Returns: boolean }
+      limit_login_attempt: {
+        Args: { _key: string; _limit: number }
+        Returns: boolean
+      }
       owns_animal: { Args: { _animal_id: string }; Returns: boolean }
+      provision_customer_login: {
+        Args: {
+          _address: string
+          _customer: string
+          _email: string
+          _login: string
+          _name: string
+          _owner: string
+          _phone: string
+          _viewer: string
+        }
+        Returns: string
+      }
       revoke_customer_access: {
         Args: { _customer_id: string }
+        Returns: undefined
+      }
+      save_login_profile: {
+        Args: { _email: string; _login: string; _name: string; _phone: string }
         Returns: undefined
       }
       shared_animal: { Args: { _animal_id: string }; Returns: Json }

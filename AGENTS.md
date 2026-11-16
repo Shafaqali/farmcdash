@@ -20,9 +20,9 @@
 - Notification and payment popups use the shared accessible dialog so focus, dismissal, scroll locking and phone bounds stay consistent.
 - Delete prompts reuse DeleteConfirmation over the shared dialog, with initial cancel focus and a pending state, to prevent accidental repeated deletion on phones.
 - Native farm reminders are serialized, cleared for empty data and signed-out/customer sessions, and only farm reminders are removed; failed syncs remain retryable.
-- Customer viewing uses separate read-only portal RPCs and an email-bound, hashed, expiring one-use invitation; owner payment RLS and editing remain unchanged. Never derive customer finance from shared QR records; the customer portal RPC scopes every query to its protected owner/customer access mapping.
+- Customer viewing uses read-only portal RPCs and owner-provisioned login accounts linked through customer_access; owner payment RLS remains unchanged. Never derive customer finance from shared QR records.
 - Account authorization comes from protected user_roles, never login selection or client storage; new account type is fixed by the signup trigger, and existing record owners retain owner access. Customer shells allow only portal, scan and read-only animal detail views.
-- Invitation links carry their one-use code in a fragment retained in tab storage until explicitly accepted; customer connection never changes account role.
+- Account credential actions use an authenticated, ownership-checked public HTTP handler for both the website and Capacitor local origin; private normalized aliases never expose email resolution, and passwords remain in Cloud Auth only.
 - Append health history through owner-scoped animal_health; database triggers create durable customer notifications for health, weights and vaccines, and customer notification reads recheck the current animal association.
 - Shared animal QR reads use a narrow shared_animal RPC, never bulk animal reads or private financial/health columns; linked customer finance continues through customer_portal.
 - Animals without a customer association are personal farm animals; preserve their growth/health history and exclude them from customer balances.

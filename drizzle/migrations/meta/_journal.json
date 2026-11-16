@@ -57,6 +57,13 @@
       "when": 1794745732452,
       "tag": "0007_animal_daily_health_contacts_and_safe_delete",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794790407400,
+      "tag": "0008_direct_customer_login",
+      "breakpoints": true
     }
   ]
 }
