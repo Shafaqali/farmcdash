@@ -60,3 +60,9 @@ Delivered as `Star-Goats-Farm_v14.apk`, version 1.14/code 14. Includes the suppl
 The signing certificate matches v13 and the package ID remains unchanged, allowing an in-place update from that version. Open the APK on the phone and choose Update; allow installation from the download source if Android asks. Older differently signed versions may require uninstalling first; cloud records remain.
 
 Verified Android compilation, valid signing, version/package/display name, all three packaged logo assets, 35 existing tests, signed-in web header at phone and desktop widths, and local packaged login/signup logo rendering. Physical-device launch, camera scanning, native sharing, notification delivery and Google sign-in remain unverified; no Google login change was made in this branding update.
+
+## Version 1.15 — Caring and health update
+
+Delivered as `Star-Goats-Farm_v15.apk`, version 1.15/code 15. Caring start uses the registration date for monthly care anniversaries. Personal animals have zero care charges. Daily health entries include temperature, illness-start date, medicines, treatment and recovery. Customers see per-animal care-period payment status without balances or receipt amounts. Customer entry includes address, phone and email; owners can save their farm phone in Profile for connected customer calls. Animal deletion removes dependent health/notification records atomically while preserving receipts as unassigned.
+
+Signing matches v14; open the downloaded APK and choose Update. Verified compilation, certificate, package/version, packaged logos, 41 tests, signed-in registration, health persistence, health-linked deletion, customer contact persistence and phone dialog bounds. Separate customer-session end-to-end checks and physical Android launch/calls/notifications remain unverified. Google login unchanged.
