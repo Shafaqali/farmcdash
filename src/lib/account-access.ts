@@ -1,7 +1,7 @@
 export type AccountRole = "owner" | "customer";
 
 export function customerRouteAllowed(path: string) {
-  return path === "/my-animals" || path === "/scan" || /^\/animals\/(?!new(?:\/|$))[^/]+\/?$/.test(path);
+  return path === "/my-animals" || path === "/settings" || path === "/scan" || /^\/animals\/(?!new(?:\/|$))[^/]+\/?$/.test(path);
 }
 
 export function canManageAnimal(role: AccountRole | null, uid: string | null, registeredBy: string) {

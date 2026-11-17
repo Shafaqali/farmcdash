@@ -16,9 +16,11 @@ import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as MyAnimalsRouteImport } from './routes/my-animals'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ScanRouteImport } from './routes/scan'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as AnimalsIdRouteImport } from './routes/animals.$id'
 import { Route as AnimalsNewRouteImport } from './routes/animals.new'
 import { Route as CustomersIdRouteImport } from './routes/customers.$id'
+import { Route as ApiPublicAccountsRouteImport } from './routes/api/public/accounts'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -55,6 +57,11 @@ const ScanRoute = ScanRouteImport.update({
   path: '/scan',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AnimalsIdRoute = AnimalsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -70,6 +77,11 @@ const CustomersIdRoute = CustomersIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => CustomersRoute,
 } as any)
+const ApiPublicAccountsRoute = ApiPublicAccountsRouteImport.update({
+  id: '/api/public/accounts',
+  path: '/api/public/accounts',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -79,9 +91,11 @@ export interface FileRoutesByFullPath {
   '/my-animals': typeof MyAnimalsRoute
   '/profile': typeof ProfileRoute
   '/scan': typeof ScanRoute
+  '/settings': typeof SettingsRoute
   '/animals/$id': typeof AnimalsIdRoute
   '/animals/new': typeof AnimalsNewRoute
   '/customers/$id': typeof CustomersIdRoute
+  '/api/public/accounts': typeof ApiPublicAccountsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -91,9 +105,11 @@ export interface FileRoutesByTo {
   '/my-animals': typeof MyAnimalsRoute
   '/profile': typeof ProfileRoute
   '/scan': typeof ScanRoute
+  '/settings': typeof SettingsRoute
   '/animals/$id': typeof AnimalsIdRoute
   '/animals/new': typeof AnimalsNewRoute
   '/customers/$id': typeof CustomersIdRoute
+  '/api/public/accounts': typeof ApiPublicAccountsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -104,9 +120,11 @@ export interface FileRoutesById {
   '/my-animals': typeof MyAnimalsRoute
   '/profile': typeof ProfileRoute
   '/scan': typeof ScanRoute
+  '/settings': typeof SettingsRoute
   '/animals/$id': typeof AnimalsIdRoute
   '/animals/new': typeof AnimalsNewRoute
   '/customers/$id': typeof CustomersIdRoute
+  '/api/public/accounts': typeof ApiPublicAccountsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -118,9 +136,11 @@ export interface FileRouteTypes {
     | '/my-animals'
     | '/profile'
     | '/scan'
+    | '/settings'
     | '/animals/$id'
     | '/animals/new'
     | '/customers/$id'
+    | '/api/public/accounts'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -130,9 +150,11 @@ export interface FileRouteTypes {
     | '/my-animals'
     | '/profile'
     | '/scan'
+    | '/settings'
     | '/animals/$id'
     | '/animals/new'
     | '/customers/$id'
+    | '/api/public/accounts'
   id:
     | '__root__'
     | '/'
@@ -142,9 +164,11 @@ export interface FileRouteTypes {
     | '/my-animals'
     | '/profile'
     | '/scan'
+    | '/settings'
     | '/animals/$id'
     | '/animals/new'
     | '/customers/$id'
+    | '/api/public/accounts'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -155,6 +179,8 @@ export interface RootRouteChildren {
   MyAnimalsRoute: typeof MyAnimalsRoute
   ProfileRoute: typeof ProfileRoute
   ScanRoute: typeof ScanRoute
+  SettingsRoute: typeof SettingsRoute
+  ApiPublicAccountsRoute: typeof ApiPublicAccountsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -208,6 +234,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ScanRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/animals/$id': {
       id: '/animals/$id'
       path: '/$id'
@@ -228,6 +261,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/customers/$id'
       preLoaderRoute: typeof CustomersIdRouteImport
       parentRoute: typeof CustomersRoute
+    }
+    '/api/public/accounts': {
+      id: '/api/public/accounts'
+      path: '/api/public/accounts'
+      fullPath: '/api/public/accounts'
+      preLoaderRoute: typeof ApiPublicAccountsRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -265,6 +305,8 @@ const rootRouteChildren: RootRouteChildren = {
   MyAnimalsRoute: MyAnimalsRoute,
   ProfileRoute: ProfileRoute,
   ScanRoute: ScanRoute,
+  SettingsRoute: SettingsRoute,
+  ApiPublicAccountsRoute: ApiPublicAccountsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

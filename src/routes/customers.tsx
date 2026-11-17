@@ -8,6 +8,7 @@ import { PageTitle } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { createCustomerLogin } from "@/lib/account-login";
 
 export const Route = createFileRoute("/customers")({
   head: () => ({ meta: [
@@ -27,9 +28,9 @@ function CustomersLayout() {
 }
 
 function Customers() {
-  const { customers, animals, payments, addPayment, addCustomer, isAdmin } = useFarm();
+  const { customers, animals, isAdmin, reload } = useFarm();
   const [adding, setAdding] = useState(false);
-  const [nc, setNc] = useState({ name: "", phone: "", village: "", address: "", email: "" });
+  const [nc, setNc] = useState({ name: "", phone: "", address: "", email: "", loginId: "", password: "" });
   const [q, setQ] = useState("");
   const [saving, setSaving] = useState(false);
   const visible = customers.filter((c) => `${c.name} ${c.phone} ${c.address} ${c.email}`.toLowerCase().includes(q.toLowerCase()));
@@ -39,11 +40,13 @@ function Customers() {
         action={<Button onClick={() => setAdding(true)} className="shrink-0"><Plus />Add</Button>} />
       <div className="relative mb-4"><Search className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" /><Input aria-label="Search customers" placeholder="Search name, phone, email or address" className="h-11 bg-card pl-10" value={q} onChange={(e) => setQ(e.target.value)} /></div>
       <Dialog open={adding} onOpenChange={setAdding}><DialogContent><DialogTitle>Add customer</DialogTitle><DialogDescription>Customer contact details</DialogDescription>
-        <form className="space-y-4" onSubmit={async (e) => { e.preventDefault(); if (!nc.name.trim()) { toast.error("Enter name"); return; } setSaving(true); try { await addCustomer({ name: nc.name.trim(), phone: nc.phone.trim(), village: "", address: nc.address.trim(), email: nc.email.trim() }); toast.success("Customer added"); setNc({ name: "", phone: "", village: "", address: "", email: "" }); setAdding(false); } catch (er) { toast.error(er instanceof Error ? er.message : "Unable to save customer"); } finally { setSaving(false); } }}>
+        <form className="space-y-4" onSubmit={async (e) => { e.preventDefault(); if (saving) return; setSaving(true); try { await createCustomerLogin(nc); await reload(); toast.success("Customer and login created"); setNc({ name: "", phone: "", address: "", email: "", loginId: "", password: "" }); setAdding(false); } catch (er) { toast.error(er instanceof Error ? er.message : "Unable to save customer"); } finally { setSaving(false); } }}>
           <label className="block space-y-2 text-sm">Name<Input required value={nc.name} onChange={(e) => setNc({ ...nc, name: e.target.value })} /></label>
           <label className="block space-y-2 text-sm">Phone<Input type="tel" required pattern="[+0-9 ()-]{7,20}" autoComplete="tel" value={nc.phone} onChange={(e) => setNc({ ...nc, phone: e.target.value })} /></label>
           <label className="block space-y-2 text-sm">Email<Input type="email" required autoComplete="email" value={nc.email} onChange={(e) => setNc({ ...nc, email: e.target.value })} /></label>
           <label className="block space-y-2 text-sm">Address<Input required autoComplete="street-address" value={nc.address} onChange={(e) => setNc({ ...nc, address: e.target.value })} /></label>
+          <label className="block space-y-2 text-sm">Login ID<Input required minLength={3} maxLength={32} pattern="[A-Za-z][A-Za-z0-9._-]{2,31}" autoComplete="off" autoCapitalize="none" value={nc.loginId} onChange={(e) => setNc({ ...nc, loginId: e.target.value })} /></label>
+          <label className="block space-y-2 text-sm">Password<Input required type="password" minLength={8} maxLength={128} autoComplete="new-password" value={nc.password} onChange={(e) => setNc({ ...nc, password: e.target.value })} /></label>
           <Button disabled={saving} className="w-full">{saving ? "Saving…" : "Save customer"}</Button>
         </form>
       </DialogContent></Dialog>

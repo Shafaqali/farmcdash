@@ -568,13 +568,13 @@ export type Database = {
       owns_animal: { Args: { _animal_id: string }; Returns: boolean }
       provision_customer_login: {
         Args: {
-          _address: string
-          _customer: string
-          _email: string
-          _login: string
-          _name: string
+          _address?: string
+          _customer?: string
+          _email?: string
+          _login?: string
+          _name?: string
           _owner: string
-          _phone: string
+          _phone?: string
           _viewer: string
         }
         Returns: string

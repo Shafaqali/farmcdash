@@ -142,7 +142,7 @@ function AuthGate() {
   const path = useLocation({ select: (l) => l.pathname });
   const { session, authReady, role, roleReady, roleError } = useFarm();
   if (!authReady) return <div className="grid min-h-screen place-items-center text-muted-foreground">Loading…</div>;
-  if (!session) return <LoginScreen key={path === "/my-animals" ? "customer" : "farmer"} customer={path === "/my-animals"} />;
+  if (!session) return <LoginScreen />;
   if (!roleReady) return <div className="grid min-h-screen place-items-center text-muted-foreground">Loading account…</div>;
   if (roleError || !role) return <div role="alert" className="p-8 text-center text-destructive">{roleError || "Account permissions unavailable"}</div>;
   if (role === "customer") {

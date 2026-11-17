@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("@tanstack/react-router", () => ({ Link: ({ children }: { children: React.ReactNode }) => <span>{children}</span> }));
 
 const auth = vi.hoisted(() => ({ signUp: vi.fn(), signInWithPassword: vi.fn(), resend: vi.fn(), oauth: vi.fn() }));
+vi.mock("@/lib/account-login", () => ({ signInIdentifier: auth.signInWithPassword }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { auth } }));
 vi.mock("@/integrations/lovable/index", () => ({ lovable: { auth: { signInWithOAuth: auth.oauth } } }));
 vi.mock("@/lib/native", () => ({ isNativeApp: () => true, authRedirectUrl: () => "https://farmcdash.lovable.app" }));
@@ -33,31 +34,16 @@ describe("FarmCare account access", () => {
     expect(auth.signUp).not.toHaveBeenCalled();
   });
   it("signs in with email and password and allows retry after rejection", async () => {
-    auth.signInWithPassword.mockResolvedValueOnce({ error: new Error("Invalid login credentials") }).mockResolvedValueOnce({ error: null });
+    auth.signInWithPassword.mockRejectedValueOnce(new Error("Invalid login credentials")).mockResolvedValueOnce(undefined);
     render(<LoginScreen />);
-    fireEvent.change(screen.getByLabelText("Email address"), { target: { value: "shafaq@example.com" } });
+    fireEvent.change(screen.getByLabelText("Phone, email or login ID"), { target: { value: "shafaq@example.com" } });
     fireEvent.change(screen.getByLabelText("Password", { exact: true }), { target: { value: "FarmCare-test-123" } });
-    fireEvent.click(screen.getByRole("button", { name: "Sign in to STAR GOATS FARM" }));
-    await waitFor(() => expect(screen.getByRole("button", { name: "Sign in to STAR GOATS FARM" })).not.toBeDisabled());
-    fireEvent.click(screen.getByRole("button", { name: "Sign in to STAR GOATS FARM" }));
+    const submit = screen.getAllByRole("button", { name: /^Sign in$/ }).find(el => el.getAttribute("type") === "submit");
+    if (!submit) throw new Error("Submit missing");
+    fireEvent.click(submit);
+    await waitFor(() => expect(submit).not.toBeDisabled());
+    fireEvent.click(submit);
     await waitFor(() => expect(auth.signInWithPassword).toHaveBeenCalledTimes(2));
-    expect(auth.signInWithPassword).toHaveBeenLastCalledWith({ email: "shafaq@example.com", password: "FarmCare-test-123" });
-  });
-  it("uses the invited customer's email for customer login without auto-connecting", async () => {
-    window.history.replaceState(null, "", `/my-animals#code=${"a".repeat(64)}&email=customer%40example.com`);
-    auth.signInWithPassword.mockResolvedValue({ error: null });
-    render(<LoginScreen customer />);
-    expect(screen.getByLabelText("Email address")).toHaveValue("customer@example.com");
-    fireEvent.change(screen.getByLabelText("Password", { exact: true }), { target: { value: "Customer-test-123" } });
-    fireEvent.click(screen.getByRole("button", { name: "Sign in to my animals" }));
-    await waitFor(() => expect(auth.signInWithPassword).toHaveBeenCalledWith({ email: "customer@example.com", password: "Customer-test-123" }));
-    window.sessionStorage.clear();
-    window.history.replaceState(null, "", "/");
-  });
-  it("creates customer accounts with the customer signup type", async () => {
-    auth.signUp.mockResolvedValue({ data: { session: null }, error: null });
-    render(<LoginScreen customer />); fillSignup();
-    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
-    await waitFor(() => expect(auth.signUp).toHaveBeenCalledWith(expect.objectContaining({ options: expect.objectContaining({ data: { full_name: "Shafaq Ali", account_type: "customer" } }) })));
+    expect(auth.signInWithPassword).toHaveBeenLastCalledWith("shafaq@example.com", "FarmCare-test-123");
   });
 });

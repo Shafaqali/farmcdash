@@ -1,17 +1,16 @@
 import { useEffect, useState } from "react";
 import { ArrowRight, CheckCircle2, Eye, EyeOff, Loader2, LockKeyhole, Mail, UserRound } from "lucide-react";
 import { Brand } from "./Brand";
-import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { isNativeApp, authRedirectUrl } from "@/lib/native";
-import { pendingCustomerInvitation } from "@/lib/customer-portal";
+import { signInIdentifier } from "@/lib/account-login";
 
 const field = "h-12 bg-card pl-11 pr-4 shadow-none";
 
-export function LoginScreen({ customer = false }: { customer?: boolean }) {
+export function LoginScreen() {
   const [mode, setMode] = useState<"in" | "up">("in");
   const [email, setEmail] = useState("");
   const [pw, setPw] = useState("");
@@ -22,12 +21,6 @@ export function LoginScreen({ customer = false }: { customer?: boolean }) {
   const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
   const [resendWait, setResendWait] = useState(0);
-  useEffect(() => {
-    if (customer) {
-      const invitation = pendingCustomerInvitation();
-      if (invitation?.email) setEmail(invitation.email);
-    }
-  }, [customer]);
   useEffect(() => {
     if (resendWait <= 0) return;
     const timer = window.setTimeout(() => setResendWait((seconds) => seconds - 1), 1000);
@@ -46,10 +39,9 @@ export function LoginScreen({ customer = false }: { customer?: boolean }) {
     setBusy(true);
     try {
       if (mode === "in") {
-        const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password: pw });
-        if (error) throw error;
+        await signInIdentifier(email.trim(), pw);
       } else {
-        const { data, error } = await supabase.auth.signUp({ email: email.trim(), password: pw, options: { emailRedirectTo: authRedirectUrl(), data: { full_name: name.trim(), account_type: customer ? "customer" : "owner" } } });
+        const { data, error } = await supabase.auth.signUp({ email: email.trim(), password: pw, options: { emailRedirectTo: authRedirectUrl(), data: { full_name: name.trim(), account_type: "owner" } } });
         if (error) throw error;
         if (!data.session) { setConfirmation(true); setResendWait(60); setPw(""); setConfirmPassword(""); }
       }
@@ -61,7 +53,7 @@ export function LoginScreen({ customer = false }: { customer?: boolean }) {
   const google = async () => {
     setBusy(true); setError("");
     try {
-      const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: customer ? `${window.location.origin}/my-animals` : window.location.origin });
+      const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
       if (r.error) throw r.error;
     } catch (err) { setError(err instanceof Error ? err.message : "Google sign-in failed. Please try again."); }
     finally { setBusy(false); }
@@ -82,13 +74,8 @@ export function LoginScreen({ customer = false }: { customer?: boolean }) {
       <main className="flex min-h-svh flex-col justify-center px-6 py-8 sm:px-10">
         <div className="mx-auto w-full max-w-sm">
         <Brand large />
-        <nav aria-label="Login account type" className="mt-6 grid grid-cols-2 gap-1 rounded-lg border p-1">
-          <Button asChild variant={customer ? "ghost" : "default"}><Link to="/">Farm owner</Link></Button>
-          <Button asChild variant={customer ? "default" : "ghost"}><Link to="/my-animals">Customer</Link></Button>
-        </nav>
         <div className="mx-auto w-full max-w-sm py-6 lg:py-8">
-          <h1 className="text-center text-2xl font-semibold">{confirmation ? "Check your email" : customer ? (mode === "in" ? "Customer login" : "Create customer account") : mode === "in" ? "Welcome back" : "Create your account"}</h1>
-          <p className="mt-2 text-center text-sm text-muted-foreground">{confirmation ? "Confirm your account to get started." : customer ? "Your animal care account" : "Your animals. Your farm. Always connected."}</p>
+          <h1 className="text-center text-2xl font-semibold">{confirmation ? "Check your email" : "Welcome"}</h1>
           {confirmation ? <div className="mt-8 space-y-5">
             <CheckCircle2 className="h-10 w-10 text-primary" />
             <p className="text-sm leading-relaxed">Open the confirmation link sent to <strong className="break-all">{email.trim()}</strong>, then return here and sign in. Check your spam folder too.</p>
@@ -103,11 +90,11 @@ export function LoginScreen({ customer = false }: { customer?: boolean }) {
             </div>
             <form onSubmit={submit} className="mt-6 space-y-5">
               {mode === "up" && <div><label htmlFor="account-name" className="mb-2 block text-sm font-medium">Full name</label><div className="relative"><UserRound className="absolute left-4 top-4 h-4 w-4 text-muted-foreground" /><Input id="account-name" className={field} autoComplete="name" placeholder="Your full name" value={name} onChange={(e) => setName(e.target.value)} required disabled={busy} /></div></div>}
-              <div><label htmlFor="account-email" className="mb-2 block text-sm font-medium">Email address</label><div className="relative"><Mail className="absolute left-4 top-4 h-4 w-4 text-muted-foreground" /><Input id="account-email" className={field} type="email" autoComplete="email" autoCapitalize="none" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={busy} /></div></div>
+              <div><label htmlFor="account-email" className="mb-2 block text-sm font-medium">{mode === "in" ? "Phone, email or login ID" : "Email address"}</label><div className="relative"><Mail className="absolute left-4 top-4 h-4 w-4 text-muted-foreground" /><Input id="account-email" className={field} type={mode === "in" ? "text" : "email"} autoComplete={mode === "in" ? "username" : "email"} autoCapitalize="none" placeholder={mode === "in" ? "Phone, email or login ID" : "you@example.com"} value={email} onChange={(e) => setEmail(e.target.value)} required disabled={busy} /></div></div>
               <div><label htmlFor="account-password" className="mb-2 block text-sm font-medium">Password</label><div className="relative"><LockKeyhole className="absolute left-4 top-4 h-4 w-4 text-muted-foreground" /><Input id="account-password" className={`${field} pr-12`} type={showPassword ? "text" : "password"} autoComplete={mode === "in" ? "current-password" : "new-password"} placeholder={mode === "in" ? "Enter your password" : "Create a password"} minLength={mode === "up" ? 6 : undefined} value={pw} onChange={(e) => setPw(e.target.value)} required disabled={busy} /><Button type="button" variant="ghost" size="icon" className="absolute right-1 top-1.5" aria-label={showPassword ? "Hide password" : "Show password"} title={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff /> : <Eye />}</Button></div></div>
               {mode === "up" && <div><label htmlFor="account-confirm" className="mb-2 block text-sm font-medium">Confirm password</label><div className="relative"><LockKeyhole className="absolute left-4 top-4 h-4 w-4 text-muted-foreground" /><Input id="account-confirm" className={field} type={showPassword ? "text" : "password"} autoComplete="new-password" placeholder="Re-enter your password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required disabled={busy} /></div></div>}
               {error && <p role="alert" className="rounded-md border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">{error}</p>}
-              <Button type="submit" disabled={busy} className="h-12 w-full text-base">{busy ? <Loader2 className="animate-spin" /> : null}{mode === "in" ? (customer ? "Sign in to my animals" : "Sign in to STAR GOATS FARM") : "Create account"}{!busy && <ArrowRight />}</Button>
+              <Button type="submit" disabled={busy} className="h-12 w-full text-base">{busy ? <Loader2 className="animate-spin" /> : null}{mode === "in" ? "Sign in" : "Create account"}{!busy && <ArrowRight />}</Button>
             </form>
             {!native && <div className="mt-6 space-y-5"><div className="flex items-center gap-3 text-xs text-muted-foreground"><span className="h-px flex-1 bg-border" />or<span className="h-px flex-1 bg-border" /></div><Button type="button" variant="outline" className="h-12 w-full bg-card" disabled={busy} onClick={google}>Continue with Google</Button></div>}
           </>}

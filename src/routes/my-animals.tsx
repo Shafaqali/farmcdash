@@ -1,13 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { ScanLine, RefreshCw, LogOut, Link2, PawPrint, CheckCircle2, Phone } from "lucide-react";
+import { RefreshCw, PawPrint, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { supabase } from "@/integrations/supabase/client";
-import { useFarm, fmtDate, inr } from "@/lib/farm-data";
-import { connectCustomer, loadCustomerPortal, pendingCustomerInvitation, type PortalData } from "@/lib/customer-portal";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { customerAccount } from "@/lib/customer-account";
+import { useFarm, fmtDate } from "@/lib/farm-data";
+import { loadCustomerPortal, type PortalData } from "@/lib/customer-portal";
 
 
 export const Route = createFileRoute("/my-animals")({
@@ -15,37 +11,27 @@ export const Route = createFileRoute("/my-animals")({
   component: CustomerPortal,
 });
 export function CustomerPortal() {
-  const { uid, session } = useFarm();
+  const { uid, userName } = useFarm();
   const [data, setData] = useState<PortalData | null>(null);
-  const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [connectOpen, setConnectOpen] = useState(false);
-  const [connected, setConnected] = useState(false);
   const request = useRef(0);
-  const refresh = async (connect = false) => {
+  const refresh = async () => {
     const current = ++request.current;
-    setBusy(true); setError(""); setConnected(false);
-    try { if (connect) { await connectCustomer(code); if (current === request.current) { setCode(""); setConnectOpen(false); setConnected(true); } } const result = await loadCustomerPortal(); if (current === request.current) setData(result); }
+    setBusy(true); setError("");
+    try { const result = await loadCustomerPortal(); if (current === request.current) setData(result); }
     catch (e) { if (current === request.current) setError(e instanceof Error ? e.message : "Unable to load customer records."); }
     finally { if (current === request.current) setBusy(false); }
   };
   useEffect(() => { setData(null); void refresh(); return () => { request.current++; }; }, [uid]);
-  useEffect(() => {
-    const invitation = pendingCustomerInvitation();
-    if (invitation) { setCode(invitation.code); setConnectOpen(true); }
-  }, []);
   return <div className="space-y-4">
     <div className="flex justify-end"><Button variant="ghost" size="icon" title="Refresh records" aria-label="Refresh records" disabled={busy} onClick={() => void refresh()}><RefreshCw /></Button></div>
-    <div className="mt-6 flex flex-wrap items-start justify-between gap-4"><div><p className="text-sm text-muted-foreground">Customer account</p><h1 className="mt-1 text-3xl font-semibold">My animals</h1></div><Button onClick={() => { setError(""); setConnectOpen(true); }}><Link2 />Connect animals</Button></div>
-    <p className="mt-3 break-all text-sm text-muted-foreground">{session?.user.email}</p>
-    {connected && <p role="status" className="mt-4 flex items-center gap-2 text-sm text-primary"><CheckCircle2 className="h-5 w-5" />Your customer account is connected.</p>}
-    {error && !connectOpen && <p role="alert" className="mt-4 text-sm text-destructive">{error}</p>}
+    <div className="mt-6"><h1 className="text-3xl font-semibold">My animals</h1><p className="mt-2 text-sm text-muted-foreground">{userName}</p></div>
+    {error && <p role="alert" className="mt-4 text-sm text-destructive">{error}</p>}
     {busy && <p className="py-6 text-muted-foreground">Loading…</p>}
-    {data && !data.customers.length && <section className="mt-8 border-y py-8 text-center"><PawPrint className="mx-auto mb-4 h-10 w-10 text-muted-foreground" /><h2 className="text-xl font-semibold">No farm connected</h2><Button className="mt-5" variant="outline" onClick={() => setConnectOpen(true)}><Link2 />Connect my animals</Button></section>}
+    {data && !data.animals.length && <section className="mt-8 border-y py-8 text-center"><PawPrint className="mx-auto mb-4 h-10 w-10 text-muted-foreground" /><h2 className="text-xl font-semibold">No animals assigned yet</h2></section>}
     {data?.customers.map((c) => <section key={c.id} className="mt-6 space-y-4 border-b pb-6"><div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-xl font-semibold">{c.name}</h2>{c.farmPhone && <Button asChild variant="outline"><a href={`tel:${c.farmPhone}`}><Phone />Call {c.farmName || "farm owner"}</a></Button>}</div>
       {data.animals.filter((a) => a.ownerId === c.id).map((animal) => { const periods = data.paymentStatuses?.filter((p) => p.animalId === animal.id) ?? []; return <article key={animal.id} className="rounded-lg border bg-card p-4"><Link to="/animals/$id" params={{ id: animal.id }} className="break-all text-lg font-semibold text-primary">{animal.id}</Link><p className="text-sm text-muted-foreground">{animal.species} · {animal.breed} · {animal.status}</p><p className="mt-3 text-sm">Caring started: {fmtDate(animal.arrival)}</p><p className="text-sm">Vaccine due: {fmtDate(animal.vaccineDue)}</p><p className={periods.some((p) => p.status !== "Paid") ? "mt-3 font-medium text-destructive" : "mt-3 font-medium text-primary"}>{periods.some((p) => p.status !== "Paid") ? "Payment due" : "Paid / no payment due"}</p><details className="mt-3"><summary className="cursor-pointer text-sm font-medium">Care months</summary><ul className="divide-y">{periods.slice().reverse().map((p) => <li key={p.periodStart} className="flex flex-wrap justify-between gap-2 py-2 text-sm"><span>{fmtDate(p.periodStart)}</span><span>{p.status}</span></li>)}</ul></details></article>; })}
     </section>)}
-    <Dialog open={connectOpen} onOpenChange={(open) => { if (!busy) { setConnectOpen(open); setError(""); } }}><DialogContent><DialogTitle>Connect my animals</DialogTitle><DialogDescription>Accept your farm's invitation using the same email it was issued to. Only your assigned animals and payments will be linked.</DialogDescription><p className="break-all text-sm">Signed in as <strong>{session?.user.email}</strong></p><form className="space-y-4" onSubmit={(e) => { e.preventDefault(); if (!busy) void refresh(true); }}><label htmlFor="connection-code" className="block text-sm font-medium">Connection code from your farm</label><Input id="connection-code" value={code} onChange={(e) => setCode(e.target.value)} autoComplete="off" autoCapitalize="none" spellCheck={false} required disabled={busy} />{error && <p role="alert" className="text-sm text-destructive">{error}</p>}<Button className="w-full" disabled={busy || !code.trim()}><Link2 />{busy ? "Connecting…" : "Connect my animals"}</Button></form></DialogContent></Dialog>
   </div>;
 }

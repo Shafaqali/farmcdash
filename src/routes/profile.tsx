@@ -50,6 +50,7 @@ function Profile() {
         ))}
       </ul>
       <AccountSettings />
+      <Button asChild variant="outline" className="w-full"><Link to="/settings"><Settings2 />Profile and login ID</Link></Button>
       <FarmPhone />
       <button onClick={async () => { await supabase.auth.signOut(); toast("Signed out"); }} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-destructive/30 py-3.5 font-semibold text-destructive"><LogOut className="h-4 w-4" />Sign out</button>
     </div>

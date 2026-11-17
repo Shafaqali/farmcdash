@@ -18,7 +18,7 @@ export type Animal = {
   weights: { id: string; date: string; kg: number }[];
   vaccinations: Vaccination[];
 };
-export type Customer = { id: string; name: string; phone: string; village: string; address?: string; email?: string; farmName?: string; farmPhone?: string };
+export type Customer = { id: string; name: string; phone: string; village: string; address?: string; email?: string; loginUserId?: string | null; farmName?: string; farmPhone?: string };
 export type Payment = { id: string; customerId: string; amount: number; date: string; animalId?: string | null; periodStart?: string | null };
 
 const DAY = 86400000;
@@ -73,7 +73,7 @@ async function fetchAll(uid: string): Promise<Data> {
   }));
   return {
     animals: animals.filter((x) => x.userId === uid), allAnimals: animals, categories,
-    customers: (c.data ?? []).map((x) => ({ id: x.id, name: x.name, phone: x.phone, village: x.village, address: x.address, email: x.email })),
+    customers: (c.data ?? []).map((x) => ({ id: x.id, name: x.name, phone: x.phone, village: x.village, address: x.address, email: x.email, loginUserId: x.login_user_id })),
     payments: (p.data ?? []).map((x) => ({ id: x.id, customerId: x.customer_id, amount: Number(x.amount), date: x.date, animalId: x.animal_id, periodStart: x.period_start })),
   };
 }
