@@ -1,5 +1,17 @@
 # Build the FarmCare Android APK
 
+## Version 1.16 — Simple customer login
+
+Delivered as `Star-Goats-Farm_v16.apk` with the matching `Star-Goats-Farm_v16-source.zip`. Package ID remains `com.farmcare.app`; signing matches v15, so install the APK over v15 and choose Update.
+
+Includes one Welcome login using phone, email or login ID and password. Owners create customer credentials while adding the customer; assigned animals appear automatically. Customers can change their name, contact details, login ID and password in Settings. Existing permissions and farm records remain unchanged.
+
+**Publish the latest website before using this APK's new login.** The Android screens are local, but credential operations call `https://farmcdash.lovable.app/api/public/accounts`. This endpoint was not published when the APK was prepared; it returned 404. This APK does not publish the website. Customer password changes require the current password; no email-reset flow is provided for internally addressed customer accounts.
+
+The source ZIP excludes private signing keys, login sessions, dependencies, generated builds and repository metadata. Copy `.env.example` to `.env` before building; it contains public browser configuration only. Use Lovable Cloud for server-side credentials—never add private keys to browser configuration. The included database migrations are already applied to the existing backend; do not blindly reapply them there.
+
+Verified: Android compilation, APK signature/version, three packaged official logos and new account controls, 44 tests, and the prior separate owner/customer web flow (creation, animal access, permission restrictions, profile persistence and password login via all three identifiers). Physical-device launch, camera, phone calls and background notifications remain unverified.
+
 Screens are bundled locally inside the APK; no published website URL is required. Sign-in and farm data require internet.
 
 1. On a computer with Android Studio (JDK 17 + Android SDK 34):
