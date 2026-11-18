@@ -63,7 +63,7 @@ export const Route = createFileRoute("/api/public/accounts")({
         // while editable contact aliases never change role or expose an authentication address.
         const { data: created, error: createError } = await supabaseAdmin.auth.admin.createUser({ email: `${crypto.randomUUID()}@customer.farm.local`, password: data.password, email_confirm: true, user_metadata: { full_name: data.name, account_type: "customer" } });
         if (createError || !created.user) return respond({ error: createError?.message || "Could not create login." }, 400);
-        const result = await supabaseAdmin.rpc("provision_customer_login", { _owner: verified.user.id, _viewer: created.user.id, _customer: data.customerId as string, _name: data.name, _phone: data.phone, _email: data.email, _address: data.address, _login: data.loginId });
+        const result = await supabaseAdmin.rpc("provision_customer_login", { _owner: verified.user.id, _viewer: created.user.id, ...(data.customerId ? { _customer: data.customerId } : {}), _name: data.name, _phone: data.phone, _email: data.email, _address: data.address, _login: data.loginId });
         if (result.error) { await supabaseAdmin.auth.admin.deleteUser(created.user.id); return respond({ error: "Could not save customer. Check whether these login details are already used." }, 409); }
         return respond({ customerId: result.data, loginId: data.loginId });
       } catch (error) {
