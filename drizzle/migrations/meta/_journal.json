@@ -78,6 +78,13 @@
       "when": 1795056036460,
       "tag": "0010_owner_customer_delete_and_farm_reset",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1795107932185,
+      "tag": "0011_tighten_category_and_photo_reads",
+      "breakpoints": true
     }
   ]
 }
