@@ -71,6 +71,13 @@
       "when": 1794900188068,
       "tag": "0009_fix_login_signup_order",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795056036460,
+      "tag": "0010_owner_customer_delete_and_farm_reset",
+      "breakpoints": true
     }
   ]
 }

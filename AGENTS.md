@@ -31,3 +31,5 @@
 - Customer portal returns server-computed per-animal period statuses with no receipt amounts or account totals; owner finance stays in the private farm store.
 - Animal deletion uses the ownership-checked atomic delete_owned_animal RPC; health/notifications are removed and receipts retained as unassigned.
 - Owner phone is saved in the owner profile and shared only through the connected customer portal; customer address/email use additive fields.
+- Owner-scoped atomic RPCs delete customers (retain animals as personal) and reset farm data (retain login/categories); reset generations prevent reused QR IDs while restarting animal counters.
+- Dashboard outstanding sums nonnegative lifetime customer balances, showing credit separately; date filters affect activity totals, never net another customer's advance against debt.

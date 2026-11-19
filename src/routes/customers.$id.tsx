@@ -1,5 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, ChevronRight, MapPin, PawPrint, Phone } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { ArrowLeft, ChevronRight, MapPin, PawPrint, Phone, Trash2 } from "lucide-react";
 import { PageTitle } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { customerAccount } from "@/lib/customer-account";
@@ -7,6 +8,9 @@ import { fmtDate, inr, useFarm } from "@/lib/farm-data";
 import { CustomerPayments } from "@/components/CustomerPayments";
 import { FarmExport } from "@/components/FarmExport";
 import { CustomerAccess } from "@/components/CustomerAccess";
+import { DeleteConfirmation } from "@/components/DeleteConfirmation";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/customers/$id")({
   head: () => ({ meta: [
@@ -22,7 +26,9 @@ export const Route = createFileRoute("/customers/$id")({
 
 function CustomerDetails() {
   const { id } = Route.useParams();
-  const { customers, animals, payments, loading } = useFarm();
+  const { customers, animals, payments, loading, reload, isAdmin } = useFarm();
+  const navigate = useNavigate();
+  const [deleting, setDeleting] = useState(false);
   const customer = customers.find((entry) => entry.id === id);
   if (loading && !customer) return <p className="py-10 text-center text-muted-foreground">Loading customer…</p>;
   if (!customer) return <div className="space-y-4 py-8"><h1 className="text-2xl font-semibold">Customer unavailable</h1><p className="text-muted-foreground">This customer isn't in your account.</p><Button asChild variant="outline"><Link to="/customers"><ArrowLeft />Customers</Link></Button></div>;
@@ -39,6 +45,7 @@ function CustomerDetails() {
       </section>
       {customer.email && <p className="break-all text-sm text-muted-foreground">{customer.email}</p>}
       <CustomerAccess customerId={customer.id} />
+      {isAdmin && <><Button variant="outline" className="text-destructive" onClick={() => setDeleting(true)}><Trash2 />Delete customer</Button><DeleteConfirmation open={deleting} onOpenChange={setDeleting} title={`Delete ${customer.name}?`} description="This deletes this customer's payments and farm access. Their animals become personal animals with zero care charges; health and growth histories stay. The customer's login account remains." onConfirm={async () => { const { error } = await supabase.rpc("delete_owned_customer", { _customer_id: customer.id }); if (error) throw new Error(error.message); await reload(); toast.success("Customer deleted; animals kept as personal"); await navigate({ to: "/customers", replace: true }); }} /></>}
       <CustomerPayments key={customer.id} customerId={customer.id} />
       <section aria-labelledby="customer-animals">
         <h2 id="customer-animals" className="mb-3 text-lg font-semibold">Animals <span className="text-sm text-muted-foreground">({account.entries.length})</span></h2>

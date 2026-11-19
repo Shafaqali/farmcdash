@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { PawPrint, Activity, Users, AlertTriangle, CalendarClock, TrendingUp, Wallet, ScanLine, Plus, ArrowUpRight } from "lucide-react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useFarm, inr, chargesFor, TODAY, DAY_MS, fmtLong, monShort } from "@/lib/farm-data";
+import { farmBalance } from "@/lib/farm-balance";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
@@ -23,7 +24,8 @@ const tip = { contentStyle: { borderRadius: 12, border: "1px solid var(--border)
 function Dashboard() {
   const { animals, customers, payments, categories } = useFarm();
   const [p, setP] = useState(1);
-  const from = TODAY - periods[p]!.d * DAY_MS;
+  const from = TODAY - (periods[p]?.d ?? 90) * DAY_MS;
+  const balance = useMemo(() => farmBalance(customers.map(c => c.id), animals, payments), [customers, animals, payments]);
   const m = useMemo(() => {
     const charges = animals.reduce((s, a) => s + chargesFor(a, from), 0);
     const collected = payments.filter((x) => Date.parse(x.date) >= from).reduce((s, x) => s + x.amount, 0);
@@ -51,7 +53,7 @@ function Dashboard() {
         <p className="text-sm opacity-80">{fmtLong(TODAY)}</p>
         <h1 className="mt-1 text-3xl font-semibold">Farm overview</h1>
         <div className="mt-5 grid grid-cols-2 gap-4">
-          <div><p className="text-xs opacity-75">Outstanding</p><p className="font-display text-2xl font-semibold">{inr(m.charges - m.collected)}</p></div>
+          <div><p className="text-xs opacity-75">Outstanding · all time</p><p className="font-display text-2xl font-semibold">{inr(balance.outstanding)}</p>{balance.advance > 0 && <p className="mt-1 text-xs">Advance / credit {inr(balance.advance)}</p>}</div>
           <div><p className="text-xs opacity-75">Collection rate</p><p className="font-display text-2xl font-semibold">{rate}%</p></div>
         </div>
         <div className="mt-3 h-2 overflow-hidden rounded-full bg-primary-foreground/20">

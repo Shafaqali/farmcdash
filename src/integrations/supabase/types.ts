@@ -428,6 +428,7 @@ export type Database = {
         Row: {
           contact_email: string
           created_at: string
+          farm_generation: number
           full_name: string
           id: string
           phone: string
@@ -436,6 +437,7 @@ export type Database = {
         Insert: {
           contact_email?: string
           created_at?: string
+          farm_generation?: number
           full_name?: string
           id: string
           phone?: string
@@ -444,6 +446,7 @@ export type Database = {
         Update: {
           contact_email?: string
           created_at?: string
+          farm_generation?: number
           full_name?: string
           id?: string
           phone?: string
@@ -556,6 +559,10 @@ export type Database = {
       connect_customer: { Args: { _code: string }; Returns: undefined }
       customer_portal: { Args: never; Returns: Json }
       delete_owned_animal: { Args: { _animal_id: string }; Returns: undefined }
+      delete_owned_customer: {
+        Args: { _customer_id: string }
+        Returns: undefined
+      }
       invite_customer: {
         Args: { _customer_id: string; _email: string }
         Returns: string
@@ -579,6 +586,7 @@ export type Database = {
         }
         Returns: string
       }
+      reset_owned_farm: { Args: { _confirmation: string }; Returns: undefined }
       revoke_customer_access: {
         Args: { _customer_id: string }
         Returns: undefined
