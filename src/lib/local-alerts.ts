@@ -30,15 +30,14 @@ export function clearPhoneAlerts() {
 }
 
 /** Schedules phone notifications that fire even when the app is closed (Android only). */
-export function syncPhoneAlerts(vaccines: VaccineItem[], money: MoneyItem[]) {
-  queue = queue.then(() => schedulePhoneAlerts(vaccines, money));
+export function syncPhoneAlerts(vaccines: VaccineItem[], money: MoneyItem[], force = false) {
+  queue = queue.then(() => schedulePhoneAlerts(vaccines, money, force));
   return queue;
 }
 
-async function schedulePhoneAlerts(vaccines: VaccineItem[], money: MoneyItem[]) {
+async function schedulePhoneAlerts(vaccines: VaccineItem[], money: MoneyItem[], force: boolean) {
   if (!Capacitor.isNativePlatform()) return;
-  const sig = JSON.stringify([vaccines, money]);
-  if (sig === lastSig) return;
+  const sig = JSON.stringify([new Date().toDateString(), vaccines, money]);
   try {
     const { LocalNotifications } = await import("@capacitor/local-notifications");
     if (!vaccines.length && !money.length) {
@@ -49,9 +48,12 @@ async function schedulePhoneAlerts(vaccines: VaccineItem[], money: MoneyItem[]) 
     const perm = await LocalNotifications.checkPermissions();
     if (perm.display !== "granted") {
       const r = await LocalNotifications.requestPermissions();
-      if (r.display !== "granted") return;
+      if (r.display !== "granted") { lastSig = ""; return; }
     }
-    await LocalNotifications.createChannel({ id: "farm", name: "Farm alerts", importance: 5, vibration: true }).catch(() => {});
+    // Android can remove alarms when exact-alarm permission is changed. Never
+    // trust a previous JS signature after returning from Settings/background.
+    if (sig === lastSig && !force) return;
+    await LocalNotifications.createChannel({ id: "farm", name: "Farm alerts", importance: 5, vibration: true });
     await clearFarmNotifications();
 
     const now = Date.now();
@@ -61,17 +63,17 @@ async function schedulePhoneAlerts(vaccines: VaccineItem[], money: MoneyItem[]) 
     for (const v of vaccines) {
       const before = at(v.due, 9, -1);
       const day = at(v.due, 9);
-      if (before.getTime() > now) list.push({ id: id++, channelId: "farm", title: "Kal vaccine due hai", body: `${v.id} (${v.species}) ko kal vaccine dena hai`, schedule: { at: before, allowWhileIdle: true } });
-      if (day.getTime() > now) list.push({ id: id++, channelId: "farm", title: "Aaj vaccine dena hai", body: `${v.id} (${v.species}) ka vaccine aaj due hai`, schedule: { at: day, allowWhileIdle: true } });
+      if (before.getTime() > now) list.push({ id: id++, channelId: "farm", title: "Vaccination due tomorrow", body: `${v.id} (${v.species}) needs a vaccination tomorrow`, schedule: { at: before, allowWhileIdle: true } });
+      if (day.getTime() > now) list.push({ id: id++, channelId: "farm", title: "Vaccination due today", body: `${v.id} (${v.species}) needs a vaccination today`, schedule: { at: day, allowWhileIdle: true } });
       else overdue.push(v.id);
       if (id > 1400) break;
     }
     if (overdue.length) {
-      list.push({ id: 1, channelId: "farm", title: "Vaccine baki hai", body: `${overdue.length} animal ka vaccine late hai: ${overdue.slice(0, 5).join(", ")}`, schedule: { on: { hour: 9, minute: 0 }, allowWhileIdle: true } });
+      list.push({ id: 1, channelId: "farm", title: "Overdue vaccinations", body: `${overdue.length} animal(s) have overdue vaccinations: ${overdue.slice(0, 5).join(", ")}`, schedule: { on: { hour: 9, minute: 0 }, allowWhileIdle: true } });
     }
     if (money.length) {
       const total = money.reduce((s, m) => s + m.bal, 0);
-      list.push({ id: 2, channelId: "farm", title: "Paisa baki hai", body: `${money.length} customer ka kul ₹${total.toLocaleString("en-IN")} baki hai — ${money.slice(0, 3).map((m) => m.name).join(", ")}`, schedule: { on: { hour: 10, minute: 0 }, allowWhileIdle: true } });
+      list.push({ id: 2, channelId: "farm", title: "Outstanding payments", body: `${money.length} customer(s) owe a total of ₹${total.toLocaleString("en-IN")} — ${money.slice(0, 3).map((m) => m.name).join(", ")}`, schedule: { on: { hour: 10, minute: 0 }, allowWhileIdle: true } });
     }
     if (list.length) await LocalNotifications.schedule({ notifications: list });
     lastSig = sig;

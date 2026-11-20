@@ -1,11 +1,12 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Bell, BellOff, Syringe, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { syncPhoneAlerts } from "@/lib/local-alerts";
 import { useFarm, inr, chargesFor, TODAY, DAY_MS, fmtDate } from "@/lib/farm-data";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { PhoneReminderControls } from "@/components/PhoneReminderControls";
 
 type Alert = { key: string; kind: "vaccine" | "money"; title: string; sub: string; to: string; params?: { id: string }; urgent: boolean };
 
@@ -18,44 +19,54 @@ export function useAlerts(): Alert[] {
       const t = Date.parse(a.vaccineDue);
       if (isNaN(t) || t > TODAY + 3 * DAY_MS) continue;
       const days = Math.round((t - TODAY) / DAY_MS);
-      const when = days < 0 ? `${-days} din late` : days === 0 ? "aaj" : `${days} din mein`;
-      out.push({ key: `v-${a.id}`, kind: "vaccine", title: `${a.id} (${a.species}) ko vaccine dena hai`, sub: `Due: ${fmtDate(a.vaccineDue)} — ${when}`, to: "/animals/$id", params: { id: a.id }, urgent: days <= 0 });
+      const when = days < 0 ? `${-days} day(s) overdue` : days === 0 ? "today" : `in ${days} day(s)`;
+      out.push({ key: `v-${a.id}`, kind: "vaccine", title: `${a.id} (${a.species}) needs a vaccination`, sub: `Due: ${fmtDate(a.vaccineDue)} — ${when}`, to: "/animals/$id", params: { id: a.id }, urgent: days <= 0 });
     }
     for (const c of customers) {
       const due = animals.filter((a) => a.ownerId === c.id).reduce((s, a) => s + chargesFor(a), 0);
       const paid = payments.filter((p) => p.customerId === c.id).reduce((s, p) => s + p.amount, 0);
       const bal = due - paid;
-      if (bal > 0) out.push({ key: `m-${c.id}-${bal}`, kind: "money", title: `${c.name} ka ${inr(bal)} baki hai`, sub: c.phone || c.village || "Customer", to: "/customers", urgent: false });
+      if (bal > 0) out.push({ key: `m-${c.id}-${bal}`, kind: "money", title: `${c.name} owes ${inr(bal)}`, sub: c.phone || c.village || "Customer", to: "/customers", urgent: false });
     }
     return out.sort((x, y) => Number(y.urgent) - Number(x.urgent));
   }, [animals, customers, payments]);
 }
 
 function usePhoneAlerts() {
-  const { animals, customers, payments } = useFarm();
-  useEffect(() => {
+  const { animals, customers, payments, loading, uid, role, reload } = useFarm();
+  const sync = useCallback(async (force = false) => {
+    if (!uid || role !== "owner" || loading) return;
     const vaccines = animals.filter((a) => a.status === "Active" && a.vaccineDue && !isNaN(Date.parse(a.vaccineDue))).map((a) => ({ id: a.id, species: a.species, due: a.vaccineDue as string }));
     const money = customers.map((c) => {
       const due = animals.filter((a) => a.ownerId === c.id).reduce((s, a) => s + chargesFor(a), 0);
       const paid = payments.filter((p) => p.customerId === c.id).reduce((s, p) => s + p.amount, 0);
       return { name: c.name, bal: due - paid };
     }).filter((m) => m.bal > 0);
-    const sync = () => void syncPhoneAlerts(vaccines, money);
-    sync();
+    await syncPhoneAlerts(vaccines, money, force);
+  }, [animals, customers, payments, loading, uid, role]);
+  useEffect(() => {
+    void sync(true);
     // Re-sync whenever the app comes back to the foreground so schedules stay fresh
     let handle: { remove: () => void } | undefined;
+    let disposed = false;
     void import("@capacitor/app").then(({ App }) =>
-      App.addListener("appStateChange", (s) => { if (s.isActive) sync(); }).then((h) => { handle = h; })
+      App.addListener("appStateChange", (s) => { if (s.isActive && !disposed) void reload().catch(() => {}); }).then((h) => { if (disposed) h.remove(); else handle = h; })
     ).catch(() => {});
-    return () => handle?.remove();
-  }, [animals, customers, payments]);
+    return () => { disposed = true; handle?.remove(); };
+  }, [sync, reload]);
+  return sync;
 }
 
 export function NotificationBell() {
   const alerts = useAlerts();
-  usePhoneAlerts();
+  const syncPhone = usePhoneAlerts();
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<"all" | "vaccine" | "money">("all");
+  useEffect(() => {
+    const show = () => setOpen(true);
+    window.addEventListener("open-farm-notifications", show);
+    return () => window.removeEventListener("open-farm-notifications", show);
+  }, []);
   const shown = useRef(new Set<string>());
 
   // Live alert: pop a message for each new vaccine due item
@@ -74,11 +85,12 @@ export function NotificationBell() {
         )}
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-md rounded-3xl">
             <DialogTitle>Notifications</DialogTitle>
             <DialogDescription>{alerts.length} alerts · vaccines and pending payments</DialogDescription>
+            <PhoneReminderControls resync={() => syncPhone(true)} />
             <div className="flex flex-wrap gap-2">{([['all', 'All'], ['vaccine', 'Vaccines'], ['money', 'Payments']] as const).map(([key, label]) => <Button key={key} size="sm" variant={filter === key ? "default" : "outline"} onClick={() => setFilter(key)} aria-pressed={filter === key}>{label}</Button>)}</div>
-            {!alerts.filter((a) => filter === "all" || a.kind === filter).length && <div className="flex flex-col items-center gap-3 py-8 text-center text-muted-foreground"><BellOff className="h-8 w-8" /><p className="text-sm">Sab theek hai — koi alert nahi.</p></div>}
+            {!alerts.filter((a) => filter === "all" || a.kind === filter).length && <div className="flex flex-col items-center gap-3 py-8 text-center text-muted-foreground"><BellOff className="h-8 w-8" /><p className="text-sm">All caught up — no alerts.</p></div>}
             <ul className="max-h-[50svh] min-h-0 space-y-2 overflow-y-auto overscroll-contain">
               {alerts.filter((a) => filter === "all" || a.kind === filter).map((a) => (
                 <li key={a.key}>

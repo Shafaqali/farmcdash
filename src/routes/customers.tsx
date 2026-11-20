@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { createCustomerLogin } from "@/lib/account-login";
+import { PaymentReminders } from "@/components/PaymentReminders";
 
 export const Route = createFileRoute("/customers")({
   head: () => ({ meta: [
@@ -38,6 +39,7 @@ function Customers() {
     <div>
       <PageTitle eyebrow={`${customers.length} customers`} title="Customers"
         action={<Button onClick={() => setAdding(true)} className="shrink-0"><Plus />Add</Button>} />
+      <PaymentReminders />
       <div className="relative mb-4"><Search className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" /><Input aria-label="Search customers" placeholder="Search name, phone, email or address" className="h-11 bg-card pl-10" value={q} onChange={(e) => setQ(e.target.value)} /></div>
       <Dialog open={adding} onOpenChange={setAdding}><DialogContent><DialogTitle>Add customer</DialogTitle><DialogDescription>Customer contact details</DialogDescription>
         <form className="space-y-4" onSubmit={async (e) => { e.preventDefault(); if (saving) return; setSaving(true); try { await createCustomerLogin(nc); await reload(); toast.success("Customer and login created"); setNc({ name: "", phone: "", address: "", email: "", loginId: "", password: "" }); setAdding(false); } catch (er) { toast.error(er instanceof Error ? er.message : "Unable to save customer"); } finally { setSaving(false); } }}>

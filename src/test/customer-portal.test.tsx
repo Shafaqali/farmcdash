@@ -1,8 +1,8 @@
 import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Animal } from "@/lib/farm-data";
-const mocks = vi.hoisted(() => ({ rpc: vi.fn() }));
-vi.mock("@/integrations/supabase/client", () => ({ supabase: { rpc: mocks.rpc } }));
+const mocks = vi.hoisted(() => ({ rpc: vi.fn(), signPhotos: vi.fn() }));
+vi.mock("@/integrations/supabase/client", () => ({ supabase: { rpc: mocks.rpc, storage: { from: () => ({ createSignedUrls: mocks.signPhotos }) } } }));
 vi.mock("@/lib/farm-data", async (original) => ({ ...await original<typeof import("@/lib/farm-data")>(), useFarm: () => ({ uid: "viewer" }) }));
 import { connectCustomer, customerInvitationUrl, loadCustomerPortal, pendingCustomerInvitation } from "@/lib/customer-portal";
 import { CustomerAnimalPayments } from "@/components/CustomerAnimalPayments";
@@ -35,6 +35,25 @@ describe("Customer financial access", () => {
     mocks.rpc.mockResolvedValue({ data: { animals: [], customers: [], payments: [] }, error: null });
     await loadCustomerPortal();
     expect(mocks.rpc).toHaveBeenCalledWith("customer_portal");
+  });
+  it("signs only photo paths belonging to animals returned by the private portal", async () => {
+    mocks.rpc.mockResolvedValueOnce({ data: { animals: [animal], customers: [], payments: [] }, error: null }).mockResolvedValueOnce({ data: [
+      { animal_id: animal.id, photo_path: `${animal.id}/photo.jpg` },
+      { animal_id: "foreign", photo_path: "foreign/private.jpg" },
+      { animal_id: animal.id, photo_path: "foreign/wrong-folder.jpg" },
+    ], error: null });
+    mocks.signPhotos.mockResolvedValue({ data: [{ path: `${animal.id}/photo.jpg`, signedUrl: "https://photos.example/short-lived" }], error: null });
+    const result = await loadCustomerPortal();
+    expect(mocks.signPhotos).toHaveBeenCalledWith([`${animal.id}/photo.jpg`], 600);
+    expect(result.animals[0]?.photoUrl).toBe("https://photos.example/short-lived");
+    expect(result.payments).toEqual([]);
+  });
+  it("keeps care records available with a clear warning when photo access fails", async () => {
+    mocks.rpc.mockResolvedValueOnce({ data: { animals: [animal], customers: [], payments: [] }, error: null }).mockResolvedValueOnce({ error: { message: "photo RPC unavailable" } });
+    const result = await loadCustomerPortal();
+    expect(result.animals).toEqual([animal]);
+    expect(result.photoWarning).toContain("temporarily unavailable");
+    expect(mocks.signPhotos).not.toHaveBeenCalled();
   });
   it("does not show another animal's finances when portal access is absent", async () => {
     mocks.rpc.mockResolvedValue({ data: { animals: [], customers: [], payments: [] }, error: null });

@@ -1,131 +1,40 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+﻿import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { ArrowUpRight, ChevronRight, IndianRupee, Loader2, LogOut, PawPrint, Phone, Plus, ScanLine, Settings2, ShieldCheck, Tags, Users } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, LogOut, ChevronRight, PawPrint, Users, IndianRupee, Tags, ScanLine, ShieldCheck, KeyRound, Mail, Loader2, Settings2 } from "lucide-react";
-import { toast } from "sonner";
+import { AnimalPhoto } from "@/components/AnimalPhoto";
 import { supabase } from "@/integrations/supabase/client";
 import { useFarm, inr } from "@/lib/farm-data";
-
-const field = "w-full rounded-xl border bg-background px-4 py-3 outline-none transition focus:border-primary focus:ring-2 focus:ring-ring/30";
+import { signOutFarmAccount } from "@/lib/background-notices";
 
 export const Route = createFileRoute("/profile")({
-  head: () => ({ meta: [
-    { title: "Profile — STAR GOATS FARM" },
-    { name: "description", content: "Your farm profile, settings and quick actions." },
-    { property: "og:title", content: "Profile — STAR GOATS FARM" },
-    { property: "og:description", content: "Your farm profile, settings and quick actions." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary_large_image" },
-  ] }),
+  head: () => ({ meta: [{ title: "My farm profile — STAR GOATS FARM" }, { name: "description", content: "Your farm, animals and account details." }] }),
   component: Profile,
 });
-
-function Profile() {
-  const { animals, customers, payments, isAdmin, userName, session } = useFarm();
-  const sold = animals.filter((a) => a.status === "Sold").length;
+export function Profile() {
+  const { animals, customers, payments, isAdmin, userName, session, loading } = useFarm();
+  const [signingOut, setSigningOut] = useState(false);
   const active = animals.filter((a) => a.status === "Active").length;
-  return (
-    <div className="space-y-5">
-      <section className="bg-hero animate-rise relative overflow-hidden rounded-3xl p-6 text-center text-primary-foreground shadow-float">
-        <div className="absolute -left-10 -top-10 h-40 w-40 rounded-full bg-primary-glow/40 blur-2xl" />
-        <div className="relative mx-auto grid h-20 w-20 place-items-center rounded-full border-4 border-primary-foreground/30 bg-accent font-display text-3xl font-semibold uppercase text-accent-foreground">{userName[0] ?? "F"}</div>
-        <h1 className="relative mt-3 text-2xl font-semibold">{userName}</h1>
-        <p className="relative text-sm opacity-80">{session?.user.email}</p>
-        <span className="relative mt-2 inline-flex items-center gap-1 rounded-full bg-primary-foreground/15 px-3 py-1 text-xs font-semibold"><ShieldCheck className="h-3.5 w-3.5" />My farm</span>
-        <div className="relative mt-5 grid grid-cols-3 gap-2">
-          {[{ i: PawPrint, v: `${active}/${animals.length}`, l: "Active" }, { i: Users, v: customers.length, l: "Customers" }, { i: IndianRupee, v: inr(payments.reduce((s, p) => s + p.amount, 0)), l: "Collected" }].map((s) => (
-            <div key={s.l} className="rounded-2xl bg-primary-foreground/10 py-3"><s.i className="mx-auto h-4 w-4 opacity-80" /><p className="mt-1 font-semibold">{s.v}</p><p className="text-[11px] opacity-75">{s.l}</p></div>
-          ))}
-        </div>
-        <p className="relative mt-3 text-xs opacity-75">{sold} sold</p>
-      </section>
-      {isAdmin && <Link to="/animals/new" className="bg-glow animate-rise flex items-center justify-center gap-2 rounded-2xl py-4 font-semibold text-primary-foreground shadow-float active:scale-[.98]"><Plus className="h-5 w-5" />Register new animal</Link>}
-      <ul className="card-soft animate-rise divide-y overflow-hidden">
-        {[{ i: Tags, l: "Animal categories", to: "/categories" as const }, { i: ScanLine, l: "Scan & update animal", to: "/scan" as const }].map((r) => (
-          <li key={r.l}><Link to={r.to} className="flex w-full items-center gap-3 px-4 py-4 active:bg-muted">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-secondary text-primary"><r.i className="h-4 w-4" /></span>
-            <span className="flex-1 font-medium">{r.l}</span><ChevronRight className="h-4 w-4 text-muted-foreground" />
-          </Link></li>
-        ))}
-      </ul>
-      <AccountSettings />
-      <Button asChild variant="outline" className="w-full"><Link to="/settings"><Settings2 />Profile and login ID</Link></Button>
-      <FarmPhone />
-      <button onClick={async () => { await supabase.auth.signOut(); toast("Signed out"); }} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-destructive/30 py-3.5 font-semibold text-destructive"><LogOut className="h-4 w-4" />Sign out</button>
-    </div>
-  );
+  const initials = userName.split(" ").filter(Boolean).slice(0, 2).map((word) => word[0]).join("") || "SG";
+  return <div className="space-y-5">
+    <section className="bg-hero relative overflow-hidden rounded-[1.75rem] p-6 text-primary-foreground"><PawPrint aria-hidden="true" className="absolute -right-5 -top-2 h-44 w-44 -rotate-12 opacity-[0.06]" /><div className="relative flex items-center gap-4"><span className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl border border-white/20 bg-white/10 font-display text-2xl font-semibold uppercase">{initials}</span><div className="min-w-0"><p className="text-[10px] font-semibold uppercase tracking-[0.2em] opacity-65">Your farm profile</p><h1 className="mt-1 break-words text-2xl font-semibold">{userName || "Farm owner"}</h1><p className="mt-1 flex items-center gap-1 text-xs opacity-75"><ShieldCheck className="h-3.5 w-3.5" />Owner account</p></div></div><div className="relative mt-6 grid grid-cols-3 divide-x divide-white/15 border-t border-white/15 pt-4">{[{ label: "Animals", value: animals.length }, { label: "Active in care", value: active }, { label: "Customers", value: customers.length }].map((stat) => <div key={stat.label} className="px-3 first:pl-0"><p className="text-2xl font-semibold tabular-nums">{loading && !animals.length ? "—" : stat.value}</p><p className="mt-1 text-[10px] opacity-70">{stat.label}</p></div>)}</div></section>
+    <div className="grid grid-cols-2 gap-3"><Button asChild className="h-12 rounded-2xl"><Link to="/settings"><Settings2 className="h-4 w-4" />Edit profile</Link></Button>{isAdmin && <Button asChild variant="outline" className="h-12 rounded-2xl"><Link to="/animals/new"><Plus className="h-4 w-4" />Add animal</Link></Button>}</div>
+    <section className="space-y-3"><div className="flex items-center justify-between"><div><h2 className="text-xl font-semibold">Your farm animals</h2><p className="mt-1 text-xs text-muted-foreground">{animals.length} total · {animals.filter((a) => !a.ownerId).length} personal</p></div><Link to="/animals" className="flex items-center gap-1 text-xs font-semibold text-primary">View all<ArrowUpRight className="h-4 w-4" /></Link></div>{animals.length ? <div className="grid grid-cols-2 gap-3">{animals.slice(0, 4).map((animal) => <article key={animal.id} className="overflow-hidden rounded-2xl border bg-card"><AnimalPhoto src={animal.photoUrl} animalId={animal.id} className="aspect-[4/3]" /><Link to="/animals/$id" params={{ id: animal.id }} className="flex items-center gap-2 p-3"><div className="min-w-0 flex-1"><p className="break-all text-xs font-semibold">{animal.id}</p><p className="mt-1 truncate text-[10px] text-muted-foreground">{animal.species} · {animal.status}</p></div><ChevronRight className="h-3.5 w-3.5 shrink-0 text-primary" /></Link></article>)}</div> : <div className="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">{loading ? "Loading your animals…" : "Register your first animal to see your herd here."}</div>}</section>
+    <section className="overflow-hidden rounded-3xl border bg-card"><h2 className="border-b px-5 py-4 text-lg font-semibold">Farm management</h2><ul className="divide-y">{[{ icon: Users, label: "Customers & payments", detail: `${customers.length} customer accounts`, to: "/customers" }, { icon: Tags, label: "Animal categories", detail: "Manage animal types and breeds", to: "/categories" }, { icon: ScanLine, label: "Scan animal QR", detail: "Open an animal's care record", to: "/scan" }, { icon: Settings2, label: "Account & notification settings", detail: "Profile, login and reminders", to: "/settings" }].map(({ icon: Icon, label, detail, to }) => <li key={label}><Link to={to} className="flex min-h-20 items-center gap-3 px-5 py-4 transition-colors hover:bg-muted/50"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secondary text-primary"><Icon className="h-4 w-4" /></span><span className="min-w-0 flex-1"><span className="block text-sm font-semibold">{label}</span><span className="mt-0.5 block text-xs text-muted-foreground">{detail}</span></span><ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" /></Link></li>)}</ul></section>
+    <div className="flex items-center justify-between gap-3 rounded-2xl border bg-card p-4"><div className="flex items-center gap-3"><IndianRupee className="h-5 w-5 text-primary" /><span className="text-sm text-muted-foreground">Lifetime collected</span></div><span className="break-all text-right font-semibold tabular-nums">{inr(payments.reduce((sum, payment) => sum + payment.amount, 0))}</span></div>
+    <FarmPhone />
+    <p className="break-all text-center text-xs text-muted-foreground">Signed in as {session?.user.email}</p>
+    <Button variant="outline" disabled={signingOut} className="h-12 w-full rounded-2xl border-destructive/20 text-destructive hover:bg-destructive/5 hover:text-destructive" onClick={async () => { if (signingOut) return; setSigningOut(true); try { await signOutFarmAccount(); toast("Signed out"); } catch { toast.error("Could not sign out. Please try again."); } finally { setSigningOut(false); } }}><LogOut className="h-4 w-4" />{signingOut ? "Signing out…" : "Sign out"}</Button>
+  </div>;
 }
-
 function FarmPhone() {
   const { uid } = useFarm();
   const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
-  useEffect(() => { if (uid) void supabase.from("profiles").select("phone").eq("id", uid).single().then(({ data }) => setPhone(data?.phone ?? "")); }, [uid]);
-  return <form className="space-y-3 border-y py-4" onSubmit={async (e) => { e.preventDefault(); if (!uid) return; setBusy(true); try { const { error } = await supabase.from("profiles").update({ phone: phone.trim() }).eq("id", uid); if (error) throw error; toast.success("Farm phone saved"); } catch (e) { toast.error(e instanceof Error ? e.message : "Could not save phone"); } finally { setBusy(false); } }}><label className="block space-y-2 text-sm">Farm phone<Input type="tel" required pattern="[+0-9 ()-]{7,20}" autoComplete="tel" value={phone} onChange={(e) => setPhone(e.target.value)} /></label><Button disabled={busy}>{busy ? "Saving…" : "Save phone"}</Button></form>;
-}
-
-function AccountSettings() {
-  const { session } = useFarm();
-  const [open, setOpen] = useState(false);
-  const [curPw, setCurPw] = useState("");
-  const [newPw, setNewPw] = useState("");
-  const [newEmail, setNewEmail] = useState("");
-  const [busyPw, setBusyPw] = useState(false);
-  const [busyEmail, setBusyEmail] = useState(false);
-
-  const changePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setBusyPw(true);
-    try {
-      const { error } = await supabase.auth.updateUser({ password: newPw, current_password: curPw });
-      if (error) throw error;
-      toast.success("Password updated");
-      setCurPw(""); setNewPw("");
-    } catch (err) { toast.error(err instanceof Error ? err.message : "Could not update password"); }
-    finally { setBusyPw(false); }
-  };
-
-  const changeEmail = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setBusyEmail(true);
-    try {
-      const { error } = await supabase.auth.updateUser({ email: newEmail });
-      if (error) throw error;
-      toast.success("Confirmation link sent to your new email — open it to finish the change");
-      setNewEmail("");
-    } catch (err) { toast.error(err instanceof Error ? err.message : "Could not update email"); }
-    finally { setBusyEmail(false); }
-  };
-
-  return (
-    <section className="card-soft animate-rise overflow-hidden">
-      <button onClick={() => setOpen(!open)} className="flex w-full items-center gap-3 px-4 py-4 active:bg-muted">
-        <span className="grid h-9 w-9 place-items-center rounded-xl bg-secondary text-primary"><Settings2 className="h-4 w-4" /></span>
-        <span className="flex-1 text-left font-medium">Account settings</span>
-        <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`} />
-      </button>
-      {open && (
-        <div className="space-y-5 border-t px-4 py-5">
-          <form onSubmit={changePassword} className="space-y-3">
-            <p className="flex items-center gap-2 text-sm font-semibold"><KeyRound className="h-4 w-4 text-primary" />Change password</p>
-            <input className={field} type="password" placeholder="Current password" value={curPw} onChange={(e) => setCurPw(e.target.value)} required />
-            <input className={field} type="password" placeholder="New password (min 6 characters)" minLength={6} value={newPw} onChange={(e) => setNewPw(e.target.value)} required />
-            <button disabled={busyPw} className="bg-glow flex w-full items-center justify-center gap-2 rounded-2xl py-3 font-semibold text-primary-foreground shadow-float active:scale-[.98] disabled:opacity-60">
-              {busyPw && <Loader2 className="h-4 w-4 animate-spin" />}Update password
-            </button>
-          </form>
-          <form onSubmit={changeEmail} className="space-y-3 border-t pt-5">
-            <p className="flex items-center gap-2 text-sm font-semibold"><Mail className="h-4 w-4 text-primary" />Change email</p>
-            <p className="text-xs text-muted-foreground">Current: {session?.user.email}</p>
-            <input className={field} type="email" placeholder="New email address" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} required />
-            <button disabled={busyEmail} className="flex w-full items-center justify-center gap-2 rounded-2xl border bg-card py-3 font-semibold active:scale-[.98] disabled:opacity-60">
-              {busyEmail && <Loader2 className="h-4 w-4 animate-spin" />}Update email
-            </button>
-            <p className="text-[11px] text-muted-foreground">A confirmation link goes to the new email — the change completes after you open it.</p>
-          </form>
-        </div>
-      )}
-    </section>
-  );
+  const [ready, setReady] = useState(false);
+  const [error, setError] = useState("");
+  useEffect(() => { let active = true; if (!uid) return; setReady(false); void supabase.from("profiles").select("phone").eq("id", uid).single().then(({ data, error }) => { if (!active) return; if (error || !data) { setError("Could not load your farm phone."); return; } setPhone(data.phone); setReady(true); }); return () => { active = false; }; }, [uid]);
+  return <section className="rounded-3xl border bg-card p-5"><div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-secondary text-primary"><Phone className="h-4 w-4" /></span><div><h2 className="text-lg font-semibold">Farm contact</h2><p className="mt-0.5 text-xs text-muted-foreground">Shared only with your connected customers.</p></div></div>{error && <p role="alert" className="mt-4 text-xs text-destructive">{error}</p>}<form className="mt-4 space-y-3" onSubmit={async (e) => { e.preventDefault(); if (!uid || !ready || busy) return; setBusy(true); try { const { error } = await supabase.from("profiles").update({ phone: phone.trim() }).eq("id", uid); if (error) throw error; toast.success("Farm phone saved"); } catch (e) { toast.error(e instanceof Error ? e.message : "Could not save phone"); } finally { setBusy(false); } }}><label className="block space-y-2 text-xs font-medium">Farm phone<Input type="tel" required pattern="[+0-9 ()-]{7,20}" autoComplete="tel" disabled={!ready || busy} value={phone} onChange={(e) => setPhone(e.target.value)} className="h-12 rounded-xl" /></label><Button variant="outline" disabled={!ready || busy} className="h-11 w-full rounded-xl">{busy && <Loader2 className="h-4 w-4 animate-spin" />}{busy ? "Saving…" : "Save farm phone"}</Button></form></section>;
 }

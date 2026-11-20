@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft, ChevronRight, MapPin, PawPrint, Phone, Trash2 } from "lucide-react";
+import { ArrowLeft, ChevronRight, MapPin, Phone, Trash2 } from "lucide-react";
 import { PageTitle } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { customerAccount } from "@/lib/customer-account";
@@ -11,6 +11,7 @@ import { CustomerAccess } from "@/components/CustomerAccess";
 import { DeleteConfirmation } from "@/components/DeleteConfirmation";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { AnimalPhoto } from "@/components/AnimalPhoto";
 
 export const Route = createFileRoute("/customers/$id")({
   head: () => ({ meta: [
@@ -54,7 +55,7 @@ function CustomerDetails() {
           {account.entries.map(({ animal, charge, paid, remaining, periods }) => (
             <li key={animal.id} className="rounded-lg border bg-card p-4">
               <Link to="/animals/$id" params={{ id: animal.id }} className="flex items-center gap-3">
-                {animal.photoUrl ? <img src={animal.photoUrl} alt={animal.species} className="h-12 w-12 shrink-0 rounded-lg object-cover" /> : <span className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-secondary text-primary"><PawPrint className="h-6 w-6" /></span>}
+                <AnimalPhoto src={animal.photoUrl} animalId={animal.id} zoom={false} className="h-16 w-16 shrink-0 rounded-xl" />
                 <div className="min-w-0 flex-1"><p className="break-all font-semibold">{animal.id}</p><p className="break-words text-sm text-muted-foreground">{[...new Set([animal.species, animal.sub, animal.breed].filter(Boolean))].join(" · ")}</p></div>
                 <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
               </Link>

@@ -35,4 +35,31 @@ describe("Fresh farm reminders", () => {
     await syncPhoneAlerts([], [{ name: "Owner", bal: 500 }]);
     expect(api.schedule).toHaveBeenCalledOnce();
   });
+  it("rebuilds lost Android alarms on foreground refresh with unchanged data", async () => {
+    const { syncPhoneAlerts } = await import("@/lib/local-alerts");
+    const money = [{ name: "Owner", bal: 500 }];
+    await syncPhoneAlerts([], money);
+    await syncPhoneAlerts([], money);
+    expect(api.schedule).toHaveBeenCalledOnce();
+    await syncPhoneAlerts([], money, true);
+    expect(api.schedule).toHaveBeenCalledTimes(2);
+  });
+  it("rechecks notification permission even when the data signature matches", async () => {
+    const { syncPhoneAlerts } = await import("@/lib/local-alerts");
+    const money = [{ name: "Owner", bal: 500 }];
+    await syncPhoneAlerts([], money);
+    api.checkPermissions.mockResolvedValueOnce({ display: "denied" });
+    api.requestPermissions.mockResolvedValueOnce({ display: "denied" });
+    await syncPhoneAlerts([], money);
+    await syncPhoneAlerts([], money);
+    expect(api.requestPermissions).toHaveBeenCalledOnce();
+    expect(api.schedule).toHaveBeenCalledTimes(2);
+  });
+  it("keeps a failed channel setup retryable", async () => {
+    const { syncPhoneAlerts } = await import("@/lib/local-alerts");
+    api.createChannel.mockRejectedValueOnce(new Error("channel unavailable"));
+    await syncPhoneAlerts([], [{ name: "Owner", bal: 500 }]);
+    await syncPhoneAlerts([], [{ name: "Owner", bal: 500 }]);
+    expect(api.schedule).toHaveBeenCalledOnce();
+  });
 });

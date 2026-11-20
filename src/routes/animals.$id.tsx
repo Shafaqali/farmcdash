@@ -15,6 +15,7 @@ import { loadCustomerPortal } from "@/lib/customer-portal";
 import { field, F } from "@/components/form";
 import { Button } from "@/components/ui/button";
 import { DeleteConfirmation } from "@/components/DeleteConfirmation";
+import { AnimalPhoto } from "@/components/AnimalPhoto";
 
 export const Route = createFileRoute("/animals/$id")({
   head: ({ params }) => ({ meta: [
@@ -61,7 +62,7 @@ function Detail() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3"><Link to={role === "customer" ? "/my-animals" : "/animals"} className="flex items-center gap-1 text-sm text-muted-foreground"><ArrowLeft className="h-4 w-4" />{role === "customer" ? "My animals" : "Animals"}</Link>{mine && <FarmExport scope={{ kind: "animal", id: a.id }} />}</div>
-      {a.photoUrl && <img src={a.photoUrl} alt={`Animal ${a.id}`} className="animate-rise aspect-[4/3] w-full rounded-3xl object-cover shadow-float" />}
+      {a.photoUrl && <AnimalPhoto src={a.photoUrl} animalId={a.id} className="aspect-[4/3] rounded-3xl shadow-sm" />}
       <section className="bg-hero animate-rise flex items-center gap-4 rounded-3xl p-5 text-primary-foreground shadow-float">
         <AnimalQR id={a.id} label={label} />
         <div className="min-w-0">

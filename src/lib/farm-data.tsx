@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { AccountRole } from "@/lib/account-access";
 import { carePeriods } from "@/lib/care-billing";
 import { clearPhoneAlerts } from "@/lib/local-alerts";
+import { syncBackgroundNotices } from "@/lib/background-notices";
 
 export type Status = "Active" | "Sold" | "Discharged" | "Dead";
 export const STATUSES: Status[] = ["Active", "Sold", "Discharged", "Dead"];
@@ -95,6 +96,12 @@ export function FarmProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const uid = session?.user.id;
+  useEffect(() => {
+    if (!authReady) return;
+    void syncBackgroundNotices(uid ?? null, roleReady ? role : null).catch(() => {
+      // Customer bell exposes permission/service status and a retry action.
+    });
+  }, [authReady, uid, roleReady, role]);
   const reload = useCallback(async () => {
     if (!uid) return;
     setLoading(true);

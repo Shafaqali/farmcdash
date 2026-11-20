@@ -1,10 +1,11 @@
 import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, Search, ChevronRight, PawPrint } from "lucide-react";
+import { Plus, Search, ChevronRight } from "lucide-react";
 import { useFarm, STATUSES } from "@/lib/farm-data";
 import { PageTitle } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AnimalPhoto } from "@/components/AnimalPhoto";
 
 export const Route = createFileRoute("/animals")({
   head: () => ({ meta: [
@@ -62,9 +63,7 @@ function Animals() {
         {list.map((a, i) => (
           <li key={a.id} className="animate-rise" style={{ animationDelay: `${Math.min(i, 12) * 35}ms` }}>
             <Link to="/animals/$id" params={{ id: a.id }} className="flex items-start gap-3 rounded-lg border bg-card p-3 transition-colors hover:bg-secondary/20">
-              {a.photoUrl
-                ? <img src={a.photoUrl} alt={a.id} className="h-14 w-14 shrink-0 rounded-lg object-cover" />
-                : <span className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-secondary text-primary"><PawPrint className="h-6 w-6" /></span>}
+              <AnimalPhoto src={a.photoUrl} animalId={a.id} zoom={false} className="h-16 w-16 shrink-0 rounded-xl" />
               <div className="min-w-0 flex-1">
                 <p className="break-all font-semibold">{a.id}</p>
                 <p className="break-words text-sm">{[a.species, a.sub || a.breed].filter(Boolean).join(" · ")}</p>

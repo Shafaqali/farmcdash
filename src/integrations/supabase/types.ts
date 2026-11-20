@@ -207,6 +207,60 @@ export type Database = {
           },
         ]
       }
+      customer_background_deliveries: {
+        Row: {
+          device_id: string
+          notice_id: string
+        }
+        Insert: {
+          device_id: string
+          notice_id: string
+        }
+        Update: {
+          device_id?: string
+          notice_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_background_deliveries_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "customer_background_devices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_background_deliveries_notice_id_fkey"
+            columns: ["notice_id"]
+            isOneToOne: false
+            referencedRelation: "customer_notifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_background_devices: {
+        Row: {
+          expires_at: string
+          id: string
+          secret_hash: string
+          session_id: string
+          viewer_id: string
+        }
+        Insert: {
+          expires_at?: string
+          id: string
+          secret_hash: string
+          session_id: string
+          viewer_id: string
+        }
+        Update: {
+          expires_at?: string
+          id?: string
+          secret_hash?: string
+          session_id?: string
+          viewer_id?: string
+        }
+        Relationships: []
+      }
       customer_invites: {
         Row: {
           customer_id: string
@@ -244,35 +298,41 @@ export type Database = {
       }
       customer_notifications: {
         Row: {
-          animal_id: string
+          animal_id: string | null
           created_at: string
           customer_id: string
           id: string
+          kind: string
           message: string
           owner_id: string
           read_at: string | null
+          reminder_day: string
           title: string
           viewer_id: string
         }
         Insert: {
-          animal_id: string
+          animal_id?: string | null
           created_at?: string
           customer_id: string
           id?: string
+          kind?: string
           message: string
           owner_id: string
           read_at?: string | null
+          reminder_day?: string
           title: string
           viewer_id: string
         }
         Update: {
-          animal_id?: string
+          animal_id?: string | null
           created_at?: string
           customer_id?: string
           id?: string
+          kind?: string
           message?: string
           owner_id?: string
           read_at?: string | null
+          reminder_day?: string
           title?: string
           viewer_id?: string
         }
@@ -547,6 +607,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      ack_customer_notifications: {
+        Args: { _device: string; _ids: string[]; _secret: string }
+        Returns: undefined
+      }
       animal_owner_info: {
         Args: { _animal_id: string }
         Returns: {
@@ -555,8 +619,33 @@ export type Database = {
           user_code: string
         }[]
       }
+      background_device_viewer: {
+        Args: { _device: string; _secret: string }
+        Returns: string
+      }
       can_read_animal_care: { Args: { _animal_id: string }; Returns: boolean }
+      can_read_customer_notice: {
+        Args: {
+          _animal: string
+          _customer: string
+          _kind: string
+          _owner: string
+          _viewer: string
+        }
+        Returns: boolean
+      }
       connect_customer: { Args: { _code: string }; Returns: undefined }
+      customer_animal_photos: {
+        Args: never
+        Returns: {
+          animal_id: string
+          photo_path: string
+        }[]
+      }
+      customer_has_payment_due: {
+        Args: { _customer: string; _owner: string }
+        Returns: boolean
+      }
       customer_portal: { Args: never; Returns: Json }
       delete_owned_animal: { Args: { _animal_id: string }; Returns: undefined }
       delete_owned_customer: {
@@ -573,6 +662,10 @@ export type Database = {
         Returns: boolean
       }
       owns_animal: { Args: { _animal_id: string }; Returns: boolean }
+      poll_customer_notifications: {
+        Args: { _device: string; _secret: string }
+        Returns: Json
+      }
       provision_customer_login: {
         Args: {
           _address?: string
@@ -586,7 +679,16 @@ export type Database = {
         }
         Returns: string
       }
+      register_background_device: {
+        Args: { _device: string; _secret: string }
+        Returns: undefined
+      }
+      remind_unpaid_customers: { Args: never; Returns: number }
       reset_owned_farm: { Args: { _confirmation: string }; Returns: undefined }
+      revoke_background_device: {
+        Args: { _device: string; _secret: string }
+        Returns: undefined
+      }
       revoke_customer_access: {
         Args: { _customer_id: string }
         Returns: undefined
