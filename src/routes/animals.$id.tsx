@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, Syringe, Scale, CalendarDays, IndianRupee, Camera, ShieldCheck, Trash2, Loader2 } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { toast } from "sonner";
@@ -15,7 +15,9 @@ import { loadCustomerPortal } from "@/lib/customer-portal";
 import { field, F } from "@/components/form";
 import { Button } from "@/components/ui/button";
 import { DeleteConfirmation } from "@/components/DeleteConfirmation";
-import { AnimalPhoto } from "@/components/AnimalPhoto";
+import { AnimalGrowthPhotos } from "@/components/AnimalGrowthPhotos";
+import { AnimalQuickSummary } from "@/components/AnimalQuickSummary";
+import type { HealthRecord } from "@/lib/animal-health-summary";
 
 export const Route = createFileRoute("/animals/$id")({
   head: ({ params }) => ({ meta: [
@@ -35,6 +37,9 @@ function Detail() {
   const [remote, setRemote] = useState<Animal | null>(null);
   const [pending, setPending] = useState(true);
   const [linkedName, setLinkedName] = useState("");
+  const healthScope = `${uid}:${id}`;
+  const [health, setHealth] = useState<{ scope: string; record: HealthRecord | null | undefined }>({scope: "", record: undefined});
+  const onLatestHealth = useCallback((record: HealthRecord | null | undefined) => setHealth({scope: healthScope, record}), [healthScope]);
   const own = allAnimals.find((x) => x.id.toLowerCase() === id.toLowerCase());
   const a = own ?? remote;
   useEffect(() => { let active = true; setRemote(null); setPending(true); setLinkedName(""); void (async () => {
@@ -47,22 +52,27 @@ function Detail() {
       if (!own) { const { data, error } = await supabase.rpc("shared_animal", { _animal_id: id }); if (error) throw error; if (active) setRemote(data as unknown as Animal | null); }
     } finally { if (active) setPending(false); }
   })().catch(() => { if (active) setPending(false); }); return () => { active = false; }; }, [id, uid, role, own]);
-  const [info, setInfo] = useState<{ registered_by: string | null; user_code: string | null; owner_name: string | null } | null>(null);
+  const [info, setInfo] = useState<{ animalId: string; registered_by: string | null; user_code: string | null; owner_name: string | null } | null>(null);
   useEffect(() => {
+    let active = true;
+    setInfo(null);
     if (!a) return;
-    void supabase.rpc("animal_owner_info", { _animal_id: a.id }).then(({ data }) => setInfo(data?.[0] ?? null));
-  }, [a?.id]);
+    const animalId = a.id;
+    void supabase.rpc("animal_owner_info", { _animal_id: animalId }).then(({ data }) => { if (active) setInfo(data?.[0] ? { ...data[0], animalId } : null); });
+    return () => { active = false; };
+  }, [a?.id, uid]);
   if (!a) return <div className="py-20 text-center"><p className="text-muted-foreground">{loading || pending ? "Loading…" : `No animal with ID ${id}`}</p><Link to={role === "customer" ? "/my-animals" : "/animals"} className="mt-4 inline-block font-semibold text-primary">Back to animals</Link></div>;
   const owner = customers.find((c) => c.id === a.ownerId);
   const mine = canManageAnimal(role, uid, a.userId);
   const overdue = a.vaccineDue !== "" && Date.parse(a.vaccineDue) < TODAY;
   const label = `${a.species}${a.sub ? " · " + a.sub : ""}`;
-  const ownerName = linkedName || owner?.name || info?.owner_name || "Personal farm animal";
-  const regBy = info?.registered_by ? `${info.registered_by}${info.user_code ? ` (${info.user_code})` : ""}` : "—";
+  const visibleInfo = info?.animalId === a.id ? info : null;
+  const ownerName = linkedName || owner?.name || visibleInfo?.owner_name || "Personal farm animal";
+  const regBy = visibleInfo?.registered_by ? `${visibleInfo.registered_by}${visibleInfo.user_code ? ` (${visibleInfo.user_code})` : ""}` : "—";
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3"><Link to={role === "customer" ? "/my-animals" : "/animals"} className="flex items-center gap-1 text-sm text-muted-foreground"><ArrowLeft className="h-4 w-4" />{role === "customer" ? "My animals" : "Animals"}</Link>{mine && <FarmExport scope={{ kind: "animal", id: a.id }} />}</div>
-      {a.photoUrl && <AnimalPhoto src={a.photoUrl} animalId={a.id} className="aspect-[4/3] rounded-3xl shadow-sm" />}
+      <AnimalGrowthPhotos key={`${uid}:${a.id}`} animalId={a.id} revision={a.photoPath} fallbackUrl={a.photoUrl} allowed={mine || (role === "customer" && !!linkedName)} />
       <section className="bg-hero animate-rise flex items-center gap-4 rounded-3xl p-5 text-primary-foreground shadow-float">
         <AnimalQR id={a.id} label={label} />
         <div className="min-w-0">
@@ -88,7 +98,7 @@ function Detail() {
         ))}
       </div>
       {mine ? <AnimalPayments animalId={a.id} /> : <CustomerAnimalPayments animalId={a.id} />}
-      <AnimalHealth animalId={a.id} editable={mine} />
+      <AnimalHealth key={`${uid}:${a.id}`} animalId={a.id} editable={mine} onLatestChange={onLatestHealth} />
       {a.notes && <p className="card-soft p-4 text-sm text-muted-foreground">{a.notes}</p>}
       {a.weights.length > 1 && (
         <section className="card-soft animate-rise p-4">
@@ -113,6 +123,7 @@ function Detail() {
         ) : <p className="text-sm text-muted-foreground">No vaccines recorded yet.</p>}
       </section>
       {mine ? <AdminPanel a={a} /> : <p className="text-center text-xs text-muted-foreground">Only the person who registered this animal can edit it.</p>}
+      <AnimalQuickSummary animal={a} ownerName={ownerName} registeredBy={regBy} health={health.scope === healthScope ? health.record : undefined} privateAccess={mine || (role === "customer" && !!linkedName)} />
     </div>
   );
 }
@@ -189,9 +200,9 @@ function AdminPanel({ a }: { a: Animal }) {
 
       {tab === "Photo" && <label className="flex cursor-pointer flex-col items-center gap-3 rounded-2xl border border-dashed p-6 text-center">
         {busy ? <Loader2 className="h-8 w-8 animate-spin text-primary" /> : <Camera className="h-8 w-8 text-primary" />}
-        <span className="font-semibold">{a.photoUrl ? "Replace photo" : "Add photo"}</span>
-        <span className="text-xs text-muted-foreground">Take a picture or choose from gallery</span>
-        <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (!file) return; void run(async () => { const path = await uploadAnimalPhoto(a.id, file); chk(await supabase.from("animals").update({ photo_url: path }).eq("id", a.id)); }, "Photo updated"); }} />
+        <span className="font-semibold">{a.photoUrl ? "Add growth photo" : "Add photo"}</span>
+        <span className="text-xs text-muted-foreground">Upload a photo each month to compare growth. Earlier photos are kept.</span>
+        <input type="file" disabled={busy} accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (!file || busy) return; e.target.value = ""; void run(async () => { const path = await uploadAnimalPhoto(a.id, file); chk(await supabase.from("animals").update({ photo_url: path }).eq("id", a.id)); }, "Photo updated"); }} />
       </label>}
       <DeleteConfirmation open={!!deleting} onOpenChange={(open) => { if (!open) setDeleting(null); }} title={deleting?.title ?? "Delete record?"} description="This record will be permanently removed. This cannot be undone." onConfirm={async () => { if (deleting) await deleting.action(); }} />
     </section>

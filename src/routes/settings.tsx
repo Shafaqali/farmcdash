@@ -4,12 +4,13 @@ import { AccountProfileSettings } from "@/components/AccountProfileSettings";
 import { FarmDataReset } from "@/components/FarmDataReset";
 import { OwnerEmailSettings } from "@/components/OwnerEmailSettings";
 import { BackgroundNoticeControls } from "@/components/BackgroundNoticeControls";
+import { StorageUsageSettings } from "@/components/StorageUsageSettings";
 import { AnimalPhoto } from "@/components/AnimalPhoto";
 import { Button } from "@/components/ui/button";
 import { useFarm } from "@/lib/farm-data";
 import { useCustomerPortal } from "@/lib/use-customer-portal";
 export const Route = createFileRoute("/settings")({
-  head: () => ({ meta: [{ title: "My profile & settings — STAR GOATS FARM" }, { name: "description", content: "Your animals, personal details, notification settings and account security." }] }),
+  head: () => ({ meta: [{ title: "My profile & settings — STAR GOATS FARM" }, { name: "description", content: "Your animals, personal details, notification settings and account security." }, { property: "og:title", content: "My profile & settings — STAR GOATS FARM" }, { property: "og:description", content: "Your account, notifications and private farm storage usage." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: SettingsPage,
 });
 export function SettingsPage() {
@@ -29,6 +30,7 @@ export function SettingsPage() {
     <section className="overflow-hidden rounded-3xl border bg-card"><div className="flex items-center gap-3 p-5"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-secondary text-primary"><Bell className="h-5 w-5" /></span><div><h2 className="text-lg font-semibold">Notifications</h2><p className="mt-0.5 text-xs text-muted-foreground">Care reminders that keep you connected.</p></div></div><div className="border-t p-4">{customer ? <><BackgroundNoticeControls /><p className="mt-3 text-xs leading-relaxed text-muted-foreground">Use the bell in the header for health, vaccine, growth and payment updates. Background alerts are available in the Android app.</p></> : <><p className="mb-3 text-sm text-muted-foreground">Check pending payments and upcoming vaccines, or refresh phone reminder permissions.</p><Button variant="outline" className="h-11 w-full rounded-xl" onClick={() => window.dispatchEvent(new Event("open-farm-notifications"))}><Bell className="h-4 w-4" />Open farm notifications</Button></>}</div></section>
     {customer && !!portal.data?.customers.length && <section className="rounded-3xl border bg-card p-5"><h2 className="text-lg font-semibold">Your connected farm</h2><div className="mt-4 space-y-4">{portal.data.customers.map((account) => <div key={account.id} className="space-y-2 border-b pb-4 last:border-0 last:pb-0"><p className="flex items-center gap-2 text-sm font-semibold"><PawPrint className="h-4 w-4 text-primary" />{account.farmName || "Connected farm"}</p>{account.address && <p className="break-words text-xs text-muted-foreground">Your address: {account.address}</p>}{account.farmPhone && <Button asChild size="sm" variant="outline" className="rounded-full"><a href={`tel:${account.farmPhone}`}><Phone className="h-3.5 w-3.5" />Call farm owner</a></Button>}</div>)}</div></section>}
     <OwnerEmailSettings />
+    <StorageUsageSettings />
     <FarmDataReset />
     <p className="flex items-center justify-center gap-1.5 py-2 text-[10px] text-muted-foreground"><UserRound className="h-3 w-3" />Your account details are private.</p>
   </div>;

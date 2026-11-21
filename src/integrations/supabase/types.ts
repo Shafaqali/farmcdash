@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           animal_id: string
           condition: string
+          created_at: string | null
           date: string
           details: string
           id: string
@@ -32,6 +33,7 @@ export type Database = {
         Insert: {
           animal_id: string
           condition: string
+          created_at?: string | null
           date?: string
           details?: string
           id?: string
@@ -46,6 +48,7 @@ export type Database = {
         Update: {
           animal_id?: string
           condition?: string
+          created_at?: string | null
           date?: string
           details?: string
           id?: string
@@ -611,6 +614,13 @@ export type Database = {
         Args: { _device: string; _ids: string[]; _secret: string }
         Returns: undefined
       }
+      animal_growth_photos: {
+        Args: { _animal_id: string }
+        Returns: {
+          photo_path: string
+          uploaded_at: string
+        }[]
+      }
       animal_owner_info: {
         Args: { _animal_id: string }
         Returns: {
@@ -652,6 +662,7 @@ export type Database = {
         Args: { _customer_id: string }
         Returns: undefined
       }
+      farm_storage_usage: { Args: never; Returns: Json }
       invite_customer: {
         Args: { _customer_id: string; _email: string }
         Returns: string

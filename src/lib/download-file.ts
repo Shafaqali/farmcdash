@@ -7,11 +7,11 @@ export async function saveExport(blob: Blob, filename: string) {
     const base64 = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(String(reader.result).split(",")[1] ?? "");
-      reader.onerror = () => reject(new Error("Unable to read the Excel file."));
+      reader.onerror = () => reject(new Error("Unable to read the export file."));
       reader.readAsDataURL(blob);
     });
     const file = await Filesystem.writeFile({ path: filename, data: base64, directory: Directory.Cache });
-    await Share.share({ title: "STAR GOATS FARM Excel", dialogTitle: "Save or share Excel", files: [file.uri] });
+    await Share.share({ title: filename, dialogTitle: "Save or share file", files: [file.uri] });
     return;
   }
   const file = new File([blob], filename, { type: blob.type });

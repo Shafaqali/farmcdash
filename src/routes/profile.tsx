@@ -10,7 +10,7 @@ import { useFarm, inr } from "@/lib/farm-data";
 import { signOutFarmAccount } from "@/lib/background-notices";
 
 export const Route = createFileRoute("/profile")({
-  head: () => ({ meta: [{ title: "My farm profile — STAR GOATS FARM" }, { name: "description", content: "Your farm, animals and account details." }] }),
+  head: () => ({ meta: [{ title: "My farm profile — STAR GOATS FARM" }, { name: "description", content: "Your farm, animals and account details." }, { property: "og:title", content: "My farm profile — STAR GOATS FARM" }, { property: "og:description", content: "Your farm, animals and account details." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: Profile,
 });
 export function Profile() {

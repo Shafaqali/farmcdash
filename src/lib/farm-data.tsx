@@ -156,9 +156,10 @@ export const useFarm = () => { const c = useContext(Ctx); if (!c) throw new Erro
 
 /** Upload a photo for an animal; returns the storage path. */
 export async function uploadAnimalPhoto(animalId: string, file: File) {
-  const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-  const path = `${animalId}/${Date.now()}.${ext}`;
-  const { error } = await supabase.storage.from("animal-photos").upload(path, file, { upsert: true, contentType: file.type });
+  if (!file.type.startsWith("image/") || file.size > 15 * 1024 * 1024) throw new Error("Choose an image smaller than 15 MB.");
+  const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+  const path = `${animalId}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage.from("animal-photos").upload(path, file, { upsert: false, contentType: file.type });
   if (error) throw error;
   return path;
 }

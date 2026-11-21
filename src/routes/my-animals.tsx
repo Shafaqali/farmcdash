@@ -8,7 +8,7 @@ import { useFarm, fmtDate } from "@/lib/farm-data";
 import { useCustomerPortal } from "@/lib/use-customer-portal";
 
 export const Route = createFileRoute("/my-animals")({
-  head: () => ({ meta: [{ title: "My animals — STAR GOATS FARM" }, { name: "description", content: "Your animals, photos and care updates in one place." }] }),
+  head: () => ({ meta: [{ title: "My animals — STAR GOATS FARM" }, { name: "description", content: "Your animals, photos and care updates in one place." }, { property: "og:title", content: "My animals — STAR GOATS FARM" }, { property: "og:description", content: "Your assigned animals, photos and recorded care updates." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: CustomerPortal,
 });
 export function CustomerPortal() {
