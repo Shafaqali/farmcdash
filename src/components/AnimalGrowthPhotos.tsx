@@ -38,7 +38,7 @@ export function AnimalGrowthPhotos({ animalId, revision, allowed, fallbackUrl }:
   if (!allowed || !uid) return fallbackUrl ? <AnimalPhotoCarousel animalId={animalId} slides={[{path: revision ?? "current", url: fallbackUrl, label: "Current photo"}]} /> : null;
   const current = state.key === key ? state : { photos: [], error: "", loading: true };
   const slides: AnimalSlide[] = [];
-  if (fallbackUrl) slides.push({path: revision ?? "current", url: fallbackUrl, label: "Current photo"});
+  if (current.error && fallbackUrl) slides.push({path: revision ?? "current", url: fallbackUrl, label: "Last saved photo · upload month unavailable"});
   growthMonths(current.photos).forEach(month => { const photo = month.photo; if (photo?.url && !slides.some(s => s.path === photo.photo_path)) slides.push({path: photo.photo_path, url: photo.url, label: month.label}); });
   return <><AnimalPhotoCarousel animalId={animalId} slides={slides} /><section className="card-soft space-y-4 p-4 sm:p-5" aria-label="Three-month photo comparison">
     <div className="flex items-start justify-between gap-3"><div><h2 className="text-lg font-semibold">Growth photo comparison</h2><p className="text-xs leading-relaxed text-muted-foreground">Latest upload from each of the last three calendar months. Tap a photo to enlarge.</p></div><Button variant="ghost" size="icon" aria-label="Refresh growth photos" onClick={() => setRetry(x => x + 1)}><RefreshCw className="h-4 w-4" /></Button></div>

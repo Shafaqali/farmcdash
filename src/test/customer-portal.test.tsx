@@ -36,6 +36,12 @@ describe("Customer financial access", () => {
     await loadCustomerPortal();
     expect(mocks.rpc).toHaveBeenCalledWith("customer_portal");
   });
+  it("retains authorized animal notes from the private portal without adding financial data", async () => {
+    mocks.rpc.mockResolvedValueOnce({ data: { animals: [{ ...animal, notes: "Recorded private observation" }], customers: [], payments: [] }, error: null }).mockResolvedValueOnce({ data: [], error: null });
+    const result = await loadCustomerPortal();
+    expect(result.animals[0]?.notes).toBe("Recorded private observation");
+    expect(result.payments).toEqual([]);
+  });
   it("signs only photo paths belonging to animals returned by the private portal", async () => {
     mocks.rpc.mockResolvedValueOnce({ data: { animals: [animal], customers: [], payments: [] }, error: null }).mockResolvedValueOnce({ data: [
       { animal_id: animal.id, photo_path: `${animal.id}/photo.jpg` },
