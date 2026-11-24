@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { PawPrint, Activity, Users, AlertTriangle, CalendarClock, TrendingUp, Wallet, ScanLine, Plus, ArrowUpRight } from "lucide-react";
+import { PawPrint, Users, AlertTriangle, CalendarClock, TrendingUp, Wallet, ScanLine, Plus, ArrowUpRight } from "lucide-react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useFarm, inr, chargesFor, TODAY, DAY_MS, fmtLong, monShort } from "@/lib/farm-data";
 import { farmBalance } from "@/lib/farm-balance";
@@ -77,7 +77,6 @@ function Dashboard() {
       <div className="grid grid-cols-2 gap-3">
         {[
           { l: "Total animals", v: animals.length, i: PawPrint, to: "/animals" },
-          { l: "Active in care", v: animals.filter((a) => a.status === "Active").length, i: Activity, to: "/animals" },
           { l: "Customers", v: customers.length, i: Users, to: "/customers" },
           { l: "Charges", v: inr(m.charges), i: TrendingUp, to: "/customers" },
           { l: "Collected", v: inr(m.collected), i: Wallet, to: "/customers" },
@@ -85,7 +84,7 @@ function Dashboard() {
           { l: "Overdue vaccines", v: m.overdue, i: AlertTriangle, to: "/animals", tone: "bad" },
           { l: "Added this month", v: animals.filter((a) => Date.parse(a.arrival) > TODAY - 30 * DAY_MS).length, i: Plus, to: "/animals" },
         ].map((s, idx) => (
-          <Link key={s.l} to={s.to} className="card-soft animate-rise group p-4 transition-transform active:scale-95" style={{ animationDelay: `${idx * 50}ms` }}>
+          <Link key={s.l} to={s.to} className="card-soft animate-rise group p-4 last:col-span-2 transition-transform active:scale-95" style={{ animationDelay: `${idx * 50}ms` }}>
             <div className="flex items-start justify-between">
               <span className={`grid h-9 w-9 place-items-center rounded-xl ${s.tone === "bad" ? "bg-destructive/10 text-destructive" : s.tone === "warn" ? "bg-accent/30 text-accent-foreground" : "bg-secondary text-primary"}`}><s.i className="h-4 w-4" /></span>
               <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />

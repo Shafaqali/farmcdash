@@ -1,8 +1,8 @@
-﻿import { useEffect, useRef, useState } from "react";
+import { notificationPresentation } from "@/lib/notification-presentation";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Bell, BellOff, Check, CheckCheck, ChevronDown, HeartPulse, RefreshCw, Settings2, Syringe, TrendingUp, Wallet } from "lucide-react";
+import { Bell, BellOff, Check, CheckCheck, HeartPulse, RefreshCw, Syringe, TrendingUp, Wallet } from "lucide-react";
 import { toast } from "sonner";
-import { BackgroundNoticeControls } from "@/components/BackgroundNoticeControls";
 import { supabase } from "@/integrations/supabase/client";
 import { useFarm } from "@/lib/farm-data";
 import type { Database } from "@/integrations/supabase/types";
@@ -33,7 +33,8 @@ export function CustomerNotifications() {
         if (!active) return;
         if (error) throw error;
         const next = data ?? [];
-        const fresh = known ? next.filter((notice) => !known!.has(notice.id) && !notice.read_at) : [];
+        const previousKnown = known;
+        const fresh = previousKnown ? next.filter((notice) => !previousKnown.has(notice.id) && !notice.read_at) : [];
         known = new Set(next.map((notice) => notice.id));
         const first = fresh[0];
         if (first) toast.info(fresh.length === 1 ? first.title : `${fresh.length} customer updates`, { description: fresh.length === 1 ? first.message : "Open the bell to see your updates." });
@@ -68,7 +69,7 @@ export function CustomerNotifications() {
     finally { if (uidRef.current === account) setSaving(false); }
   };
   return <>
-    <Button variant="ghost" size="icon" aria-label={`Customer notifications${unread ? ` (${unread} unread)` : ""}`} title="Customer notifications" className="relative h-10 w-10 rounded-full bg-muted" onClick={() => { setOpen(true); void refreshRef.current(); }}><Bell className="h-4.5 w-4.5" />{unread > 0 && <span className="absolute -right-0.5 -top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">{unread > 99 ? "99+" : unread}</span>}</Button>
+    <Button variant="ghost" size="icon" aria-label={`Customer notifications${unread ? ` (${unread} unread)` : ""}`} title="Customer notifications" className="relative h-10 w-10 rounded-full bg-muted" onClick={() => { setOpen(true); void refreshRef.current(); }}><Bell className="h-4.5 w-4.5" />{unread > 0 && <span className="absolute -right-0.5 -top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-destructive px-1 text-xs font-bold text-destructive-foreground">{unread > 99 ? "99+" : unread}</span>}</Button>
     <Dialog open={open} onOpenChange={setOpen}><DialogContent className="max-w-lg rounded-3xl p-5">
       <div className="flex items-center gap-3 pr-6"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-secondary text-primary"><Bell className="h-5 w-5" /></span><div><DialogTitle>Your updates</DialogTitle><DialogDescription className="mt-1 text-xs">{unread ? `${unread} unread · ` : ""}Health, care and payment reminders</DialogDescription></div></div>
       <div className="flex flex-wrap items-center justify-between gap-2"><div className="flex flex-wrap gap-1.5">{["All", "Unread", "Health", "Payments"].map((value) => <Button key={value} size="sm" variant={filter === value ? "default" : "outline"} className="rounded-full px-3 text-xs" aria-pressed={filter === value} onClick={() => setFilter(value)}>{value}</Button>)}</div><Button size="icon" variant="ghost" className="h-9 w-9 rounded-full" aria-label="Refresh notifications" disabled={fetching} onClick={() => void refreshRef.current()}><RefreshCw className={`h-4 w-4 ${fetching ? "animate-spin" : ""}`} /></Button></div>
@@ -76,13 +77,13 @@ export function CustomerNotifications() {
       {loadedUid !== uid && <p className="py-8 text-center text-sm text-muted-foreground">Loading your updates…</p>}
       {loadedUid === uid && !filtered.length && !error && <div className="flex flex-col items-center gap-3 rounded-2xl bg-muted/50 px-5 py-9 text-center"><BellOff className="h-8 w-8 text-muted-foreground/50" /><p className="font-semibold">{filter === "Unread" ? "You're all caught up" : "No updates here yet"}</p><p className="max-w-xs text-xs leading-relaxed text-muted-foreground">Your farm's animal updates and payment reminders will appear here.</p></div>}
       <ul className="max-h-[45svh] min-h-0 space-y-2.5 overflow-y-auto overscroll-contain">{filtered.map((notice) => {
-        const payment = notice.kind === "payment";
-        const health = notice.title.toLowerCase().includes("health");
+        const presentation = notificationPresentation(notice.title, notice.kind);
+        const payment = presentation.type === "payment";
+        const health = presentation.type === "health";
         const Icon = payment ? Wallet : health ? HeartPulse : notice.title.toLowerCase().includes("vaccin") ? Syringe : TrendingUp;
-        return <li key={notice.id} className={`rounded-2xl border p-3.5 ${notice.read_at ? "bg-card" : "border-primary/15 bg-secondary/30"}`}><div className="flex items-start gap-3"><span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${payment ? "bg-amber-100 text-amber-800" : "bg-secondary text-primary"}`}><Icon className="h-4 w-4" /></span><div className="min-w-0 flex-1">{notice.animal_id ? <Link to="/animals/$id" params={{ id: notice.animal_id }} onClick={() => { setOpen(false); if (!notice.read_at) void markRead([notice.id]); }} className="block break-words text-sm font-semibold">{notice.title}<span className="mt-0.5 block text-[10px] font-medium text-primary">{notice.animal_id}</span></Link> : <Link to="/my-animals" onClick={() => { setOpen(false); if (!notice.read_at) void markRead([notice.id]); }} className="block break-words text-sm font-semibold">{notice.title}</Link>}<p className="mt-2 break-words text-xs leading-relaxed text-muted-foreground">{notice.message}</p><div className="mt-3 flex flex-wrap items-center justify-between gap-2"><time dateTime={notice.created_at} className="text-[10px] text-muted-foreground">{new Date(notice.created_at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</time>{!notice.read_at ? <Button variant="ghost" size="sm" disabled={saving} className="h-7 gap-1 rounded-full px-2 text-[10px] text-primary" onClick={() => void markRead([notice.id])}><Check className="h-3 w-3" />Mark read</Button> : <CheckCheck aria-label="Read" className="h-3.5 w-3.5 text-primary/60" />}</div></div>{!notice.read_at && <span aria-label="Unread" className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />}</div></li>;
+        return <li key={notice.id} className={`rounded-2xl border p-3.5 ${notice.read_at ? "bg-card" : "border-primary/15 bg-secondary/30"}`}><div className="flex items-start gap-3"><span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${payment ? "bg-accent/30 text-accent-foreground" : "bg-secondary text-primary"}`}><Icon aria-hidden="true" className="h-5 w-5" /></span><div className="min-w-0 flex-1"><p className="mb-1 text-xs font-semibold text-primary"><span aria-hidden="true">{presentation.emoji} </span>{presentation.label}</p>{notice.animal_id ? <Link to="/animals/$id" params={{ id: notice.animal_id }} onClick={() => { setOpen(false); if (!notice.read_at) void markRead([notice.id]); }} className="block break-words text-sm font-semibold">{notice.title}<span className="mt-0.5 block text-xs font-medium text-primary">{notice.animal_id}</span></Link> : <Link to="/my-animals" onClick={() => { setOpen(false); if (!notice.read_at) void markRead([notice.id]); }} className="block break-words text-sm font-semibold">{notice.title}</Link>}<p className="mt-2 break-words text-sm leading-relaxed text-muted-foreground">{notice.message}</p><div className="mt-3 flex flex-wrap items-center justify-between gap-2"><time dateTime={notice.created_at} className="text-xs text-muted-foreground">{new Date(notice.created_at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</time>{!notice.read_at ? <Button variant="ghost" size="sm" disabled={saving} className="h-7 gap-1 rounded-full px-2 text-xs text-primary" onClick={() => void markRead([notice.id])}><Check className="h-3 w-3" />Mark read</Button> : <CheckCheck aria-label="Read" className="h-3.5 w-3.5 text-primary/60" />}</div></div>{!notice.read_at && <span aria-label="Unread" className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />}</div></li>;
       })}</ul>
       {unread > 0 && <Button variant="outline" disabled={saving} className="h-10 rounded-xl text-xs" onClick={() => void markRead(visibleItems.filter((notice) => !notice.read_at).map((notice) => notice.id))}><CheckCheck className="h-4 w-4" />{saving ? "Updating…" : "Mark all read"}</Button>}
-      <details className="group rounded-2xl border"><summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-xs font-semibold text-muted-foreground"><Settings2 className="h-4 w-4" />Phone notification settings<ChevronDown className="ml-auto h-4 w-4 transition-transform group-open:rotate-180" /></summary><div className="border-t p-3"><BackgroundNoticeControls /><p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">New updates also appear here while you use the app.</p></div></details>
     </DialogContent></Dialog>
   </>;
 }

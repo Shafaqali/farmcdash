@@ -9,6 +9,8 @@ interface BackgroundNoticesPlugin {
   stop(): Promise<void>;
   status(): Promise<BackgroundNoticeStatus>;
   checkNow(): Promise<void>;
+  openNotificationSettings(): Promise<void>;
+  ownerPermission(): Promise<{ permission: boolean }>;
 }
 export const BackgroundNotices = registerPlugin<BackgroundNoticesPlugin>("BackgroundNotices");
 const isAndroid = () => Capacitor.isNativePlatform() && Capacitor.getPlatform() === "android";
@@ -26,7 +28,7 @@ export function syncBackgroundNotices(uid: string | null, role: string | null) {
     if (!uid || role === "owner") { await BackgroundNotices.stop(); return; }
     if (role !== "customer") return;
     const { LocalNotifications } = await import("@capacitor/local-notifications");
-    const permission = await LocalNotifications.requestPermissions();
+    const permission = await LocalNotifications.checkPermissions();
     if (permission.display !== "granted") throw new Error("Allow notifications in Android app settings.");
     if (current !== revision) return;
     const credential = await BackgroundNotices.prepare({ uid });

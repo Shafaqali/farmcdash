@@ -38,3 +38,4 @@
 - Monthly photo galleries use animal_growth_photos with Asia/Kolkata calendar months and expiring account-scoped links, so reassignment revokes access.
 - Health summaries use observation date then known creation time; legacy NULL timestamps mean unknown same-day order, never fabricated history.
 - Storage usage uses owner-checked farm_storage_usage for attributable files and estimated rows only; unknown sizes stay incomplete and quotas are never inferred.
+- Vaccines use atomic record_owned_vaccination; private photo URLs use account-scoped memory caches; new photos share a resizing picker. Priority Android polls retain session/association checks and batch routine notices without replay.

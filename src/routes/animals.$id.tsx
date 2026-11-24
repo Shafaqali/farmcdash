@@ -1,10 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, Syringe, Scale, CalendarDays, IndianRupee, Camera, ShieldCheck, Trash2, Loader2 } from "lucide-react";
+import { ArrowLeft, Syringe, Scale, CalendarDays, IndianRupee, ShieldCheck, Trash2, Loader2 } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useFarm, inr, chargesFor, TODAY, fmtDate, monShort, uploadAnimalPhoto, isoToday, STATUSES, type Animal, type Status } from "@/lib/farm-data";
+import { AnimalPhotoPicker } from "@/components/AnimalPhotoPicker";
 import { AnimalQR } from "@/components/AnimalQR";
 import { AnimalPayments } from "@/components/AnimalPayments";
 import { FarmExport } from "@/components/FarmExport";
@@ -45,7 +46,7 @@ function Detail() {
   useEffect(() => { let active = true; setRemote(null); setPending(true); setLinkedName(""); void (async () => {
     try {
       if (role === "customer") {
-        const portal = await loadCustomerPortal();
+        const portal = await loadCustomerPortal(uid ?? undefined);
         const linked = portal.animals.find((x) => x.id.toLowerCase() === id.toLowerCase());
         if (linked) { if (active) { setRemote(linked); setLinkedName(portal.customers.find((c) => c.id === linked.ownerId)?.name ?? ""); } return; }
       }
@@ -122,7 +123,7 @@ function Detail() {
           <ul className="divide-y text-sm">{a.vaccinations.map((v) => <li key={v.id} className="flex justify-between py-2"><span className="font-medium">{v.name}</span><span className="text-muted-foreground">{fmtDate(v.date)}</span></li>)}</ul>
         ) : <p className="text-sm text-muted-foreground">No vaccines recorded yet.</p>}
       </section>
-      {mine ? <AdminPanel a={a} /> : <p className="text-center text-xs text-muted-foreground">Only the person who registered this animal can edit it.</p>}
+      {mine ? <AdminPanel key={a.id} a={a} /> : <p className="text-center text-xs text-muted-foreground">Only the person who registered this animal can edit it.</p>}
       <AnimalQuickSummary animal={a} ownerName={ownerName} registeredBy={regBy} health={health.scope === healthScope ? health.record : undefined} privateAccess={mine || (role === "customer" && !!linkedName)} />
     </div>
   );
@@ -135,11 +136,14 @@ function AdminPanel({ a }: { a: Animal }) {
   const nav = useNavigate();
   const [tab, setTab] = useState<(typeof tabs)[number]>("Weight");
   const [busy, setBusy] = useState(false);
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [photoProcessing, setPhotoProcessing] = useState(false);
   const [deleting, setDeleting] = useState<{ title: string; action: () => Promise<void> } | null>(null);
   const [kg, setKg] = useState(""); const [wDate, setWDate] = useState(isoToday());
   const [vName, setVName] = useState(""); const [vDate, setVDate] = useState(isoToday()); const [vNext, setVNext] = useState("");
   const [status, setStatus] = useState<Status>(a.status); const [soldDate, setSoldDate] = useState(a.soldDate ?? isoToday()); const [soldPrice, setSoldPrice] = useState(a.soldPrice?.toString() ?? "");
   const [d, setD] = useState({ categoryId: a.categoryId, subcategoryId: a.subcategoryId ?? "", breed: a.breed, ownerId: a.ownerId, monthlyCharge: String(a.monthlyCharge), arrival: a.arrival, notes: a.notes, vaccineDue: a.vaccineDue });
+  useEffect(() => { setD(previous => ({ ...previous, vaccineDue: a.vaccineDue })); }, [a.vaccineDue]);
 
   const run = async (fn: () => Promise<unknown>, msg: string, propagate = false) => {
     setBusy(true);
@@ -147,7 +151,7 @@ function AdminPanel({ a }: { a: Animal }) {
     catch (err) { if (propagate) throw err; toast.error(err instanceof Error ? err.message : "Update failed"); }
     finally { setBusy(false); }
   };
-  const chk = <T,>(r: { error: unknown } & T) => { if (r.error) throw r.error; return r; };
+  const chk = <T,>(r: { error: unknown } & T) => { if (r.error) throw new Error(typeof r.error === "object" && "message" in r.error ? String(r.error.message) : "Update failed"); return r; };
   const btn = <button disabled={busy} className="bg-glow flex w-full items-center justify-center gap-2 rounded-2xl py-3 font-semibold text-primary-foreground shadow-float disabled:opacity-60">{busy && <Loader2 className="h-4 w-4 animate-spin" />}Save</button>;
   const tops = categories.filter((c) => !c.parentId);
   const subs = categories.filter((c) => c.parentId === d.categoryId);
@@ -166,12 +170,12 @@ function AdminPanel({ a }: { a: Animal }) {
       </form>}
 
       {tab === "Vaccine" && <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (!vName.trim()) { toast.error("Enter vaccine name"); return; } void run(async () => {
-        chk(await supabase.from("vaccinations").insert({ animal_id: a.id, name: vName.trim(), date: vDate, next_due: vNext || null }));
-        if (vNext) chk(await supabase.from("animals").update({ vaccine_due: vNext }).eq("id", a.id));
+        chk(await supabase.rpc("record_owned_vaccination", { _animal_id: a.id, _name: vName.trim(), _date: vDate, ...(vNext ? { _next_due: vNext } : {}), ...(a.vaccineDue ? { _previous_due: a.vaccineDue } : {}) }));
         setVName(""); setVNext("");
       }, "Vaccine recorded"); }}>
+        <p className="rounded-xl bg-secondary/40 p-3 text-xs leading-relaxed text-muted-foreground">Saving completes the current vaccination reminder, even when given early. Enter the next due date to schedule the next reminder, or leave it empty to clear the schedule.</p>
         <F label="Vaccine name"><input className={field} value={vName} onChange={(e) => setVName(e.target.value)} placeholder="e.g. FMD, PPR, HS" /></F>
-        <div className="grid grid-cols-2 gap-3"><F label="Given on"><input type="date" className={field} value={vDate} onChange={(e) => setVDate(e.target.value)} /></F><F label="Next due"><input type="date" className={field} value={vNext} onChange={(e) => setVNext(e.target.value)} /></F></div>
+        <div className="grid grid-cols-2 gap-3"><F label="Given on"><input type="date" required max={isoToday()} className={field} value={vDate} onChange={(e) => setVDate(e.target.value)} /></F><F label="Next due"><input type="date" min={vDate} className={field} value={vNext} onChange={(e) => setVNext(e.target.value)} /></F></div>
         {btn}
       </form>}
 
@@ -198,12 +202,14 @@ function AdminPanel({ a }: { a: Animal }) {
         <Button type="button" variant="outline" disabled={busy} onClick={() => setDeleting({ title: `Delete ${a.id}?`, action: () => run(async () => { chk(await supabase.rpc("delete_owned_animal", { _animal_id: a.id })); await nav({ to: "/animals" }); }, "Animal deleted", true) })} className="w-full border-destructive/30 text-destructive"><Trash2 className="h-4 w-4" />Delete animal</Button>
       </form>}
 
-      {tab === "Photo" && <label className="flex cursor-pointer flex-col items-center gap-3 rounded-2xl border border-dashed p-6 text-center">
-        {busy ? <Loader2 className="h-8 w-8 animate-spin text-primary" /> : <Camera className="h-8 w-8 text-primary" />}
-        <span className="font-semibold">{a.photoUrl ? "Add growth photo" : "Add photo"}</span>
-        <span className="text-xs text-muted-foreground">Upload a photo each month to compare growth. Earlier photos are kept.</span>
-        <input type="file" disabled={busy} accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (!file || busy) return; e.target.value = ""; void run(async () => { const path = await uploadAnimalPhoto(a.id, file); chk(await supabase.from("animals").update({ photo_url: path }).eq("id", a.id)); }, "Photo updated"); }} />
-      </label>}
+      {tab === "Photo" && <div className="space-y-3">
+        <p className="text-xs text-muted-foreground">Upload a photo each month to compare growth. Earlier photos are kept.</p>
+        <AnimalPhotoPicker key={a.id} value={photo} onChange={setPhoto} disabled={busy} onProcessingChange={setPhotoProcessing} />
+        <Button type="button" className="w-full" disabled={busy || photoProcessing || !photo} onClick={() => {
+          if (!photo || busy || photoProcessing) return;
+          void run(async () => { const path = await uploadAnimalPhoto(a.id, photo); chk(await supabase.from("animals").update({ photo_url: path }).eq("id", a.id)); setPhoto(null); }, "Photo updated");
+        }}>{busy ? "Uploading photo..." : "Upload photo"}</Button>
+      </div>}
       <DeleteConfirmation open={!!deleting} onOpenChange={(open) => { if (!open) setDeleting(null); }} title={deleting?.title ?? "Delete record?"} description="This record will be permanently removed. This cannot be undone." onConfirm={async () => { if (deleting) await deleting.action(); }} />
     </section>
   );

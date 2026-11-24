@@ -677,6 +677,10 @@ export type Database = {
         Args: { _device: string; _secret: string }
         Returns: Json
       }
+      poll_customer_notifications_v2: {
+        Args: { _device: string; _include_routine?: boolean; _secret: string }
+        Returns: Json
+      }
       provision_customer_login: {
         Args: {
           _address?: string
@@ -689,6 +693,16 @@ export type Database = {
           _viewer: string
         }
         Returns: string
+      }
+      record_owned_vaccination: {
+        Args: {
+          _animal_id: string
+          _date: string
+          _name: string
+          _next_due?: string
+          _previous_due?: string
+        }
+        Returns: undefined
       }
       register_background_device: {
         Args: { _device: string; _secret: string }

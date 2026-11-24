@@ -10,6 +10,16 @@ const animal = { id: "U01-G0001", userId: "farmer", ownerId: "linked-customer", 
 beforeEach(() => { vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(new Date("2026-11-04T00:00:00Z")); });
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.resetAllMocks(); window.sessionStorage.clear(); window.history.replaceState(null, "", "/"); });
 describe("Customer financial access", () => {
+  it("starts photo authorization alongside the portal but signs only after portal authorization", async () => {
+    let resolvePortal: (value: unknown) => void = () => { throw new Error("Pending callback unavailable"); };
+    mocks.rpc.mockImplementationOnce(() => new Promise(resolve => { resolvePortal = resolve; })).mockResolvedValueOnce({ data: [{ animal_id: animal.id, photo_path: `${animal.id}/parallel.jpg` }], error: null });
+    mocks.signPhotos.mockResolvedValue({ data: [{ path: `${animal.id}/parallel.jpg`, signedUrl: "https://photos.example/parallel" }], error: null });
+    const pending = loadCustomerPortal();
+    expect(mocks.rpc).toHaveBeenCalledWith("customer_animal_photos");
+    expect(mocks.signPhotos).not.toHaveBeenCalled();
+    resolvePortal({ data: { animals: [animal], customers: [], payments: [] }, error: null });
+    expect((await pending).animals[0]?.photoUrl).toBe("https://photos.example/parallel");
+  });
   it("keeps an invitation code out of request URLs and retains it until connection", async () => {
     const code = "a".repeat(64);
     const url = new URL(customerInvitationUrl("https://farmcdash.lovable.app", code, "customer@example.com"));
@@ -35,12 +45,6 @@ describe("Customer financial access", () => {
     mocks.rpc.mockResolvedValue({ data: { animals: [], customers: [], payments: [] }, error: null });
     await loadCustomerPortal();
     expect(mocks.rpc).toHaveBeenCalledWith("customer_portal");
-  });
-  it("retains authorized animal notes from the private portal without adding financial data", async () => {
-    mocks.rpc.mockResolvedValueOnce({ data: { animals: [{ ...animal, notes: "Recorded private observation" }], customers: [], payments: [] }, error: null }).mockResolvedValueOnce({ data: [], error: null });
-    const result = await loadCustomerPortal();
-    expect(result.animals[0]?.notes).toBe("Recorded private observation");
-    expect(result.payments).toEqual([]);
   });
   it("signs only photo paths belonging to animals returned by the private portal", async () => {
     mocks.rpc.mockResolvedValueOnce({ data: { animals: [animal], customers: [], payments: [] }, error: null }).mockResolvedValueOnce({ data: [

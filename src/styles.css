@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-display: "Fraunces", Georgia, serif;
+  --font-display: "Figtree", system-ui, sans-serif;
   --font-sans: "Figtree", system-ui, sans-serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -86,8 +86,21 @@
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-tap-highlight-color: transparent;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
-  h1, h2, h3 { font-family: var(--font-display); }
+  h1, h2, h3 { font-family: var(--font-display); line-height: 1.25; letter-spacing: 0; }
+  button, input, select, textarea { font-family: inherit; }
+  :focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+  @media (pointer: coarse) {
+    button, a[role="button"] { min-height: 44px; }
+    input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select { min-height: 44px; font-size: 16px; }
+    textarea { font-size: 16px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+  }
 }
 
 @utility card-soft {

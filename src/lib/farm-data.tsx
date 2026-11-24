@@ -1,9 +1,11 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { AccountRole } from "@/lib/account-access";
 import { carePeriods } from "@/lib/care-billing";
 import { clearPhoneAlerts } from "@/lib/local-alerts";
+import { privatePhotoUrls, clearPrivatePhotoUrls } from "@/lib/private-photo-urls";
+import { prepareAnimalPhoto } from "@/lib/prepare-animal-photo";
 import { syncBackgroundNotices } from "@/lib/background-notices";
 
 export type Status = "Active" | "Sold" | "Discharged" | "Dead";
@@ -57,11 +59,7 @@ async function fetchAll(uid: string): Promise<Data> {
   const categories: Category[] = (cat.data ?? []).map((x) => ({ id: x.id, name: x.name, parentId: x.parent_id, code: x.code }));
   const catName = (id: string | null) => categories.find((x) => x.id === id)?.name ?? "";
   const paths = (a.data ?? []).map((x) => x.photo_url).filter((x): x is string => !!x);
-  const urls = new Map<string, string>();
-  if (paths.length) {
-    const { data } = await supabase.storage.from("animal-photos").createSignedUrls(paths, 3600);
-    data?.forEach((d) => { if (d.path && d.signedUrl) urls.set(d.path, d.signedUrl); });
-  }
+  const urls = await privatePhotoUrls(paths, `owner:${uid}`).catch(() => new Map<string, string>());
   const animals: Animal[] = (a.data ?? []).map((x) => ({
     id: x.id, userId: x.user_id, categoryId: x.category_id, subcategoryId: x.subcategory_id,
     species: catName(x.category_id), sub: catName(x.subcategory_id), breed: x.breed,
@@ -89,9 +87,11 @@ export function FarmProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<Data>(empty);
   const [loading, setLoading] = useState(false);
 
+  const accountKey = useRef("");
+  const requestGeneration = useRef(0);
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => { if (event === "SIGNED_OUT") setData(empty); setSession(s); setAuthReady(true); });
-    supabase.auth.getSession().then(({ data }) => { setSession(data.session); setAuthReady(true); });
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => { if (event === "SIGNED_OUT" || accountKey.current !== (s?.user.id ?? "")) { accountKey.current = s?.user.id ?? ""; requestGeneration.current++; clearPrivatePhotoUrls(); setData(empty); } setSession(s); setAuthReady(true); });
+    supabase.auth.getSession().then(({ data }) => { accountKey.current = data.session?.user.id ?? ""; setSession(data.session); setAuthReady(true); });
     return () => sub.subscription.unsubscribe();
   }, []);
 
@@ -104,11 +104,12 @@ export function FarmProvider({ children }: { children: ReactNode }) {
   }, [authReady, uid, roleReady, role]);
   const reload = useCallback(async () => {
     if (!uid) return;
+    const request = ++requestGeneration.current;
     setLoading(true);
     try {
-      if (role === "owner") setData(await fetchAll(uid));
-      else setData(empty);
-    } finally { setLoading(false); }
+      const fresh = role === "owner" ? await fetchAll(uid) : empty;
+      if (request === requestGeneration.current) setData(fresh);
+    } finally { if (request === requestGeneration.current) setLoading(false); }
   }, [uid, role]);
 
   useEffect(() => {
@@ -157,9 +158,10 @@ export const useFarm = () => { const c = useContext(Ctx); if (!c) throw new Erro
 /** Upload a photo for an animal; returns the storage path. */
 export async function uploadAnimalPhoto(animalId: string, file: File) {
   if (!file.type.startsWith("image/") || file.size > 15 * 1024 * 1024) throw new Error("Choose an image smaller than 15 MB.");
+  file = await prepareAnimalPhoto(file);
   const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
   const path = `${animalId}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
-  const { error } = await supabase.storage.from("animal-photos").upload(path, file, { upsert: false, contentType: file.type });
+  const { error } = await supabase.storage.from("animal-photos").upload(path, file, { upsert: false, contentType: file.type, cacheControl: "600" });
   if (error) throw error;
   return path;
 }

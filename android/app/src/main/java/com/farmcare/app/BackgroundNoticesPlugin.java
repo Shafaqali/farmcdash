@@ -20,6 +20,25 @@ public class BackgroundNoticesPlugin extends Plugin {
     static final String IMMEDIATE = "customer-notice-check";
     static final String CHANNEL = "customer_updates";
 
+    @PluginMethod public void openNotificationSettings(PluginCall call) {
+        try {
+            android.content.Intent intent = new android.content.Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                .putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, getContext().getPackageName());
+            if (Build.VERSION.SDK_INT < 26) intent = new android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                android.net.Uri.parse("package:" + getContext().getPackageName()));
+            getActivity().startActivity(intent);
+            call.resolve();
+        } catch (Exception error) { call.reject("Open Android app settings and allow notifications."); }
+    }
+    @PluginMethod public void ownerPermission(PluginCall call) {
+        boolean enabled = NotificationManagerCompat.from(getContext()).areNotificationsEnabled();
+        if (Build.VERSION.SDK_INT >= 26) {
+            NotificationChannel channel = getContext().getSystemService(NotificationManager.class).getNotificationChannel("farm");
+            enabled = enabled && (channel == null || channel.getImportance() != NotificationManager.IMPORTANCE_NONE);
+        }
+        call.resolve(new JSObject().put("permission", enabled));
+    }
+
     @PluginMethod public void bindAccount(PluginCall call) {
         synchronized (BackgroundNoticeStore.LOCK) {
             try {

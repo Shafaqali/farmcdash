@@ -6,7 +6,7 @@ import { syncPhoneAlerts } from "@/lib/local-alerts";
 import { useFarm, inr, chargesFor, TODAY, DAY_MS, fmtDate } from "@/lib/farm-data";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import { PhoneReminderControls } from "@/components/PhoneReminderControls";
+
 
 type Alert = { key: string; kind: "vaccine" | "money"; title: string; sub: string; to: string; params?: { id: string }; urgent: boolean };
 
@@ -26,13 +26,13 @@ export function useAlerts(): Alert[] {
       const due = animals.filter((a) => a.ownerId === c.id).reduce((s, a) => s + chargesFor(a), 0);
       const paid = payments.filter((p) => p.customerId === c.id).reduce((s, p) => s + p.amount, 0);
       const bal = due - paid;
-      if (bal > 0) out.push({ key: `m-${c.id}-${bal}`, kind: "money", title: `${c.name} owes ${inr(bal)}`, sub: c.phone || c.village || "Customer", to: "/customers", urgent: false });
+      if (bal > 0) out.push({ key: `m-${c.id}-${bal}`, kind: "money", title: `${c.name} owes ${inr(bal)}`, sub: `Payment pending${c.phone ? ` | ${c.phone}` : c.village ? ` | ${c.village}` : ""}`, to: "/customers", urgent: false });
     }
     return out.sort((x, y) => Number(y.urgent) - Number(x.urgent));
   }, [animals, customers, payments]);
 }
 
-function usePhoneAlerts() {
+export function usePhoneAlerts(automatic = true) {
   const { animals, customers, payments, loading, uid, role, reload } = useFarm();
   const sync = useCallback(async (force = false) => {
     if (!uid || role !== "owner" || loading) return;
@@ -42,9 +42,10 @@ function usePhoneAlerts() {
       const paid = payments.filter((p) => p.customerId === c.id).reduce((s, p) => s + p.amount, 0);
       return { name: c.name, bal: due - paid };
     }).filter((m) => m.bal > 0);
-    await syncPhoneAlerts(vaccines, money, force);
+    return await syncPhoneAlerts(vaccines, money, force);
   }, [animals, customers, payments, loading, uid, role]);
   useEffect(() => {
+    if (!automatic) return;
     void sync(true);
     // Re-sync whenever the app comes back to the foreground so schedules stay fresh
     let handle: { remove: () => void } | undefined;
@@ -53,13 +54,13 @@ function usePhoneAlerts() {
       App.addListener("appStateChange", (s) => { if (s.isActive && !disposed) void reload().catch(() => {}); }).then((h) => { if (disposed) h.remove(); else handle = h; })
     ).catch(() => {});
     return () => { disposed = true; handle?.remove(); };
-  }, [sync, reload]);
+  }, [sync, reload, automatic]);
   return sync;
 }
 
 export function NotificationBell() {
   const alerts = useAlerts();
-  const syncPhone = usePhoneAlerts();
+  usePhoneAlerts();
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<"all" | "vaccine" | "money">("all");
   useEffect(() => {
@@ -88,7 +89,6 @@ export function NotificationBell() {
           <DialogContent className="max-w-md rounded-3xl">
             <DialogTitle>Notifications</DialogTitle>
             <DialogDescription>{alerts.length} alerts · vaccines and pending payments</DialogDescription>
-            <PhoneReminderControls resync={() => syncPhone(true)} />
             <div className="flex flex-wrap gap-2">{([['all', 'All'], ['vaccine', 'Vaccines'], ['money', 'Payments']] as const).map(([key, label]) => <Button key={key} size="sm" variant={filter === key ? "default" : "outline"} onClick={() => setFilter(key)} aria-pressed={filter === key}>{label}</Button>)}</div>
             {!alerts.filter((a) => filter === "all" || a.kind === filter).length && <div className="flex flex-col items-center gap-3 py-8 text-center text-muted-foreground"><BellOff className="h-8 w-8" /><p className="text-sm">All caught up — no alerts.</p></div>}
             <ul className="max-h-[50svh] min-h-0 space-y-2 overflow-y-auto overscroll-contain">
@@ -98,7 +98,7 @@ export function NotificationBell() {
                     <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${a.kind === "vaccine" ? (a.urgent ? "bg-destructive/15 text-destructive" : "bg-accent/30 text-accent-foreground") : "bg-secondary text-primary"}`}>
                       {a.kind === "vaccine" ? <Syringe className="h-4 w-4" /> : <Wallet className="h-4 w-4" />}
                     </span>
-                    <span className="min-w-0"><span className="block break-words text-sm font-semibold">{a.title}</span><span className="mt-1 block break-words text-xs text-muted-foreground">{a.sub}</span></span>
+                    <span className="min-w-0"><span className="mb-1 block text-xs font-semibold text-primary"><span aria-hidden="true">{a.kind === "vaccine" ? "\uD83D\uDC89" : "\uD83D\uDCB3"} </span>{a.kind === "vaccine" ? "Vaccination reminder" : "Payment reminder"}</span><span className="block break-words text-sm font-semibold">{a.title}</span><span className="mt-1 block break-words text-sm text-muted-foreground">{a.sub}</span></span>
                   </Link>
                 </li>
               ))}

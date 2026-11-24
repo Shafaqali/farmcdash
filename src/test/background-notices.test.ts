@@ -1,20 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   native: { bindAccount: vi.fn(), prepare: vi.fn(), activate: vi.fn(), stop: vi.fn() },
-  getUser: vi.fn(), rpc: vi.fn(), requestPermissions: vi.fn(), platform: "android", nativePlatform: true,
+  getUser: vi.fn(), rpc: vi.fn(), checkPermissions: vi.fn(), platform: "android", nativePlatform: true,
 }));
 vi.mock("@capacitor/core", () => ({
   Capacitor: { isNativePlatform: () => mocks.nativePlatform, getPlatform: () => mocks.platform },
   registerPlugin: () => mocks.native,
 }));
-vi.mock("@capacitor/local-notifications", () => ({ LocalNotifications: { requestPermissions: mocks.requestPermissions } }));
+vi.mock("@capacitor/local-notifications", () => ({ LocalNotifications: { checkPermissions: mocks.checkPermissions } }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { auth: { getUser: mocks.getUser }, rpc: mocks.rpc } }));
 beforeEach(() => {
   vi.resetModules(); vi.resetAllMocks();
   mocks.nativePlatform = true; mocks.platform = "android";
   vi.stubEnv("VITE_SUPABASE_URL", "https://farm.example.com");
   vi.stubEnv("VITE_SUPABASE_PUBLISHABLE_KEY", "public-key");
-  mocks.requestPermissions.mockResolvedValue({ display: "granted" });
+  mocks.checkPermissions.mockResolvedValue({ display: "granted" });
   mocks.native.prepare.mockResolvedValue({ device: "device-a", secret: "secret-a" });
   mocks.getUser.mockResolvedValue({ data: { user: { id: "customer-a" } }, error: null });
   mocks.rpc.mockResolvedValue({ error: null });
@@ -50,7 +50,7 @@ describe("Android background notice account lifecycle", () => {
   });
   it("stops immediately at sign-out and invalidates a registration still in flight", async () => {
     const { syncBackgroundNotices, stopBackgroundNotices } = await import("@/lib/background-notices");
-    let finish!: (value: { error: null }) => void;
+    let finish: (value: { error: null }) => void = () => { throw new Error("Pending callback unavailable"); };
     mocks.rpc.mockImplementation(() => new Promise((resolve) => { finish = resolve; }));
     const pending = syncBackgroundNotices("customer-a", "customer");
     await vi.waitFor(() => expect(mocks.rpc).toHaveBeenCalled());
@@ -61,7 +61,7 @@ describe("Android background notice account lifecycle", () => {
   });
   it("does not register without notification permission", async () => {
     const { syncBackgroundNotices } = await import("@/lib/background-notices");
-    mocks.requestPermissions.mockResolvedValue({ display: "denied" });
+    mocks.checkPermissions.mockResolvedValue({ display: "denied" });
     await expect(syncBackgroundNotices("customer-a", "customer")).rejects.toThrow("Allow notifications");
     expect(mocks.rpc).not.toHaveBeenCalled();
   });

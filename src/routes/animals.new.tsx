@@ -1,10 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { field, F } from "@/components/form";
-import { ArrowLeft, Camera, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useFarm, uploadAnimalPhoto, isoToday, STATUSES, type Status } from "@/lib/farm-data";
+import { AnimalPhotoPicker } from "@/components/AnimalPhotoPicker";
 import { PageTitle } from "@/components/AppShell";
 
 export const Route = createFileRoute("/animals/new")({
@@ -26,6 +27,7 @@ function NewAnimal() {
   const tops = categories.filter((c) => !c.parentId);
   const [f, setF] = useState({ categoryId: "", subcategoryId: "", breed: "", ownerId: "", arrival: isoToday(), monthlyCharge: "", status: "Active" as Status, weight: "", vaccineDue: "", notes: "" });
   const [photo, setPhoto] = useState<File | null>(null);
+  const [photoProcessing, setPhotoProcessing] = useState(false);
   const [busy, setBusy] = useState(false);
   const catId = f.categoryId || tops[0]?.id || "";
   const subs = categories.filter((c) => c.parentId === catId);
@@ -36,6 +38,7 @@ function NewAnimal() {
   return (
     <form className="space-y-4" onSubmit={async (e) => {
       e.preventDefault();
+      if (busy || photoProcessing) return;
       if (!catId) { toast.error("Add a category first"); return; }
       setBusy(true);
       try {
@@ -48,7 +51,13 @@ function NewAnimal() {
         if (error) throw error;
         const id = data.id;
         if (f.weight) await supabase.from("weights").insert({ animal_id: id, date: f.arrival, kg: Number(f.weight) });
-        if (photo) { const path = await uploadAnimalPhoto(id, photo); await supabase.from("animals").update({ photo_url: path }).eq("id", id); }
+        if (photo) {
+          try {
+            const path = await uploadAnimalPhoto(id, photo);
+            const { error: photoError } = await supabase.from("animals").update({ photo_url: path }).eq("id", id);
+            if (photoError) throw photoError;
+          } catch { toast.error(`Animal ${id} was saved, but its photo could not upload. Add the photo from the animal record.`); }
+        }
         await reload();
         toast.success(`${id} registered — QR code ready`);
         nav({ to: "/animals/$id", params: { id } });
@@ -58,11 +67,7 @@ function NewAnimal() {
       <Link to="/animals" className="flex items-center gap-1 text-sm text-muted-foreground"><ArrowLeft className="h-4 w-4" />Animals</Link>
       <PageTitle title="Register animal" />
       <section className="card-soft animate-rise space-y-4 p-4">
-        <label className="flex cursor-pointer items-center gap-3">
-          {photo ? <img src={URL.createObjectURL(photo)} alt="" className="h-20 w-20 rounded-2xl object-cover" /> : <span className="grid h-20 w-20 place-items-center rounded-2xl bg-secondary text-primary"><Camera className="h-6 w-6" /></span>}
-          <span className="text-sm font-semibold text-primary">{photo ? "Change photo" : "Add animal photo"}</span>
-          <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => setPhoto(e.target.files?.[0] ?? null)} />
-        </label>
+        <AnimalPhotoPicker value={photo} onChange={setPhoto} disabled={busy} onProcessingChange={setPhotoProcessing} />
         <F label="Category">
           <div className="flex flex-wrap gap-2">
             {tops.map((s) => (
@@ -86,7 +91,7 @@ function NewAnimal() {
         <F label="Next vaccine due"><input type="date" className={field} value={f.vaccineDue} onChange={set("vaccineDue")} /></F>
         <F label="Identification notes"><textarea rows={3} className={field} value={f.notes} onChange={set("notes")} placeholder="Markings, colour, horns…" /></F>
       </section>
-      <button disabled={busy} className="bg-glow flex w-full items-center justify-center gap-2 rounded-2xl py-4 font-semibold text-primary-foreground shadow-float active:scale-[.98] disabled:opacity-60">{busy && <Loader2 className="h-4 w-4 animate-spin" />}Save animal</button>
+      <button disabled={busy || photoProcessing} className="bg-glow flex w-full items-center justify-center gap-2 rounded-2xl py-4 font-semibold text-primary-foreground shadow-float active:scale-[.98] disabled:opacity-60">{busy && <Loader2 className="h-4 w-4 animate-spin" />}Save animal</button>
     </form>
   );
 }

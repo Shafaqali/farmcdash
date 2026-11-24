@@ -31,9 +31,10 @@ public class CustomerNoticeWorker extends Worker {
                     record(snapshot, "permission_blocked"); return Result.success();
                 }
                 BackgroundNoticesPlugin.createChannel(getApplicationContext());
+                boolean includeRoutine = System.currentTimeMillis() - snapshot.optLong("lastRoutineCheck", 0) >= 3L * 60 * 60 * 1000;
                 // Bounded batches catch up without keeping the phone awake indefinitely.
                 for (int batch = 0; batch < 4 && !isStopped(); batch++) {
-                    JSONArray notices = new JSONArray(request(snapshot, "poll_customer_notifications", credential(snapshot)));
+                    JSONArray notices = new JSONArray(request(snapshot, "poll_customer_notifications_v2", credential(snapshot).put("_include_routine", includeRoutine)));
                     JSONArray delivered = new JSONArray();
                     for (int index = 0; index < notices.length(); index++) {
                         JSONObject notice = notices.getJSONObject(index);
@@ -49,7 +50,17 @@ public class CustomerNoticeWorker extends Worker {
                     if (delivered.length() > 0) request(snapshot, "ack_customer_notifications", credential(snapshot).put("_ids", delivered));
                     if (notices.length() < 30) break;
                 }
+                if (includeRoutine) synchronized (BackgroundNoticeStore.LOCK) {
+                    if (isCurrent(snapshot)) {
+                        JSONObject current = BackgroundNoticeStore.load(getApplicationContext());
+                        current.put("lastRoutineCheck", System.currentTimeMillis());
+                        BackgroundNoticeStore.save(getApplicationContext(), current);
+                    }
+                }
                 record(snapshot, "ok"); return Result.success();
+            } catch (ServiceMissing error) {
+                if (snapshot != null) record(snapshot, "server_update_required");
+                return Result.retry();
             } catch (Expired error) {
                 if (snapshot != null) {
                     synchronized (BackgroundNoticeStore.LOCK) {
@@ -111,6 +122,7 @@ public class CustomerNoticeWorker extends Worker {
                 }
             }
             String response = new String(output.toByteArray(), StandardCharsets.UTF_8);
+            if (status == 404 && response.contains("PGRST202")) throw new ServiceMissing();
             if (status >= 400) {
                 if (response.contains("\"28000\"")) throw new Expired();
                 throw new IllegalStateException("Background request failed: " + status);
@@ -125,12 +137,20 @@ public class CustomerNoticeWorker extends Worker {
         }
         Intent intent = new Intent(getApplicationContext(), MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent tap = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        String title = notice.getString("title");
+        String lower = title.toLowerCase(java.util.Locale.ROOT);
+        String emoji = lower.contains("payment") ? "\uD83D\uDCB3" : lower.contains("vaccin") ? "\uD83D\uDC89" :
+            lower.contains("health") ? "\uD83E\uDE7A" : lower.contains("weight") || lower.contains("growth") ? "\uD83D\uDCC8" : "\uD83D\uDD14";
         NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), BackgroundNoticesPlugin.CHANNEL)
-            .setSmallIcon(R.drawable.ic_stat_farm).setContentTitle(notice.getString("title"))
+            .setSmallIcon(R.drawable.ic_stat_farm)
+            .setLargeIcon(android.graphics.BitmapFactory.decodeResource(getApplicationContext().getResources(), R.mipmap.ic_launcher))
+            .setColor(android.graphics.Color.rgb(33, 94, 61)).setContentTitle(emoji + " " + title)
+            .setStyle(new NotificationCompat.BigTextStyle().bigText(notice.getString("body")))
             .setContentText(notice.getString("body")).setContentIntent(tap).setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_HIGH).setVisibility(NotificationCompat.VISIBILITY_PRIVATE).setOnlyAlertOnce(true);
         // The stable UUID tag replaces a retry after a crash instead of adding a second receipt/notice.
         NotificationManagerCompat.from(getApplicationContext()).notify("customer:" + config.getString("uid") + ":" + notice.getString("id"), 20000, builder.build());
     }
+    private static final class ServiceMissing extends Exception { }
     private static final class Expired extends Exception { }
 }

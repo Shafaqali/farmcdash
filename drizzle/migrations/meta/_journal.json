@@ -106,6 +106,20 @@
       "when": 1795311260126,
       "tag": "0014_v23_linked_customer_animal_notes",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1795481710178,
+      "tag": "0015_v29_vaccination_and_priority_notices",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1795481788287,
+      "tag": "0016_optional_vaccination_schedule_dates",
+      "breakpoints": true
     }
   ]
 }

@@ -1,3 +1,4 @@
+import { privatePhotoUrls } from "@/lib/private-photo-urls";
 import { supabase } from "@/integrations/supabase/client";
 import type { Animal, Customer, Payment } from "@/lib/farm-data";
 
@@ -38,20 +39,21 @@ export async function connectCustomer(code: string) {
   if (error) throw new Error("This code is expired, already used, or belongs to a different email. Sign in with the invited email or ask your farm for a new invitation.");
   clearCustomerInvitation();
 }
-export async function loadCustomerPortal(): Promise<PortalData> {
-  const { data, error } = await supabase.rpc("customer_portal");
+export async function loadCustomerPortal(uid?: string): Promise<PortalData> {
+  const portalRequest = supabase.rpc("customer_portal");
+  // Both RPCs independently check the signed-in customer and associations.
+  const photoRequest = Promise.resolve(supabase.rpc("customer_animal_photos")).catch(error => ({ data: null, error }));
+  const { data, error } = await portalRequest;
   if (error) throw error;
   const portal = data as unknown as PortalData;
   if (!portal.animals.length) return portal;
   try {
-    const { data: photos, error: photoError } = await supabase.rpc("customer_animal_photos");
+    const { data: photos, error: photoError } = await photoRequest;
     if (photoError) throw photoError;
     const permitted = new Set(portal.animals.map((a) => a.id));
     const paths = (photos ?? []).filter((p) => permitted.has(p.animal_id) && p.photo_path.startsWith(`${p.animal_id}/`));
     if (!paths.length) return portal;
-    const { data: signed, error: signingError } = await supabase.storage.from("animal-photos").createSignedUrls(paths.map((p) => p.photo_path), 600);
-    if (signingError) throw signingError;
-    const urls = new Map((signed ?? []).filter((p) => p.path && p.signedUrl && !p.error).map((p) => [p.path!, p.signedUrl]));
+    const urls = await privatePhotoUrls(paths.map(p => p.photo_path), uid ? `customer:${uid}` : undefined);
     const byAnimal = new Map(paths.map((p) => [p.animal_id, p.photo_path]));
     return { ...portal, animals: portal.animals.map((a) => ({ ...a, photoPath: byAnimal.get(a.id) ?? null, photoUrl: urls.get(byAnimal.get(a.id) ?? "") ?? null })), ...(urls.size < paths.length ? { photoWarning: "Some photos could not load. Refresh to try again." } : {}) };
   } catch {
