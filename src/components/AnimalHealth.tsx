@@ -18,9 +18,9 @@ export function AnimalHealth({ animalId, editable = false, onLatestChange }: { a
   const refresh = async () => {
     const { data, error } = await supabase.from("animal_health").select("*").eq("animal_id", animalId).order("date", { ascending: false }).order("id");
     if (error) throw error;
-    setRecords([...(data ?? [])].sort((a,b) => b.date.localeCompare(a.date) || (b.created_at ?? "").localeCompare(a.created_at ?? "") || b.id.localeCompare(a.id))); onLatestChange?.(latestHealth(data ?? []));
+    setRecords(data ?? []); onLatestChange?.(latestHealth(data ?? []));
   };
-  useEffect(() => { let active = true; void supabase.from("animal_health").select("*").eq("animal_id", animalId).order("date", { ascending: false }).then(({ data, error }) => { if (active) { setRecords([...(data ?? [])].sort((a,b) => b.date.localeCompare(a.date) || (b.created_at ?? "").localeCompare(a.created_at ?? "") || b.id.localeCompare(a.id))); onLatestChange?.(error ? undefined : latestHealth(data ?? [])); setError(error?.message ?? ""); } }); return () => { active = false; }; }, [animalId, onLatestChange]);
+  useEffect(() => { let active = true; void supabase.from("animal_health").select("*").eq("animal_id", animalId).order("date", { ascending: false }).then(({ data, error }) => { if (active) { setRecords(data ?? []); onLatestChange?.(error ? undefined : latestHealth(data ?? [])); setError(error?.message ?? ""); } }); return () => { active = false; }; }, [animalId, onLatestChange]);
   return <section className="space-y-3 border-y py-4" aria-label="Animal health history">
     <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="flex items-center gap-2 text-lg font-semibold"><HeartPulse className="h-5 w-5 text-primary" />Health history</h2>{editable && <Button variant="outline" onClick={() => { setError(""); setOpen(true); }}><Plus />Health update</Button>}</div>
     {error && !open && <p role="alert" className="text-sm text-destructive">{error}</p>}

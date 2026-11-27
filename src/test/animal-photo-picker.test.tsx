@@ -28,7 +28,7 @@ describe("animal camera/gallery picker", () => {
     expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:preview");
   });
   it("blocks competing selections during resize and cancels a late result on unmount", async () => {
-    let finish: (file: File) => void = () => { throw new Error("Pending callback unavailable"); };
+    let finish!: (file: File) => void;
     mocks.prepare.mockImplementation(() => new Promise(resolve => { finish = resolve; }));
     const photo = new File(["camera"], "camera.jpg", { type: "image/jpeg" });
     const view = render(<Harness />);

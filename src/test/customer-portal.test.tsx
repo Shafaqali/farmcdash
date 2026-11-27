@@ -11,7 +11,7 @@ beforeEach(() => { vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(new 
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.resetAllMocks(); window.sessionStorage.clear(); window.history.replaceState(null, "", "/"); });
 describe("Customer financial access", () => {
   it("starts photo authorization alongside the portal but signs only after portal authorization", async () => {
-    let resolvePortal: (value: unknown) => void = () => { throw new Error("Pending callback unavailable"); };
+    let resolvePortal!: (value: unknown) => void;
     mocks.rpc.mockImplementationOnce(() => new Promise(resolve => { resolvePortal = resolve; })).mockResolvedValueOnce({ data: [{ animal_id: animal.id, photo_path: `${animal.id}/parallel.jpg` }], error: null });
     mocks.signPhotos.mockResolvedValue({ data: [{ path: `${animal.id}/parallel.jpg`, signedUrl: "https://photos.example/parallel" }], error: null });
     const pending = loadCustomerPortal();

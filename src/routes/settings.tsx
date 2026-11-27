@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useFarm } from "@/lib/farm-data";
 import { useCustomerPortal } from "@/lib/use-customer-portal";
 export const Route = createFileRoute("/settings")({
-  head: () => ({ meta: [{ title: "My profile & settings — STAR GOATS FARM" }, { name: "description", content: "Your animals, personal details, notification settings and account security." }, { property: "og:title", content: "My profile & settings — STAR GOATS FARM" }, { property: "og:description", content: "Your account, notifications and private farm storage usage." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
+  head: () => ({ meta: [{ title: "My profile & settings — STAR GOATS FARM" }, { name: "description", content: "Your animals, personal details, notification settings and account security." }] }),
   component: SettingsPage,
 });
 export function SettingsPage() {

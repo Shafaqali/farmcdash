@@ -29,7 +29,7 @@ describe("private photo URL reuse", () => {
     } finally { clock.mockRestore(); }
   });
   it("deduplicates concurrent signing and prevents late requests restoring a cleared cache", async () => {
-    let finish: (value: unknown) => void = () => { throw new Error("Pending callback unavailable"); };
+    let finish!: (value: unknown) => void;
     mock.sign.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
     const first = privatePhotoUrls(["a/1.jpg"], "owner:a");
     const second = privatePhotoUrls(["a/1.jpg"], "owner:a");

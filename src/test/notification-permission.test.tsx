@@ -15,50 +15,83 @@ vi.mock("@capacitor/local-notifications", () => ({ LocalNotifications: { request
 vi.mock("@/lib/background-notices", () => ({ syncBackgroundNotices: mocks.background, BackgroundNotices: { ownerPermission: mocks.permission, openNotificationSettings: mocks.settings, status: mocks.status } }));
 beforeEach(() => {
   vi.clearAllMocks(); mocks.role = "owner";
-  mocks.request.mockResolvedValue({ display: "granted" });
+  mocks.request.mockImplementation(async () => { mocks.permission.mockResolvedValue({ permission: true, sound: true }); return { display: "granted" }; });
   mocks.exact.mockResolvedValue({ exact_alarm: "granted" });
-  mocks.permission.mockResolvedValue({ permission: true });
-  mocks.status.mockResolvedValue({ permission: true, enabled: true });
+  mocks.permission.mockResolvedValue({ permission: false, sound: true });
+  mocks.status.mockResolvedValue({ permission: true, enabled: false, sound: true });
+  mocks.background.mockImplementation(async () => { mocks.status.mockResolvedValue({ permission: true, enabled: true, sound: true }); });
   mocks.sync.mockResolvedValue(true);
 });
 afterEach(cleanup);
-it("uses one button to enable owner reminders at the advertised hours", async () => {
+it("enables reminders and replaces the one button with verified enabled status", async () => {
   render(<NotificationPermissionControl />);
+  fireEvent.click(await screen.findByRole("button", { name: "Enable notifications" }));
+  await screen.findByRole("button", { name: "Notifications enabled" });
   expect(screen.getAllByRole("button")).toHaveLength(1);
-  expect(mocks.request).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole("button", { name: "Enable notifications" }));
-  await screen.findByText(/Vaccines: 9 AM/);
   expect(mocks.sync).toHaveBeenCalledWith(true);
-  expect(mocks.background).not.toHaveBeenCalled();
 });
-it("opens Android settings when denied and resumes setup after returning", async () => {
+it("restores enabled status when Settings is reopened without requesting permission again", async () => {
+  mocks.permission.mockResolvedValue({ permission: true, sound: true });
+  const view = render(<NotificationPermissionControl />);
+  await screen.findByRole("button", { name: "Notifications enabled" });
+  view.unmount();
+  render(<NotificationPermissionControl />);
+  fireEvent.click(await screen.findByRole("button", { name: "Notifications enabled" }));
+  await waitFor(() => expect(mocks.settings).toHaveBeenCalledOnce());
+  expect(mocks.request).not.toHaveBeenCalled();
+});
+it("opens Android settings when denied and completes after returning", async () => {
   mocks.request.mockResolvedValue({ display: "denied" });
   render(<NotificationPermissionControl />);
-  fireEvent.click(screen.getByRole("button"));
+  fireEvent.click(await screen.findByRole("button", { name: "Enable notifications" }));
   await waitFor(() => expect(mocks.settings).toHaveBeenCalledOnce());
   expect(mocks.sync).not.toHaveBeenCalled();
+  mocks.permission.mockResolvedValue({ permission: true, sound: true });
   mocks.resume?.({ isActive: true });
-  await screen.findByText(/Enabled. Vaccines/);
+  await screen.findByRole("button", { name: "Notifications enabled" });
 });
 it("opens exact alarm settings using the same button", async () => {
   mocks.exact.mockResolvedValue({ exact_alarm: "denied" });
   render(<NotificationPermissionControl />);
-  fireEvent.click(screen.getByRole("button"));
+  fireEvent.click(await screen.findByRole("button", { name: "Enable notifications" }));
   await waitFor(() => expect(mocks.change).toHaveBeenCalledOnce());
-  expect(screen.getAllByRole("button")).toHaveLength(1);
+  expect(screen.queryByRole("button", { name: "Notifications enabled" })).not.toBeInTheDocument();
 });
-it("reports scheduling errors without claiming reminders are enabled", async () => {
+it("keeps failed scheduling retryable without showing enabled", async () => {
   mocks.sync.mockResolvedValue(false);
   render(<NotificationPermissionControl />);
-  fireEvent.click(screen.getByRole("button"));
+  fireEvent.click(await screen.findByRole("button", { name: "Enable notifications" }));
   await screen.findByText(/Could not schedule reminders/);
+  await waitFor(() => expect(screen.getByRole("button", { name: "Enable notifications" })).not.toBeDisabled());
 });
 it("activates customer background checks without owner alarms", async () => {
   mocks.role = "customer";
   render(<NotificationPermissionControl />);
-  fireEvent.click(screen.getByRole("button"));
-  await screen.findByText(/15 minutes or longer/);
+  fireEvent.click(await screen.findByRole("button", { name: "Enable notifications" }));
+  await screen.findByRole("button", { name: "Notifications enabled" });
   expect(mocks.background).toHaveBeenCalledWith("account", "customer");
   expect(mocks.sync).not.toHaveBeenCalled();
-  expect(mocks.change).not.toHaveBeenCalled();
+});
+it("reflects a permission revoked in Android settings on foreground return", async () => {
+  mocks.permission.mockResolvedValue({ permission: true, sound: true });
+  render(<NotificationPermissionControl />);
+  await screen.findByRole("button", { name: "Notifications enabled" });
+  mocks.permission.mockResolvedValue({ permission: false });
+  mocks.resume?.({ isActive: true });
+  await screen.findByRole("button", { name: "Enable notifications" });
+});
+it("shows silent channel status without pretending to enable sound", async () => {
+  mocks.permission.mockResolvedValue({ permission: true, sound: false });
+  render(<NotificationPermissionControl />);
+  await screen.findByText(/Sound is off in Android settings/);
+});
+
+it("does not show enabled when the background worker reports missing server setup", async () => {
+  mocks.role = "customer";
+  mocks.status.mockResolvedValue({ permission: true, enabled: true, result: "server_update_required" });
+  mocks.background.mockResolvedValue(undefined);
+  render(<NotificationPermissionControl />);
+  fireEvent.click(await screen.findByRole("button", { name: "Enable notifications" }));
+  await screen.findByText(/Apply the supplied SQL update/);
+  expect(screen.queryByRole("button", { name: "Notifications enabled" })).not.toBeInTheDocument();
 });

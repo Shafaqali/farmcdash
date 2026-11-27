@@ -21,6 +21,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { CustomerShell } from "@/components/CustomerShell";
 import { customerRouteAllowed } from "@/lib/account-access";
 import { NativeBridge } from "@/lib/native";
+import { AppOpening } from "@/components/AppOpening";
 
 function NotFoundComponent() {
   return (
@@ -130,6 +131,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <FarmProvider>
         <NativeBridge />
+        <AppOpening />
         <AuthGate />
 
         <Toaster position="top-center" />

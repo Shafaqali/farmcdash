@@ -14,14 +14,14 @@ describe("farm storage usage", () => {
   });
   it("keeps slow results from a previous owner out of the current account", async () => {
     mocks.account = { uid: "owner-a", role: "owner" };
-    let resolveOld: ((value: ReturnType<typeof usage>) => void) | undefined;
+    let resolveOld!: (value: ReturnType<typeof usage>) => void;
     mocks.rpc.mockReset().mockImplementationOnce(() => new Promise(resolve => { resolveOld = resolve; })).mockResolvedValueOnce(usage(2097152));
     const view = render(<StorageUsageSettings />);
     await waitFor(() => expect(mocks.rpc).toHaveBeenCalledTimes(1));
     mocks.account = { uid: "owner-b", role: "owner" };
     view.rerender(<StorageUsageSettings />);
     expect(await screen.findByText("2 MB")).toBeInTheDocument();
-    await act(async () => { if (!resolveOld) throw new Error("Missing pending request"); resolveOld(usage(9437184)); });
+    await act(async () => { resolveOld(usage(9437184)); });
     expect(screen.getByText("2 MB")).toBeInTheDocument();
     expect(screen.queryByText("9 MB")).not.toBeInTheDocument();
     expect(screen.getByText("Cloud plan capacity: unavailable in the app")).toBeInTheDocument();

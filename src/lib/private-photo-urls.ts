@@ -29,7 +29,7 @@ export async function privatePhotoUrls(paths: string[], scope?: string): Promise
         signed.set(item.path, item.signedUrl);
         if (scope && revision === generation) cache.set(`${scope}:${item.path}`, { url: item.signedUrl, expires: now + 8 * 60_000 });
       }
-      while (cache.size > 400) { const oldest = cache.keys().next().value; if (oldest === undefined) break; cache.delete(oldest); }
+      while (cache.size > 400) cache.delete(cache.keys().next().value!);
       return signed;
     })();
     if (scope) {

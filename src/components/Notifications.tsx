@@ -74,7 +74,7 @@ export function NotificationBell() {
   useEffect(() => {
     const fresh = alerts.filter((a) => a.kind === "vaccine" && !shown.current.has(a.key));
     fresh.forEach((a) => shown.current.add(a.key));
-    if (fresh.length) toast.warning(fresh.length === 1 ? fresh[0]?.title : `${fresh.length} vaccine reminders`, { id: "farm-vaccine-alert", description: fresh.length === 1 ? fresh[0]?.sub : "Check notifications for due animals.", action: { label: "View", onClick: () => { setFilter("vaccine"); setOpen(true); } } });
+    if (fresh.length) toast.warning(fresh.length === 1 ? "Vaccination reminder" : `${fresh.length} vaccine reminders`, { id: "farm-vaccine-alert", description: fresh.length === 1 ? `${fresh[0]?.params?.id} | ${fresh[0]?.sub}` : "Check notifications for due animals.", action: { label: "View alerts", onClick: () => { setFilter("vaccine"); setOpen(true); } } });
   }, [alerts]);
 
   return (
@@ -86,19 +86,19 @@ export function NotificationBell() {
         )}
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
-          <DialogContent className="max-w-md rounded-3xl">
-            <DialogTitle>Notifications</DialogTitle>
-            <DialogDescription>{alerts.length} alerts · vaccines and pending payments</DialogDescription>
-            <div className="flex flex-wrap gap-2">{([['all', 'All'], ['vaccine', 'Vaccines'], ['money', 'Payments']] as const).map(([key, label]) => <Button key={key} size="sm" variant={filter === key ? "default" : "outline"} onClick={() => setFilter(key)} aria-pressed={filter === key}>{label}</Button>)}</div>
+          <DialogContent className="max-w-lg gap-0 overflow-hidden rounded-2xl p-0 shadow-xl">
+            <div className="border-b px-5 py-5"><DialogTitle className="text-xl font-bold">Notifications</DialogTitle>
+            <DialogDescription>{alerts.length} alerts · vaccines and pending payments</DialogDescription></div>
+            <div className="flex flex-wrap gap-2 border-b px-5 py-3">{([['all', 'All'], ['vaccine', 'Vaccines'], ['money', 'Payments']] as const).map(([key, label]) => <Button key={key} size="sm" className="rounded-lg font-semibold" variant={filter === key ? "default" : "outline"} onClick={() => setFilter(key)} aria-pressed={filter === key}>{label}</Button>)}</div>
             {!alerts.filter((a) => filter === "all" || a.kind === filter).length && <div className="flex flex-col items-center gap-3 py-8 text-center text-muted-foreground"><BellOff className="h-8 w-8" /><p className="text-sm">All caught up — no alerts.</p></div>}
-            <ul className="max-h-[50svh] min-h-0 space-y-2 overflow-y-auto overscroll-contain">
+            <ul className="max-h-[50svh] min-h-0 divide-y overflow-y-auto overscroll-contain px-5">
               {alerts.filter((a) => filter === "all" || a.kind === filter).map((a) => (
                 <li key={a.key}>
-                  <Link to={a.to} params={a.params as never} onClick={() => setOpen(false)} className="flex items-start gap-3 rounded-lg border p-3 hover:bg-muted">
+                  <Link to={a.to} params={a.params as never} onClick={() => setOpen(false)} className="flex items-start gap-3 py-4 transition-colors hover:bg-muted/40">
                     <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${a.kind === "vaccine" ? (a.urgent ? "bg-destructive/15 text-destructive" : "bg-accent/30 text-accent-foreground") : "bg-secondary text-primary"}`}>
                       {a.kind === "vaccine" ? <Syringe className="h-4 w-4" /> : <Wallet className="h-4 w-4" />}
                     </span>
-                    <span className="min-w-0"><span className="mb-1 block text-xs font-semibold text-primary"><span aria-hidden="true">{a.kind === "vaccine" ? "\uD83D\uDC89" : "\uD83D\uDCB3"} </span>{a.kind === "vaccine" ? "Vaccination reminder" : "Payment reminder"}</span><span className="block break-words text-sm font-semibold">{a.title}</span><span className="mt-1 block break-words text-sm text-muted-foreground">{a.sub}</span></span>
+                    <span className="min-w-0"><span className="mb-1 block text-xs font-semibold text-primary">{a.kind === "vaccine" ? "Vaccination reminder" : "Payment reminder"}</span><span className="block break-words text-base font-bold leading-snug">{a.title}</span><span className="mt-1 block break-words text-sm text-muted-foreground">{a.sub}</span></span>
                   </Link>
                 </li>
               ))}

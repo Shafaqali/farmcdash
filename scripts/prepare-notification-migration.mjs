@@ -48,3 +48,56 @@ const english = await readFile(new URL("../drizzle/migrations/0015_english_notif
 const englishUpdate = update.replace("-- Star Goats Farm v19:", "-- Star Goats Farm v20:").replace("COMMIT;\n", `${english}\nCOMMIT;\n`);
 await writeFile(new URL("../APPLY-UPDATE-v20.sql", import.meta.url), englishUpdate);
 console.log("Prepared APPLY-UPDATE-v20.sql");
+
+const growth = await readFile(new URL("../drizzle/migrations/0016_animal_growth_photos.sql", import.meta.url), "utf8");
+await writeFile(new URL("../APPLY-UPDATE-v21.sql", import.meta.url), englishUpdate.replace("-- Star Goats Farm v20:", "-- Star Goats Farm v21:").replace("COMMIT;\n", () => `${growth}\nCOMMIT;\n`));
+console.log("Prepared APPLY-UPDATE-v21.sql");
+
+const healthTimestamp = await readFile(new URL("../drizzle/migrations/0017_health_record_timestamp.sql", import.meta.url), "utf8");
+const v21 = await readFile(new URL("../APPLY-UPDATE-v21.sql", import.meta.url), "utf8");
+await writeFile(new URL("../APPLY-UPDATE-v22.sql", import.meta.url), v21.replace("-- Star Goats Farm v21:", "-- Star Goats Farm v22:").replace("COMMIT;\n", () => `${healthTimestamp}\nCOMMIT;\n`));
+console.log("Prepared APPLY-UPDATE-v22.sql");
+
+const usage = await readFile(new URL("../drizzle/migrations/0018_farm_storage_usage.sql", import.meta.url), "utf8");
+const v22 = await readFile(new URL("../APPLY-UPDATE-v22.sql", import.meta.url), "utf8");
+await writeFile(new URL("../APPLY-UPDATE-v23.sql", import.meta.url), v22.replace("-- Star Goats Farm v22:", "-- Star Goats Farm v23:").replace("COMMIT;\n", () => `${usage}\nCOMMIT;\n`));
+console.log("Prepared APPLY-UPDATE-v23.sql");
+
+const vaccination = await readFile(new URL("../drizzle/migrations/0019_complete_vaccination_reminder.sql", import.meta.url), "utf8");
+const v23 = await readFile(new URL("../APPLY-UPDATE-v23.sql", import.meta.url), "utf8");
+await writeFile(new URL("../APPLY-UPDATE-v24.sql", import.meta.url), v23.replace("-- Star Goats Farm v23:", "-- Star Goats Farm v24:").replace("COMMIT;\n", () => `${vaccination}\nCOMMIT;\n`));
+console.log("Prepared APPLY-UPDATE-v24.sql");
+
+// v25 optimizes client photo loading; backend prerequisites are unchanged.
+const v24 = await readFile(new URL("../APPLY-UPDATE-v24.sql", import.meta.url), "utf8");
+await writeFile(new URL("../APPLY-UPDATE-v25.sql", import.meta.url), v24.replace("-- Star Goats Farm v24:", "-- Star Goats Farm v25:"));
+console.log("Prepared APPLY-UPDATE-v25.sql");
+
+// v26 adds camera/gallery selection and resizing UI; backend is unchanged.
+const v25 = await readFile(new URL("../APPLY-UPDATE-v25.sql", import.meta.url), "utf8");
+await writeFile(new URL("../APPLY-UPDATE-v26.sql", import.meta.url), v25.replace("-- Star Goats Farm v25:", "-- Star Goats Farm v26:"));
+console.log("Prepared APPLY-UPDATE-v26.sql");
+
+// v27 simplifies Android notification permissions; backend prerequisites are unchanged.
+const v26 = await readFile(new URL("../APPLY-UPDATE-v26.sql", import.meta.url), "utf8");
+await writeFile(new URL("../APPLY-UPDATE-v27.sql", import.meta.url), v26.replace("-- Star Goats Farm v26:", "-- Star Goats Farm v27:"));
+
+// v28 improves notification and summary presentation; backend unchanged.
+const v27 = await readFile(new URL("../APPLY-UPDATE-v27.sql", import.meta.url), "utf8");
+await writeFile(new URL("../APPLY-UPDATE-v28.sql", import.meta.url), v27.replace("-- Star Goats Farm v27:", "-- Star Goats Farm v28:"));
+
+const priority = await readFile(new URL("../drizzle/migrations/0020_priority_background_notices.sql", import.meta.url), "utf8");
+const v28 = await readFile(new URL("../APPLY-UPDATE-v28.sql", import.meta.url), "utf8");
+await writeFile(new URL("../APPLY-UPDATE-v29.sql", import.meta.url), v28.replace("-- Star Goats Farm v28:", "-- Star Goats Farm v29:").replace("COMMIT;", `${priority}\nCOMMIT;`));
+
+// v30 changes client UI, permission status and Android channel defaults only.
+const v29 = await readFile(new URL("../APPLY-UPDATE-v29.sql", import.meta.url), "utf8");
+await writeFile(new URL("../APPLY-UPDATE-v30.sql", import.meta.url), v29.replace("-- Star Goats Farm v29:", "-- Star Goats Farm v30:"));
+
+// v31 fixes the in-page toast banner only; backend unchanged.
+const v30 = await readFile(new URL("../APPLY-UPDATE-v30.sql", import.meta.url), "utf8");
+await writeFile(new URL("../APPLY-UPDATE-v31.sql", import.meta.url), v30.replace("-- Star Goats Farm v30:", "-- Star Goats Farm v31:"));
+
+// v32 changes summary, branding and opening animation; backend unchanged.
+const v31 = await readFile(new URL("../APPLY-UPDATE-v31.sql", import.meta.url), "utf8");
+await writeFile(new URL("../APPLY-UPDATE-v32.sql", import.meta.url), v31.replace("-- Star Goats Farm v31:", "-- Star Goats Farm v32:"));

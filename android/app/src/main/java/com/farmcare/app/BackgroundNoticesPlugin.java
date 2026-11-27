@@ -31,12 +31,13 @@ public class BackgroundNoticesPlugin extends Plugin {
         } catch (Exception error) { call.reject("Open Android app settings and allow notifications."); }
     }
     @PluginMethod public void ownerPermission(PluginCall call) {
+        createSoundChannel(getContext(), "farm", "Farm alerts");
         boolean enabled = NotificationManagerCompat.from(getContext()).areNotificationsEnabled();
         if (Build.VERSION.SDK_INT >= 26) {
             NotificationChannel channel = getContext().getSystemService(NotificationManager.class).getNotificationChannel("farm");
             enabled = enabled && (channel == null || channel.getImportance() != NotificationManager.IMPORTANCE_NONE);
         }
-        call.resolve(new JSObject().put("permission", enabled));
+        call.resolve(new JSObject().put("permission", enabled).put("sound", channelSound(getContext(), "farm")));
     }
 
     @PluginMethod public void bindAccount(PluginCall call) {
@@ -111,7 +112,7 @@ public class BackgroundNoticesPlugin extends Plugin {
             try {
                 JSONObject config = BackgroundNoticeStore.load(getContext());
                 call.resolve(new JSObject().put("enabled", config != null && config.optBoolean("enabled"))
-                    .put("permission", canNotify(getContext()))
+                    .put("permission", canNotify(getContext())).put("sound", channelSound(getContext(), CHANNEL))
                     .put("lastCheck", config == null ? 0 : config.optLong("lastCheck"))
                     .put("result", config == null ? "" : config.optString("result")));
             } catch (Exception error) { call.reject("Could not read notification status"); }
@@ -127,11 +128,25 @@ public class BackgroundNoticesPlugin extends Plugin {
         WorkManager.getInstance(context).enqueueUniqueWork(IMMEDIATE, ExistingWorkPolicy.KEEP, check);
     }
     static void createChannel(android.content.Context context) {
+        createSoundChannel(context, CHANNEL, "Customer animal and payment updates");
+    }
+    static void createSoundChannel(android.content.Context context, String id, String name) {
         if (Build.VERSION.SDK_INT >= 26) {
-            NotificationChannel channel = new NotificationChannel(CHANNEL, "Customer animal and payment updates", NotificationManager.IMPORTANCE_HIGH);
+            NotificationManager manager = context.getSystemService(NotificationManager.class);
+            // Existing channels belong to the user: never reset a chosen silent mode.
+            if (manager.getNotificationChannel(id) != null) return;
+            NotificationChannel channel = new NotificationChannel(id, name, NotificationManager.IMPORTANCE_HIGH);
             channel.enableVibration(true);
-            context.getSystemService(NotificationManager.class).createNotificationChannel(channel);
+            channel.setSound(android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_NOTIFICATION),
+                new android.media.AudioAttributes.Builder().setUsage(android.media.AudioAttributes.USAGE_NOTIFICATION)
+                    .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION).build());
+            manager.createNotificationChannel(channel);
         }
+    }
+    static boolean channelSound(android.content.Context context, String id) {
+        if (Build.VERSION.SDK_INT < 26) return true;
+        NotificationChannel channel = context.getSystemService(NotificationManager.class).getNotificationChannel(id);
+        return channel == null || (channel.getSound() != null && channel.getImportance() >= NotificationManager.IMPORTANCE_DEFAULT);
     }
     static boolean canNotify(android.content.Context context) {
         if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) return false;

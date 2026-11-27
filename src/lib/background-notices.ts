@@ -1,7 +1,7 @@
 import { Capacitor, registerPlugin } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 
-export type BackgroundNoticeStatus = { enabled: boolean; permission: boolean; lastCheck: number; result: string };
+export type BackgroundNoticeStatus = { enabled: boolean; permission: boolean; sound?: boolean; lastCheck: number; result: string };
 interface BackgroundNoticesPlugin {
   bindAccount(options: { uid: string }): Promise<void>;
   prepare(options: { uid: string }): Promise<{ device: string; secret: string }>;
@@ -10,7 +10,7 @@ interface BackgroundNoticesPlugin {
   status(): Promise<BackgroundNoticeStatus>;
   checkNow(): Promise<void>;
   openNotificationSettings(): Promise<void>;
-  ownerPermission(): Promise<{ permission: boolean }>;
+  ownerPermission(): Promise<{ permission: boolean; sound?: boolean }>;
 }
 export const BackgroundNotices = registerPlugin<BackgroundNoticesPlugin>("BackgroundNotices");
 const isAndroid = () => Capacitor.isNativePlatform() && Capacitor.getPlatform() === "android";

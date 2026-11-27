@@ -1,11 +1,10 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useFarm } from "@/lib/farm-data";
 import { loadCustomerPortal } from "@/lib/customer-portal";
 
 export function useCustomerPortal() {
   const { uid, role } = useFarm();
-  const client = useQueryClient();
   const query = useQuery({
     queryKey: ["customer-portal", uid],
     queryFn: () => loadCustomerPortal(uid ?? undefined),
@@ -21,7 +20,7 @@ export function useCustomerPortal() {
     void import("@capacitor/app").then(({ App }) => App.addListener("appStateChange", (state) => {
       if (active && state.isActive) void query.refetch();
     })).then((handle) => { if (active) remove = () => void handle.remove(); else void handle.remove(); }).catch(() => {});
-    return () => { active = false; remove?.(); client.removeQueries({ queryKey: ["customer-portal", uid], exact: true }); };
-  }, [uid, role, query.refetch, client]);
+    return () => { active = false; remove?.(); };
+  }, [uid, role, query.refetch]);
   return query;
 }

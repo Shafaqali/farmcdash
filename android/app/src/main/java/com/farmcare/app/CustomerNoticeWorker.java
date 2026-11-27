@@ -147,7 +147,7 @@ public class CustomerNoticeWorker extends Worker {
             .setColor(android.graphics.Color.rgb(33, 94, 61)).setContentTitle(emoji + " " + title)
             .setStyle(new NotificationCompat.BigTextStyle().bigText(notice.getString("body")))
             .setContentText(notice.getString("body")).setContentIntent(tap).setAutoCancel(true)
-            .setPriority(NotificationCompat.PRIORITY_HIGH).setVisibility(NotificationCompat.VISIBILITY_PRIVATE).setOnlyAlertOnce(true);
+            .setDefaults(android.app.Notification.DEFAULT_ALL).setPriority(NotificationCompat.PRIORITY_HIGH).setVisibility(NotificationCompat.VISIBILITY_PRIVATE).setOnlyAlertOnce(true);
         // The stable UUID tag replaces a retry after a crash instead of adding a second receipt/notice.
         NotificationManagerCompat.from(getApplicationContext()).notify("customer:" + config.getString("uid") + ":" + notice.getString("id"), 20000, builder.build());
     }

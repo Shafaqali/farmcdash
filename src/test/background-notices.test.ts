@@ -50,7 +50,7 @@ describe("Android background notice account lifecycle", () => {
   });
   it("stops immediately at sign-out and invalidates a registration still in flight", async () => {
     const { syncBackgroundNotices, stopBackgroundNotices } = await import("@/lib/background-notices");
-    let finish: (value: { error: null }) => void = () => { throw new Error("Pending callback unavailable"); };
+    let finish!: (value: { error: null }) => void;
     mocks.rpc.mockImplementation(() => new Promise((resolve) => { finish = resolve; }));
     const pending = syncBackgroundNotices("customer-a", "customer");
     await vi.waitFor(() => expect(mocks.rpc).toHaveBeenCalled());

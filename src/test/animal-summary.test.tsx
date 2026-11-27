@@ -21,6 +21,12 @@ describe("animal summary", () => {
     expect(screen.queryByText("PRIVATE NOTE")).not.toBeInTheDocument();
     expect(screen.queryByText("Recovering")).not.toBeInTheDocument();
   });
+  it("replaces missing health fields with one concise empty state", () => {
+    render(<AnimalQuickSummary animal={animal} privateAccess health={null} />);
+    expect(screen.getByText("No health observations recorded yet.")).toBeInTheDocument();
+    expect(screen.queryByText("Medicines & dosage")).not.toBeInTheDocument();
+    expect(screen.queryByText("Health observation date")).not.toBeInTheDocument();
+  });
   it("uses the newest observation, breaking same-day ties by record timestamp", () => {
     expect(latestHealth([{ ...health, id: "zzz", created_at: "2026-11-20T09:00:00Z" }, health, { ...health, id: "older", date: "2026-11-19" }])?.id).toBe("h");
     expect(latestHealth([])).toBeNull();

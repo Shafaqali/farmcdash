@@ -77,7 +77,7 @@ function Detail() {
       <section className="bg-hero animate-rise flex items-center gap-4 rounded-3xl p-5 text-primary-foreground shadow-float">
         <AnimalQR id={a.id} label={label} />
         <div className="min-w-0">
-          <p className="font-display text-2xl font-semibold break-all">{a.id}</p>
+          <p className="font-display text-2xl font-bold break-all">{a.id}</p>
           <p className="opacity-85">{label}</p>
           {a.breed && a.breed !== a.sub && <p className="text-sm opacity-75">{a.breed}</p>}
           <p className="mt-1 text-sm opacity-75">Owner: {ownerName}</p>
@@ -103,7 +103,7 @@ function Detail() {
       {a.notes && <p className="card-soft p-4 text-sm text-muted-foreground">{a.notes}</p>}
       {a.weights.length > 1 && (
         <section className="card-soft animate-rise p-4">
-          <h2 className="mb-2 text-lg font-semibold">Weight trend</h2>
+          <h2 className="mb-2 text-lg font-bold">Weight trend</h2>
           <div className="h-44">
             <ResponsiveContainer>
               <AreaChart data={a.weights} margin={{ left: -20, right: 6 }}>
@@ -118,7 +118,7 @@ function Detail() {
         </section>
       )}
       <section className="card-soft animate-rise p-4">
-        <h2 className="mb-2 text-lg font-semibold">Vaccination history</h2>
+        <h2 className="mb-2 text-lg font-bold">Vaccination history</h2>
         {a.vaccinations.length ? (
           <ul className="divide-y text-sm">{a.vaccinations.map((v) => <li key={v.id} className="flex justify-between py-2"><span className="font-medium">{v.name}</span><span className="text-muted-foreground">{fmtDate(v.date)}</span></li>)}</ul>
         ) : <p className="text-sm text-muted-foreground">No vaccines recorded yet.</p>}
@@ -158,7 +158,7 @@ function AdminPanel({ a }: { a: Animal }) {
 
   return (
     <section className="card-soft animate-rise space-y-4 p-4">
-      <h2 className="flex items-center gap-2 text-lg font-semibold"><ShieldCheck className="h-5 w-5 text-primary" />Update record</h2>
+      <h2 className="flex items-center gap-2 text-lg font-bold"><ShieldCheck className="h-5 w-5 text-primary" />Update record</h2>
       <div className="flex gap-1.5 overflow-x-auto">
         {tabs.map((t) => <button key={t} type="button" onClick={() => setTab(t)} className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium ${tab === t ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{t}</button>)}
       </div>
