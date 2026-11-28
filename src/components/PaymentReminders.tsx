@@ -14,12 +14,13 @@ export function PaymentReminders() {
       if (busy) return;
       setBusy(true);
       try {
-        const { data, error } = await supabase.rpc("remind_unpaid_customers");
+        const { data, error } = await supabase.rpc("remind_unpaid_customers_now");
         if (error) throw error;
-        toast.success(data ? `In-app reminders sent to ${data} customer account(s).` : "No new reminders: payments are settled, customer logins are not linked, or reminders were already sent today.");
-      } catch { toast.error("Could not send reminders. Try again and ensure the farm service is up to date."); }
+        if (data) toast.success(`New reminders queued for ${data} customer account(s).`);
+        else toast.info("No linked customers currently have an outstanding balance. Check customer login links and balances.");
+      } catch { toast.error("Could not queue reminders. Check your connection and apply the v35 SQL update through Lovable."); }
       finally { setBusy(false); }
     }}><BellRing />{busy ? "Sending reminders…" : "Remind unpaid customers"}</Button>
-    <p className="text-xs text-muted-foreground">Send one daily in-app reminder to linked customers with outstanding payments. Customers who have paid or have credit are excluded.</p>
+    <p className="text-xs text-muted-foreground">Every press queues a new reminder for linked unpaid customers. Paid customers are excluded. Closed-app delivery depends on Android background checks.</p>
   </div>;
 }

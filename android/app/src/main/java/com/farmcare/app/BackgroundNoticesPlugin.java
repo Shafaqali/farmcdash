@@ -19,6 +19,7 @@ public class BackgroundNoticesPlugin extends Plugin {
     static final String PERIODIC = "customer-notice-poll";
     static final String IMMEDIATE = "customer-notice-check";
     static final String CHANNEL = "customer_updates";
+    private static android.media.Ringtone foregroundTone;
 
     @PluginMethod public void openNotificationSettings(PluginCall call) {
         try {
@@ -38,6 +39,33 @@ public class BackgroundNoticesPlugin extends Plugin {
             enabled = enabled && (channel == null || channel.getImportance() != NotificationManager.IMPORTANCE_NONE);
         }
         call.resolve(new JSObject().put("permission", enabled).put("sound", channelSound(getContext(), "farm")));
+    }
+
+    @PluginMethod public void playForegroundNotice(PluginCall call) {
+        String uid = call.getString("uid", "");
+        getActivity().runOnUiThread(() -> {
+            synchronized (BackgroundNoticeStore.LOCK) {
+                try {
+                    JSONObject config = BackgroundNoticeStore.load(getContext());
+                    if (config == null || !config.optBoolean("enabled") || !uid.equals(config.optString("uid"))
+                        || !canNotify(getContext()) || !channelSound(getContext(), CHANNEL)) { call.resolve(); return; }
+                    android.media.AudioManager audio = (android.media.AudioManager) getContext().getSystemService(android.content.Context.AUDIO_SERVICE);
+                    if (audio.getRingerMode() != android.media.AudioManager.RINGER_MODE_NORMAL) { call.resolve(); return; }
+                    if (Build.VERSION.SDK_INT >= 23 && getContext().getSystemService(NotificationManager.class).getCurrentInterruptionFilter() != NotificationManager.INTERRUPTION_FILTER_ALL) { call.resolve(); return; }
+                    android.net.Uri sound = android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_NOTIFICATION);
+                    if (Build.VERSION.SDK_INT >= 26) sound = getContext().getSystemService(NotificationManager.class).getNotificationChannel(CHANNEL).getSound();
+                    if (foregroundTone != null) foregroundTone.stop();
+                    foregroundTone = android.media.RingtoneManager.getRingtone(getContext(), sound);
+                    if (foregroundTone != null) {
+                        foregroundTone.setAudioAttributes(new android.media.AudioAttributes.Builder().setUsage(android.media.AudioAttributes.USAGE_NOTIFICATION).build());
+                        foregroundTone.play();
+                        android.media.Ringtone playing = foregroundTone;
+                        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(playing::stop, 1200);
+                    }
+                    call.resolve();
+                } catch (Exception error) { call.resolve(); }
+            }
+        });
     }
 
     @PluginMethod public void bindAccount(PluginCall call) {
@@ -113,10 +141,18 @@ public class BackgroundNoticesPlugin extends Plugin {
                 JSONObject config = BackgroundNoticeStore.load(getContext());
                 call.resolve(new JSObject().put("enabled", config != null && config.optBoolean("enabled"))
                     .put("permission", canNotify(getContext())).put("sound", channelSound(getContext(), CHANNEL))
+                    .put("backgroundRestricted", Build.VERSION.SDK_INT >= 28 && getContext().getSystemService(android.app.ActivityManager.class).isBackgroundRestricted())
                     .put("lastCheck", config == null ? 0 : config.optLong("lastCheck"))
                     .put("result", config == null ? "" : config.optString("result")));
             } catch (Exception error) { call.reject("Could not read notification status"); }
         }
+    }
+    @PluginMethod public void openBackgroundSettings(PluginCall call) {
+        try {
+            android.content.Intent intent = new android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                android.net.Uri.parse("package:" + getContext().getPackageName()));
+            getActivity().startActivity(intent); call.resolve();
+        } catch (Exception error) { call.reject("Open Android app settings to allow background battery use"); }
     }
     @PluginMethod public void stop(PluginCall call) {
         synchronized (BackgroundNoticeStore.LOCK) { clearLocal(getContext()); }
@@ -157,6 +193,7 @@ public class BackgroundNoticesPlugin extends Plugin {
         return true;
     }
     static void clearLocal(android.content.Context context) {
+        if (foregroundTone != null) { foregroundTone.stop(); foregroundTone = null; }
         BackgroundNoticeStore.clear(context);
         WorkManager.getInstance(context).cancelUniqueWork(PERIODIC);
         WorkManager.getInstance(context).cancelUniqueWork(IMMEDIATE);

@@ -1,6 +1,7 @@
 /** Presentation only: preserve server titles, identifiers and private data boundaries. */
 export function notificationPresentation(title: string, kind = "") {
   const text = title.toLowerCase();
+  if (kind === "account" && /payment/.test(text)) return { emoji: "\uD83D\uDCB3", label: "Payment update", type: "payment" } as const;
   if (kind === "payment" || /payment|balance/.test(text)) return { emoji: "\uD83D\uDCB3", label: "Payment reminder", type: "payment" } as const;
   if (/vaccin/.test(text)) return { emoji: "\uD83D\uDC89", label: "Vaccination", type: "vaccine" } as const;
   if (/health|illness|treatment/.test(text)) return { emoji: "\uD83E\uDE7A", label: "Health update", type: "health" } as const;

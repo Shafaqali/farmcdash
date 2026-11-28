@@ -95,3 +95,12 @@ it("does not show enabled when the background worker reports missing server setu
   await screen.findByText(/Apply the supplied SQL update/);
   expect(screen.queryByRole("button", { name: "Notifications enabled" })).not.toBeInTheDocument();
 });
+
+it("identifies restricted background delivery and shows the last check",async()=>{
+ mocks.role="customer";mocks.status.mockResolvedValue({permission:true,enabled:true,backgroundRestricted:true,lastCheck:1730000000000,result:"ok"});
+ render(<NotificationPermissionControl/>);
+ await screen.findByText(/Android has restricted background activity/);
+ expect(screen.getByText(/Last background check:/)).toBeInTheDocument();
+ expect(screen.getByRole("button",{name:"Open app battery settings"})).toBeInTheDocument();
+ expect(screen.queryByRole("button",{name:"Notifications enabled"})).not.toBeInTheDocument();
+});

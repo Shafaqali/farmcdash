@@ -147,7 +147,7 @@ function AdminPanel({ a }: { a: Animal }) {
 
   const run = async (fn: () => Promise<unknown>, msg: string, propagate = false) => {
     setBusy(true);
-    try { await fn(); await reload(); toast.success(msg); }
+    try { await fn(); try { await reload(); toast.success(msg); } catch { toast.warning(`${msg}. Saved to the database, but the screen could not refresh. Please refresh before making another change.`); } }
     catch (err) { if (propagate) throw err; toast.error(err instanceof Error ? err.message : "Update failed"); }
     finally { setBusy(false); }
   };
@@ -179,13 +179,13 @@ function AdminPanel({ a }: { a: Animal }) {
         {btn}
       </form>}
 
-      {tab === "Status" && <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); void run(async () => chk(await supabase.from("animals").update({ status, sold_date: status === "Sold" ? soldDate : null, sold_price: status === "Sold" && soldPrice ? Number(soldPrice) : null }).eq("id", a.id)), `Marked ${status}`); }}>
+      {tab === "Status" && <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); void run(async () => chk(await supabase.from("animals").update({ status, sold_date: status === "Sold" ? soldDate : null, sold_price: status === "Sold" && soldPrice ? Number(soldPrice) : null }).eq("id", a.id).select("id").single()), `Marked ${status}`); }}>
         <div className="grid grid-cols-2 gap-2">{STATUSES.map((s) => <button type="button" key={s} onClick={() => setStatus(s)} className={`rounded-2xl border py-3 text-sm font-semibold ${status === s ? "border-primary bg-secondary text-primary" : "text-muted-foreground"}`}>{s}</button>)}</div>
         {status === "Sold" && <div className="grid grid-cols-2 gap-3"><F label="Sold on"><input type="date" className={field} value={soldDate} onChange={(e) => setSoldDate(e.target.value)} /></F><F label="Sale price (₹)"><input type="number" className={field} value={soldPrice} onChange={(e) => setSoldPrice(e.target.value)} /></F></div>}
         {btn}
       </form>}
 
-      {tab === "Details" && <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); void run(async () => chk(await supabase.from("animals").update({ category_id: d.categoryId, subcategory_id: d.subcategoryId || null, breed: d.breed, owner_id: d.ownerId || null, arrival: d.arrival, monthly_charge: d.ownerId ? Number(d.monthlyCharge) || 0 : 0, notes: d.notes, vaccine_due: d.vaccineDue || null }).eq("id", a.id)), "Details saved"); }}>
+      {tab === "Details" && <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); void run(async () => chk(await supabase.from("animals").update({ category_id: d.categoryId, subcategory_id: d.subcategoryId || null, breed: d.breed, owner_id: d.ownerId || null, arrival: d.arrival, monthly_charge: d.ownerId ? Number(d.monthlyCharge) || 0 : 0, notes: d.notes, vaccine_due: d.vaccineDue || null }).eq("id", a.id).select("id").single()), "Details saved"); }}>
         <div className="grid grid-cols-2 gap-3">
           <F label="Category"><select className={field} value={d.categoryId} onChange={(e) => setD({ ...d, categoryId: e.target.value, subcategoryId: "" })}>{tops.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></F>
           <F label="Sub-category"><select className={field} value={d.subcategoryId} onChange={(e) => setD({ ...d, subcategoryId: e.target.value })}><option value="">—</option>{subs.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></F>
@@ -207,7 +207,7 @@ function AdminPanel({ a }: { a: Animal }) {
         <AnimalPhotoPicker key={a.id} value={photo} onChange={setPhoto} disabled={busy} onProcessingChange={setPhotoProcessing} />
         <Button type="button" className="w-full" disabled={busy || photoProcessing || !photo} onClick={() => {
           if (!photo || busy || photoProcessing) return;
-          void run(async () => { const path = await uploadAnimalPhoto(a.id, photo); chk(await supabase.from("animals").update({ photo_url: path }).eq("id", a.id)); setPhoto(null); }, "Photo updated");
+          void run(async () => { const path = await uploadAnimalPhoto(a.id, photo); chk(await supabase.from("animals").update({ photo_url: path }).eq("id", a.id).select("id").single()); setPhoto(null); }, "Photo updated");
         }}>{busy ? "Uploading photo..." : "Upload photo"}</Button>
       </div>}
       <DeleteConfirmation open={!!deleting} onOpenChange={(open) => { if (!open) setDeleting(null); }} title={deleting?.title ?? "Delete record?"} description="This record will be permanently removed. This cannot be undone." onConfirm={async () => { if (deleting) await deleting.action(); }} />

@@ -1,4 +1,5 @@
-﻿import { createFileRoute, Link } from "@tanstack/react-router";
+import { PaymentStatusBadge } from "@/components/PaymentStatusBadge";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowUpRight, CalendarDays, CheckCircle2, ChevronRight, PawPrint, Phone, RefreshCw, Search, ShieldCheck, Syringe, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,7 @@ import { useFarm, fmtDate } from "@/lib/farm-data";
 import { useCustomerPortal } from "@/lib/use-customer-portal";
 
 export const Route = createFileRoute("/my-animals")({
-  head: () => ({ meta: [{ title: "My animals — STAR GOATS FARM" }, { name: "description", content: "Your animals, photos and care updates in one place." }] }),
+  head: () => ({ meta: [{ title: "My animals — STAR GOATS FARM" }, { name: "description", content: "Your animals, photos and care updates in one place." }, { property: "og:title", content: "My animals — STAR GOATS FARM" }, { property: "og:description", content: "Your privately linked animals and current care payment statuses." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: CustomerPortal,
 });
 export function CustomerPortal() {
@@ -41,8 +42,8 @@ export function CustomerPortal() {
           <div className="relative"><AnimalPhoto src={animal.photoUrl} animalId={animal.id} /><span className={`pointer-events-none absolute left-3 top-3 rounded-full px-2.5 py-1 text-[10px] font-semibold shadow-sm ${animal.status === "Active" ? "bg-primary text-primary-foreground" : "bg-background/95 text-foreground"}`}>{animal.status}</span></div>
           <div className="space-y-4 p-4"><Link to="/animals/$id" params={{ id: animal.id }} className="group flex items-center justify-between gap-2"><div className="min-w-0"><h3 className="break-all font-sans text-lg font-bold">{animal.id}</h3><p className="mt-0.5 break-words text-xs text-muted-foreground">{[animal.species, animal.breed || animal.sub].filter(Boolean).join(" · ")}</p></div><ArrowUpRight className="h-5 w-5 shrink-0 text-primary transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" /></Link>
           <div className="space-y-2.5 border-y py-3 text-xs"><p className="flex items-center justify-between gap-2"><span className="flex items-center gap-2 text-muted-foreground"><CalendarDays className="h-3.5 w-3.5" />Care started</span><span className="font-medium">{fmtDate(animal.arrival)}</span></p><p className="flex items-center justify-between gap-2"><span className="flex items-center gap-2 text-muted-foreground"><Syringe className="h-3.5 w-3.5" />Next vaccine</span><span className="font-medium">{animal.vaccineDue ? fmtDate(animal.vaccineDue) : "Not scheduled"}</span></p></div>
-          <div className={`flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-medium ${due ? "bg-amber-50 text-amber-900" : "bg-secondary text-primary"}`}>{due ? <Wallet className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}{due ? "Care payment due" : periods.length ? "Care payments up to date" : "No care payment due"}</div>
-          <details className="group text-xs"><summary className="flex cursor-pointer list-none items-center justify-between py-1 font-semibold text-muted-foreground">Care month history<ChevronRight className="h-4 w-4 transition-transform group-open:rotate-90" /></summary>{periods.length ? <ul className="mt-2 divide-y">{periods.slice().reverse().map((p) => <li key={p.periodStart} className="flex justify-between gap-2 py-2.5"><span>{fmtDate(p.periodStart)}</span><span className={p.status === "Paid" ? "text-primary" : "text-amber-800"}>{p.status}</span></li>)}</ul> : <p className="py-3 text-muted-foreground">No care months recorded.</p>}</details></div>
+          <div className={`flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-medium ${due ? "border border-destructive/25 bg-destructive/10 text-destructive" : "border border-success/25 bg-success/10 text-success"}`}>{due ? <Wallet className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}{due ? "Unpaid care periods" : periods.length ? "Paid · All care periods" : "No care payment due"}</div>
+          <details className="group text-xs"><summary className="flex cursor-pointer list-none items-center justify-between py-1 font-semibold text-muted-foreground">Care month history<ChevronRight className="h-4 w-4 transition-transform group-open:rotate-90" /></summary>{periods.length ? <ul className="mt-2 divide-y">{periods.slice().reverse().map((p) => <li key={p.periodStart} className="flex justify-between gap-2 py-2.5"><span>{fmtDate(p.periodStart)}</span><PaymentStatusBadge status={p.status} /></li>)}</ul> : <p className="py-3 text-muted-foreground">No care months recorded.</p>}</details></div>
         </article>;
       })}</div>
     </section>)}

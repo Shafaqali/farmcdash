@@ -1,9 +1,10 @@
 import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Animal } from "@/lib/farm-data";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 const mocks = vi.hoisted(() => ({ rpc: vi.fn(), signPhotos: vi.fn() }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { rpc: mocks.rpc, storage: { from: () => ({ createSignedUrls: mocks.signPhotos }) } } }));
-vi.mock("@/lib/farm-data", async (original) => ({ ...await original<typeof import("@/lib/farm-data")>(), useFarm: () => ({ uid: "viewer" }) }));
+vi.mock("@/lib/farm-data", async (original) => ({ ...await original<typeof import("@/lib/farm-data")>(), useFarm: () => ({ uid: "viewer", role: "customer" }) }));
 import { connectCustomer, customerInvitationUrl, loadCustomerPortal, pendingCustomerInvitation } from "@/lib/customer-portal";
 import { CustomerAnimalPayments } from "@/components/CustomerAnimalPayments";
 const animal = { id: "U01-G0001", userId: "farmer", ownerId: "linked-customer", arrival: "2026-11-01", monthlyCharge: 1000, status: "Active", weights: [], vaccinations: [] } as unknown as Animal;
@@ -67,13 +68,13 @@ describe("Customer financial access", () => {
   });
   it("does not show another animal's finances when portal access is absent", async () => {
     mocks.rpc.mockResolvedValue({ data: { animals: [], customers: [], payments: [] }, error: null });
-    render(<CustomerAnimalPayments animalId="U01-G0001" />);
+    render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><CustomerAnimalPayments animalId="U01-G0001" /></QueryClientProvider>);
     await waitFor(() => expect(mocks.rpc).toHaveBeenCalled());
     expect(screen.queryByRole("region", { name: "Customer care payments" })).toBeNull();
   });
   it("uses server animal-period statuses without exposing receipt amounts", async () => {
     mocks.rpc.mockResolvedValue({ data: { animals: [animal], customers: [{ id: "linked-customer", name: "Customer", phone: "", village: "" }], payments: [], paymentStatuses: [{ animalId: "U01-G0001", periodStart: "2026-11-01", status: "Payment due" }] }, error: null });
-    render(<CustomerAnimalPayments animalId="U01-G0001" />);
+    render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><CustomerAnimalPayments animalId="U01-G0001" /></QueryClientProvider>);
     expect(await screen.findByText("Payment due")).toBeTruthy();
     expect(screen.queryAllByRole("button")).toHaveLength(0);
   });

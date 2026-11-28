@@ -1,3 +1,4 @@
+import { PaymentStatusBadge } from "@/components/PaymentStatusBadge";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowLeft, ChevronRight, MapPin, Phone, Trash2 } from "lucide-react";
@@ -64,8 +65,8 @@ function CustomerDetails() {
                 <div><dt className="text-muted-foreground">Caring / month</dt><dd className="mt-1 break-words font-semibold">{inr(animal.monthlyCharge)}</dd></div>
                 <div><dt className="text-muted-foreground">Care charges to date</dt><dd className="mt-1 break-words font-semibold">{inr(charge)}</dd></div>
               </dl>
-              <div className="mt-3 flex flex-wrap justify-between gap-2 text-sm"><span>Assigned payments {inr(paid)}</span><span className={remaining > 0 ? "font-semibold text-destructive" : "font-semibold text-primary"}>{remaining > 0 ? `Unpaid ${inr(remaining)}` : "Paid"}</span></div>
-              <details className="mt-3 border-t pt-3"><summary className="cursor-pointer text-sm font-medium text-primary">Care periods ({periods.length})</summary><ul className="mt-2 divide-y">{periods.slice().reverse().map((period) => <li key={period.start} className="flex flex-wrap justify-between gap-2 py-2 text-xs"><span>{fmtDate(period.start)} · {inr(period.charge)}</span><span className={period.remaining > 0 ? "text-destructive" : "text-primary"}>{period.remaining === 0 ? "Paid" : period.paid > 0 ? `Partial · ${inr(period.remaining)} due` : `Unpaid · ${inr(period.remaining)}`}</span></li>)}</ul></details>
+              <div className="mt-3 flex flex-wrap justify-between gap-2 text-sm"><span>Assigned payments {inr(paid)}</span><PaymentStatusBadge status={remaining > 0 ? "Unpaid" : "Paid"}>{remaining > 0 ? `Unpaid ${inr(remaining)}` : "Paid"}</PaymentStatusBadge></div>
+              <details className="mt-3 border-t pt-3"><summary className="cursor-pointer text-sm font-medium text-primary">Care periods ({periods.length})</summary><ul className="mt-2 divide-y">{periods.slice().reverse().map((period) => <li key={period.start} className="flex flex-wrap justify-between gap-2 py-2 text-xs"><span>{fmtDate(period.start)} · {inr(period.charge)}</span><PaymentStatusBadge status={period.remaining === 0 ? "Paid" : period.paid > 0 ? "Partial" : "Unpaid"}>{period.remaining === 0 ? "Paid" : period.paid > 0 ? `Partial · ${inr(period.remaining)} due` : `Unpaid · ${inr(period.remaining)}`}</PaymentStatusBadge></li>)}</ul></details>
             </li>
           ))}
         </ul>

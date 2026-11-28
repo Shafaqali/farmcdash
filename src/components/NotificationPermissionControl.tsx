@@ -15,6 +15,8 @@ export function NotificationPermissionControl() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [backgroundIssue, setBackgroundIssue] = useState("");
+  const [lastCheck, setLastCheck] = useState(0);
+  const [backgroundRestricted, setBackgroundRestricted] = useState(false);
   const account = useRef(uid);
   account.current = uid;
   const returning = useRef(false);
@@ -31,7 +33,7 @@ export function NotificationPermissionControl() {
         sound = permission.sound !== false;
       } else if (role === "customer") {
         const status = await BackgroundNotices.status();
-        ready = status.enabled && status.permission && status.result !== "sign_in_required" && status.result !== "server_update_required";
+        ready = status.enabled && status.permission && !status.backgroundRestricted && status.result !== "sign_in_required" && status.result !== "server_update_required";
         sound = status.sound !== false;
       }
       if (account.current === uid && revision === readRevision.current) setReadiness({ uid, ready: ready && setupFailure.current !== uid, sound, checked: true });
@@ -60,6 +62,7 @@ export function NotificationPermissionControl() {
       await syncBackgroundNotices(uid, role);
       const status = await BackgroundNotices.status();
       if (!status.enabled || !status.permission) throw new Error("Allow app notifications and the Customer updates channel in Android settings.");
+      if (status.backgroundRestricted) throw new Error("Allow unrestricted background battery use in Android app settings, then try again.");
       if (status.result === "server_update_required") throw new Error("Apply the supplied SQL update through Lovable to enable background alerts.");
       if (status.result === "sign_in_required") throw new Error("Sign in again to restore background alerts.");
       if (account.current === uid) setMessage("Enabled. Background checks may take 15 minutes or longer.");
@@ -81,13 +84,14 @@ export function NotificationPermissionControl() {
     return () => { disposed = true; remove?.(); };
   }, [supported, finish, uid, refreshStatus]);
   useEffect(() => {
-    setBackgroundIssue("");
+    setBackgroundIssue(""); setLastCheck(0); setBackgroundRestricted(false);
     if (!supported || role !== "customer") return;
     let active = true;
     const refresh = async () => {
       try {
         const status = await BackgroundNotices.status();
         if (!active) return;
+        setLastCheck(status.lastCheck || 0); setBackgroundRestricted(status.backgroundRestricted === true);
         setBackgroundIssue(status.result === "server_update_required" ? "Background alerts need the supplied SQL update applied through Lovable." : status.result === "retrying" ? "Background checks are retrying. Check internet access and the farm service." : status.result === "sign_in_required" ? "Sign in again and enable notifications to restore background access." : "");
       } catch { /* Setup button reports registration failures. */ }
     };
@@ -130,6 +134,8 @@ export function NotificationPermissionControl() {
     }}><BellRing className="h-4 w-4" />{checking ? "Checking notifications..." : busy ? "Enabling notifications..." : ready ? "Notifications enabled" : "Enable notifications"}</Button>
     {ready && <p className="text-xs text-muted-foreground">{readiness.sound ? "Notification tone enabled. Tap above to manage notifications." : "Sound is off in Android settings. Tap above to turn it on."}</p>}
     {message && <p role="status" className="text-xs leading-relaxed text-muted-foreground">{message}</p>}
+    {supported && role === "customer" && <p className="text-xs text-muted-foreground">{lastCheck ? `Last background check: ${new Date(lastCheck).toLocaleString("en-IN")}` : "Waiting for the first background check."}</p>}
+    {backgroundRestricted && <div className="space-y-2 rounded-lg border border-destructive/20 p-3"><p className="text-xs text-destructive">Android has restricted background activity. In app settings, open Battery and allow unrestricted background use.</p><Button size="sm" variant="outline" onClick={() => void BackgroundNotices.openBackgroundSettings().catch(() => setMessage("Open Android app settings, then Battery, and allow background use."))}>Open app battery settings</Button></div>}
     {backgroundIssue && <p role="status" className="text-xs text-destructive">{backgroundIssue}</p>}
     <p className="text-xs text-muted-foreground">Android controls delivery. Reopen the app after a force stop.</p>
   </div>;

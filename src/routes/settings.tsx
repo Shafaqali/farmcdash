@@ -1,4 +1,5 @@
-﻿import { createFileRoute, Link } from "@tanstack/react-router";
+import { ProfileFooter } from "@/components/ProfileFooter";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Bell, ChevronRight, PawPrint, Phone, ShieldCheck, UserRound } from "lucide-react";
 import { AccountProfileSettings } from "@/components/AccountProfileSettings";
 import { FarmDataReset } from "@/components/FarmDataReset";
@@ -10,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { useFarm } from "@/lib/farm-data";
 import { useCustomerPortal } from "@/lib/use-customer-portal";
 export const Route = createFileRoute("/settings")({
-  head: () => ({ meta: [{ title: "My profile & settings — STAR GOATS FARM" }, { name: "description", content: "Your animals, personal details, notification settings and account security." }] }),
+  head: () => ({ meta: [{ title: "My profile & settings — STAR GOATS FARM" }, { name: "description", content: "Your animals, personal details, notification settings and account security." }, { property: "og:title", content: "My profile & settings — STAR GOATS FARM" }, { property: "og:description", content: "Manage your private contact details, account security and notification preferences." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: SettingsPage,
 });
 export function SettingsPage() {
@@ -33,5 +34,6 @@ export function SettingsPage() {
     <StorageUsageSettings />
     <FarmDataReset />
     <p className="flex items-center justify-center gap-1.5 py-2 text-[10px] text-muted-foreground"><UserRound className="h-3 w-3" />Your account details are private.</p>
+    {customer && <ProfileFooter />}
   </div>;
 }

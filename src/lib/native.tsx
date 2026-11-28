@@ -24,7 +24,7 @@ export function NativeBridge() {
       try {
         await StatusBar.setOverlaysWebView({ overlay: false });
         await StatusBar.setStyle({ style: Style.Light });
-        await StatusBar.setBackgroundColor({ color: "#f7f6f0" });
+        await StatusBar.setBackgroundColor({ color: "#f7f7f8" });
       } catch { /* status bar not available */ }
       const h = await App.addListener("backButton", ({ canGoBack }) => {
         if (canGoBack && window.location.pathname !== "/") window.history.back();

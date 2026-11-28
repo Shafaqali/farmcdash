@@ -120,6 +120,13 @@
       "when": 1795481788287,
       "tag": "0016_optional_vaccination_schedule_dates",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1795826959780,
+      "tag": "0017_v35_customer_updates_manual_reminders_fixed_login",
+      "breakpoints": true
     }
   ]
 }

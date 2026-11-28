@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { fmtDate, isoToday } from "@/lib/farm-data";
+import { fmtDate, isoToday, useFarm } from "@/lib/farm-data";
 
 type Health = HealthRecord;
 export function AnimalHealth({ animalId, editable = false, onLatestChange }: { animalId: string; editable?: boolean; onLatestChange?: (record: Health | null | undefined) => void }) {
+  const { uid } = useFarm();
   const [records, setRecords] = useState<Health[]>([]);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -20,13 +21,25 @@ export function AnimalHealth({ animalId, editable = false, onLatestChange }: { a
     if (error) throw error;
     setRecords(data ?? []); onLatestChange?.(latestHealth(data ?? []));
   };
-  useEffect(() => { let active = true; void supabase.from("animal_health").select("*").eq("animal_id", animalId).order("date", { ascending: false }).then(({ data, error }) => { if (active) { setRecords(data ?? []); onLatestChange?.(error ? undefined : latestHealth(data ?? [])); setError(error?.message ?? ""); } }); return () => { active = false; }; }, [animalId, onLatestChange]);
+  useEffect(() => {
+    let active = true, generation = 0;
+    const load = async () => {
+      const request = ++generation;
+      const { data, error } = await supabase.from("animal_health").select("*").eq("animal_id", animalId).order("date", { ascending: false });
+      if (!active || request !== generation) return;
+      setRecords(data ?? []); onLatestChange?.(error ? undefined : latestHealth(data ?? [])); setError(error?.message ?? "");
+    };
+    const onUpdate = (event: Event) => { if ((event as CustomEvent<{uid:string}>).detail?.uid === uid) void load(); };
+    void load();
+    window.addEventListener("farm-customer-update", onUpdate);
+    return () => { active = false; window.removeEventListener("farm-customer-update", onUpdate); };
+  }, [animalId, onLatestChange, uid]);
   return <section className="space-y-3 border-y py-4" aria-label="Animal health history">
     <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="flex items-center gap-2 text-lg font-semibold"><HeartPulse className="h-5 w-5 text-primary" />Health history</h2>{editable && <Button variant="outline" onClick={() => { setError(""); setOpen(true); }}><Plus />Health update</Button>}</div>
     {error && !open && <p role="alert" className="text-sm text-destructive">{error}</p>}
     {!records.length && <p className="text-sm text-muted-foreground">No health updates recorded.</p>}
     {records.map((h) => <article key={h.id} className="rounded-lg border bg-card p-4"><div className="flex flex-wrap justify-between gap-2"><h3 className="break-words font-semibold">{h.condition}</h3><span className={h.status === "Sick" ? "text-sm text-destructive" : "text-sm text-primary"}>{h.status}</span></div><p className="mt-1 text-xs text-muted-foreground">{fmtDate(h.date)}</p><dl className="mt-3 space-y-2 text-sm">{([["Temperature", h.temperature_c == null ? "" : `${h.temperature_c} °C`], ["Illness started", h.illness_started ? fmtDate(h.illness_started) : ""], ["Condition details", h.details], ["Medicines", h.medicine], ["Treatment", h.treatment], ["Daily progress / recovery", h.recovery]] as const).filter(([,value]) => value).map(([label,value]) => <div key={label}><dt className="font-medium">{label}</dt><dd className="whitespace-pre-wrap break-words text-muted-foreground">{value}</dd></div>)}</dl></article>)}
-    <Dialog open={open} onOpenChange={(value) => { if (!busy) setOpen(value); }}><DialogContent className="max-w-xl grid-rows-[auto_minmax(0,1fr)] gap-0 overflow-hidden rounded-3xl p-0"><div className="border-b bg-secondary/30 p-5 pr-12"><div className="mb-3 grid h-10 w-10 place-items-center rounded-2xl bg-primary/10"><HeartPulse className="h-5 w-5 text-primary" /></div><DialogTitle>Animal health update</DialogTitle><DialogDescription>{animalId} - Record the condition, care and progress.</DialogDescription></div><form className="grid min-h-0 grid-rows-[minmax(0,1fr)_auto]" onSubmit={async (e) => { e.preventDefault(); if (busy || !form.condition.trim()) return; setBusy(true); setError(""); try { const { temperature, illnessStarted, ...entry } = form; const { error } = await supabase.from("animal_health").insert({ ...entry, temperature_c: temperature ? Number(temperature) : null, illness_started: illnessStarted || null, condition: form.condition.trim(), animal_id: animalId }); if (error) throw error; await refresh(); setOpen(false); setForm({ date: isoToday(), condition: "", details: "", medicine: "", treatment: "", recovery: "", temperature: "", illnessStarted: "", status: "Monitoring" }); } catch(e) { setError(e instanceof Error ? e.message : "Health update could not be saved"); } finally { setBusy(false); } }}>
+    <Dialog open={open} onOpenChange={(value) => { if (!busy) setOpen(value); }}><DialogContent className="max-w-xl grid-rows-[auto_minmax(0,1fr)] gap-0 overflow-hidden rounded-3xl p-0"><div className="border-b bg-secondary/30 p-5 pr-12"><div className="mb-3 grid h-10 w-10 place-items-center rounded-2xl bg-primary/10"><HeartPulse className="h-5 w-5 text-primary" /></div><DialogTitle>Animal health update</DialogTitle><DialogDescription>{animalId} - Record the condition, care and progress.</DialogDescription></div><form className="grid min-h-0 grid-rows-[minmax(0,1fr)_auto]" onSubmit={async (e) => { e.preventDefault(); if (busy || !form.condition.trim()) return; setBusy(true); setError(""); try { const { temperature, illnessStarted, ...entry } = form; const { error } = await supabase.from("animal_health").insert({ ...entry, temperature_c: temperature ? Number(temperature) : null, illness_started: illnessStarted || null, condition: form.condition.trim(), animal_id: animalId }); if (error) throw error; setOpen(false); setForm({ date: isoToday(), condition: "", details: "", medicine: "", treatment: "", recovery: "", temperature: "", illnessStarted: "", status: "Monitoring" }); try { await refresh(); } catch { setError("Health update saved. Refresh the page to see the latest history."); } } catch(e) { setError(e instanceof Error ? e.message : "Health update could not be saved"); } finally { setBusy(false); } }}>
     <div className="min-h-0 space-y-5 overflow-y-auto p-5"><fieldset disabled={busy} className="min-w-0 space-y-4"><legend className="mb-3 text-sm font-semibold text-primary">Observation</legend><label className="block space-y-1 text-sm font-medium">Observation date<Input type="date" value={form.date} required onChange={(e) => setForm({ ...form, date: e.target.value })} /></label>
     <div className="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2"><label className="block space-y-1 text-sm">Temperature (°C)<Input type="number" min="20" max="50" step="0.1" value={form.temperature} onChange={(e) => setForm({ ...form, temperature: e.target.value })} /></label><label className="block space-y-1 text-sm">Illness started on<Input type="date" max={form.date} value={form.illnessStarted} onChange={(e) => setForm({ ...form, illnessStarted: e.target.value })} /></label></div>
     <label className="block space-y-1 text-sm">Health status<select className="h-10 w-full rounded-md border bg-background px-3" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>{["Healthy", "Monitoring", "Sick", "Recovering", "Recovered"].map((s) => <option key={s}>{s}</option>)}</select></label>

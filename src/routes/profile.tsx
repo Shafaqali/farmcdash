@@ -1,21 +1,20 @@
-﻿import { createFileRoute, Link } from "@tanstack/react-router";
+import { ProfileFooter } from "@/components/ProfileFooter";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowUpRight, ChevronRight, IndianRupee, Loader2, LogOut, PawPrint, Phone, Plus, ScanLine, Settings2, ShieldCheck, Tags, Users } from "lucide-react";
+import { ArrowUpRight, ChevronRight, IndianRupee, Loader2, PawPrint, Phone, Plus, ScanLine, Settings2, ShieldCheck, Tags, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AnimalPhoto } from "@/components/AnimalPhoto";
 import { supabase } from "@/integrations/supabase/client";
 import { useFarm, inr } from "@/lib/farm-data";
-import { signOutFarmAccount } from "@/lib/background-notices";
 
 export const Route = createFileRoute("/profile")({
-  head: () => ({ meta: [{ title: "My farm profile — STAR GOATS FARM" }, { name: "description", content: "Your farm, animals and account details." }] }),
+  head: () => ({ meta: [{ title: "My farm profile — STAR GOATS FARM" }, { name: "description", content: "Your farm, animals and account details." }, { property: "og:title", content: "My farm profile — STAR GOATS FARM" }, { property: "og:description", content: "Your private farm profile, animals and contact details." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: Profile,
 });
 export function Profile() {
   const { animals, customers, payments, isAdmin, userName, session, loading } = useFarm();
-  const [signingOut, setSigningOut] = useState(false);
   const active = animals.filter((a) => a.status === "Active").length;
   const initials = userName.split(" ").filter(Boolean).slice(0, 2).map((word) => word[0]).join("") || "SG";
   return <div className="space-y-5">
@@ -26,7 +25,7 @@ export function Profile() {
     <div className="flex items-center justify-between gap-3 rounded-2xl border bg-card p-4"><div className="flex items-center gap-3"><IndianRupee className="h-5 w-5 text-primary" /><span className="text-sm text-muted-foreground">Lifetime collected</span></div><span className="break-all text-right font-semibold tabular-nums">{inr(payments.reduce((sum, payment) => sum + payment.amount, 0))}</span></div>
     <FarmPhone />
     <p className="break-all text-center text-xs text-muted-foreground">Signed in as {session?.user.email}</p>
-    <Button variant="outline" disabled={signingOut} className="h-12 w-full rounded-2xl border-destructive/20 text-destructive hover:bg-destructive/5 hover:text-destructive" onClick={async () => { if (signingOut) return; setSigningOut(true); try { await signOutFarmAccount(); toast("Signed out"); } catch { toast.error("Could not sign out. Please try again."); } finally { setSigningOut(false); } }}><LogOut className="h-4 w-4" />{signingOut ? "Signing out…" : "Sign out"}</Button>
+    <ProfileFooter />
   </div>;
 }
 function FarmPhone() {

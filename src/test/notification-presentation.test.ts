@@ -7,3 +7,5 @@ it("labels each notification category without modifying the source message", () 
     expect(result.emoji).not.toBe("");
   }
 });
+
+it("distinguishes a payment receipt update from an unpaid reminder", () => { expect(notificationPresentation("Payment record updated", "account").label).toBe("Payment update"); });

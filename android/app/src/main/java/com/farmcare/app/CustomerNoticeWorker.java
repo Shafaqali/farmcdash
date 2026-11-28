@@ -144,7 +144,7 @@ public class CustomerNoticeWorker extends Worker {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), BackgroundNoticesPlugin.CHANNEL)
             .setSmallIcon(R.drawable.ic_stat_farm)
             .setLargeIcon(android.graphics.BitmapFactory.decodeResource(getApplicationContext().getResources(), R.mipmap.ic_launcher))
-            .setColor(android.graphics.Color.rgb(33, 94, 61)).setContentTitle(emoji + " " + title)
+            .setColor(android.graphics.Color.rgb(199, 22, 45)).setContentTitle(emoji + " " + title)
             .setStyle(new NotificationCompat.BigTextStyle().bigText(notice.getString("body")))
             .setContentText(notice.getString("body")).setContentIntent(tap).setAutoCancel(true)
             .setDefaults(android.app.Notification.DEFAULT_ALL).setPriority(NotificationCompat.PRIORITY_HIGH).setVisibility(NotificationCompat.VISIBILITY_PRIVATE).setOnlyAlertOnce(true);

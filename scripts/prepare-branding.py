@@ -5,7 +5,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 ROOT = Path(__file__).resolve().parent.parent
 source = Image.open(ROOT / "resources/branding/star-goats-farm-original.png").convert("RGBA")
-background = (12, 32, 21, 255)
+background = (17, 17, 20, 255)
 def fitted(canvas_size, edge, bg=(0, 0, 0, 0)):
     art = source.copy()
     art.thumbnail((edge, edge), Image.Resampling.LANCZOS)
@@ -30,7 +30,7 @@ for density, scale in [("mdpi",1),("hdpi",1.5),("xhdpi",2),("xxhdpi",3),("xxxhdp
 xml = '<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android"><background android:drawable="@color/farm_icon_background"/><foreground android:drawable="@mipmap/ic_launcher_foreground"/></adaptive-icon>\n'
 for name in ["ic_launcher.xml","ic_launcher_round.xml"]:
     (res / "mipmap-anydpi-v26" / name).write_text(xml,encoding="utf-8")
-(res / "values/farm_branding.xml").write_text('<resources><color name="farm_icon_background">#0C2015</color><color name="farm_splash_background">#0C2015</color></resources>\n',encoding="utf-8")
+(res / "values/farm_branding.xml").write_text('<resources><color name="farm_icon_background">#111114</color><color name="farm_splash_background">#111114</color></resources>\n',encoding="utf-8")
 fitted((256,256),224).save(res / "drawable/farm_splash_logo.png", optimize=True)
 fitted((192,192),168,background).save(res / "drawable/farm_notice_logo.png", optimize=True)
 fitted((96,96),84,background).save(ROOT / "public/favicon.png", optimize=True)

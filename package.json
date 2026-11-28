@@ -12,7 +12,9 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "build:android": "vite build --config vite.android.config.ts && node scripts/prepare-android.mjs && npx cap sync android"
+    "build:android": "vite build --config vite.android.config.ts && node scripts/prepare-android.mjs && npx cap sync android",
+    "prebuild": "node scripts/prepare-app-version.mjs",
+    "prebuild:android": "node scripts/prepare-app-version.mjs"
   },
   "overrides": {
     "rolldown": "1.2.1"

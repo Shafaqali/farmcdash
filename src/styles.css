@@ -43,40 +43,39 @@
 }
 
 :root {
-  --radius: 1rem;
-  --background: oklch(0.975 0.008 95);
-  --foreground: oklch(0.22 0.03 150);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.03 150);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.03 150);
-  --primary: oklch(0.38 0.09 152);
-  --primary-glow: oklch(0.58 0.14 145);
-  --primary-foreground: oklch(0.98 0.01 95);
-  --secondary: oklch(0.94 0.03 140);
-  --secondary-foreground: oklch(0.3 0.07 152);
-  --muted: oklch(0.95 0.01 95);
-  --muted-foreground: oklch(0.5 0.02 150);
-  --accent: oklch(0.82 0.13 80);
-  --accent-foreground: oklch(0.3 0.06 60);
-  --warning: oklch(0.72 0.15 65);
-  --success: oklch(0.6 0.14 150);
-  --destructive: oklch(0.58 0.2 27);
-  --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.91 0.012 110);
-  --input: oklch(0.91 0.012 110);
-  --ring: oklch(0.58 0.14 145);
-  --chart-1: oklch(0.45 0.11 152);
-  --chart-2: oklch(0.78 0.14 80);
-  --chart-3: oklch(0.62 0.13 200);
-  --chart-4: oklch(0.6 0.18 30);
-  --chart-5: oklch(0.7 0.12 130);
-
-  --gradient-hero: linear-gradient(135deg, var(--primary) 0%, oklch(0.3 0.07 160) 60%, oklch(0.25 0.05 170) 100%);
-  --gradient-glow: linear-gradient(135deg, var(--primary-glow), var(--primary));
-  --shadow-soft: 0 1px 2px oklch(0.3 0.05 150 / 6%), 0 8px 24px -12px oklch(0.3 0.05 150 / 18%);
-  --shadow-float: 0 12px 30px -8px oklch(0.38 0.09 152 / 55%);
-  --shadow-nav: 0 -8px 30px -12px oklch(0.3 0.05 150 / 25%);
+  --radius: .85rem;
+  --background: #f7f7f8;
+  --foreground: #18181b;
+  --card: #ffffff;
+  --card-foreground: #18181b;
+  --popover: #ffffff;
+  --popover-foreground: #18181b;
+  --primary: #c7162d;
+  --primary-glow: #e6263d;
+  --primary-foreground: #ffffff;
+  --secondary: #fff0f2;
+  --secondary-foreground: #9e1224;
+  --muted: #f1f1f3;
+  --muted-foreground: #62626c;
+  --accent: #fce8eb;
+  --accent-foreground: #991426;
+  --warning: #ad6800;
+  --success: #166534;
+  --destructive: #be1230;
+  --destructive-foreground: #ffffff;
+  --border: #e5e5e9;
+  --input: #dedee4;
+  --ring: #c7162d;
+  --chart-1: #c7162d;
+  --chart-2: #27272a;
+  --chart-3: #8c8c97;
+  --chart-4: #f08090;
+  --chart-5: #66616b;
+  --gradient-hero: linear-gradient(135deg, #151518, #29292f);
+  --gradient-glow: linear-gradient(135deg, #e6263d, #b90f26);
+  --shadow-soft: 0 1px 2px #18181b08, 0 8px 24px -12px #18181b1a;
+  --shadow-float: 0 12px 30px -12px #18181b45;
+  --shadow-nav: 0 -8px 30px -12px #18181b24;
 }
 
 @layer base {
@@ -90,7 +89,7 @@
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
-  h1, h2, h3 { font-family: var(--font-display); line-height: 1.25; letter-spacing: -0.02em; font-weight: 700; }
+  h1, h2, h3 { font-family: var(--font-display); line-height: 1.25; letter-spacing: 0; font-weight: 700; }
   button, input, select, textarea { font-family: inherit; }
   :focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
   @media (pointer: coarse) {
@@ -146,7 +145,7 @@
   display: grid; place-items: center;
   border-radius: 8px; background: var(--secondary); color: var(--primary);
 }
-[data-sonner-toaster] .farm-toast[data-type='warning'] [data-icon] { background: #fff2ce; color: #835b0b; }
+[data-sonner-toaster] .farm-toast[data-type='warning'] [data-icon] { background: #fff0f2; color: #9e1224; }
 [data-sonner-toaster] .farm-toast[data-type='error'] [data-icon] { background: var(--muted); color: var(--destructive); }
 [data-sonner-toaster] .farm-toast[data-styled='true'] [data-content] { grid-column: 2; grid-row: 1; min-width: 0; gap: 5px; }
 [data-sonner-toaster] .farm-toast[data-styled='true'] [data-title] { font-size: 15px; font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; }
@@ -170,7 +169,7 @@
   [data-sonner-toaster] .farm-toast[data-styled='true'] [data-button] { height: 44px; min-height: 44px; }
 }
 
-.app-opening { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; background: #0c2015; animation: farm-opening 950ms ease-in-out both; }
+.app-opening { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; background: #111114; animation: farm-opening 950ms ease-in-out both; }
 .app-opening img { width: 180px; height: 180px; object-fit: contain; animation: farm-logo-in 650ms cubic-bezier(.2,.8,.2,1) both; }
 .app-opening p { font-size: 20px; font-weight: 700; color: #fff; }
 @keyframes farm-opening { 0% { opacity: 1; } 75% { opacity: 1; } 100% { opacity: 0; } }

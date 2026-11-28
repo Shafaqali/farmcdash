@@ -306,6 +306,7 @@ export type Database = {
           customer_id: string
           id: string
           kind: string
+          manual_reminder: boolean
           message: string
           owner_id: string
           read_at: string | null
@@ -319,6 +320,7 @@ export type Database = {
           customer_id: string
           id?: string
           kind?: string
+          manual_reminder?: boolean
           message: string
           owner_id: string
           read_at?: string | null
@@ -332,6 +334,7 @@ export type Database = {
           customer_id?: string
           id?: string
           kind?: string
+          manual_reminder?: boolean
           message?: string
           owner_id?: string
           read_at?: string | null
@@ -662,6 +665,17 @@ export type Database = {
         Args: { _customer_id: string }
         Returns: undefined
       }
+      enqueue_customer_update: {
+        Args: {
+          _animal: string
+          _customer: string
+          _kind?: string
+          _message: string
+          _owner: string
+          _title: string
+        }
+        Returns: undefined
+      }
       farm_storage_usage: { Args: never; Returns: Json }
       invite_customer: {
         Args: { _customer_id: string; _email: string }
@@ -709,6 +723,7 @@ export type Database = {
         Returns: undefined
       }
       remind_unpaid_customers: { Args: never; Returns: number }
+      remind_unpaid_customers_now: { Args: never; Returns: number }
       reset_owned_farm: { Args: { _confirmation: string }; Returns: undefined }
       revoke_background_device: {
         Args: { _device: string; _secret: string }

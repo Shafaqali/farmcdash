@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ insert: vi.fn().mockResolvedValue({ error: null }) }));
-vi.mock("@/lib/farm-data", () => ({ fmtDate: (s: string) => s, isoToday: () => "2026-11-20" }));
+vi.mock("@/lib/farm-data", () => ({ useFarm: () => ({ uid: "owner" }), fmtDate: (s: string) => s, isoToday: () => "2026-11-20" }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: { from: () => ({ insert: mocks.insert, select: () => ({ eq: () => ({ order: () => { const result = Promise.resolve({ data: [], error: null }); return Object.assign(result, { order: () => result }); } }) }) }) } }));
 import { AnimalHealth } from "@/components/AnimalHealth";
 it("saves a single trimmed owner health entry and resets the form", async () => {

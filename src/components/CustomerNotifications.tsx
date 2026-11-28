@@ -1,3 +1,4 @@
+import { playCustomerNoticeSound } from "@/lib/notice-sound";
 import { notificationPresentation } from "@/lib/notification-presentation";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
@@ -23,37 +24,46 @@ export function CustomerNotifications() {
   useEffect(() => {
     setSaving(false); setFilter("All"); setError(""); setLoadedUid(null); setItems([]); setFetching(false);
     if (!uid) return;
-    let active = true, running = false;
+    let active = true, running = false, queued = false;
     let known: Set<string> | null = null;
     const refresh = async () => {
-      if (running || !active) return;
+      if (!active) return;
+      if (running) { queued = true; return; }
       running = true; setFetching(true);
       try {
         const { data, error } = await supabase.from("customer_notifications").select("*").order("created_at", { ascending: false }).limit(100);
         if (!active) return;
         if (error) throw error;
         const next = data ?? [];
-        const fresh = known ? next.filter((notice) => !known!.has(notice.id) && !notice.read_at) : [];
+        const previous = known;
+        const fresh = previous ? next.filter((notice) => !previous.has(notice.id) && !notice.read_at) : [];
         known = new Set(next.map((notice) => notice.id));
         const first = fresh[0];
+        if (fresh.length) {
+          window.dispatchEvent(new CustomEvent("farm-customer-update", { detail: { uid } }));
+          if (document.visibilityState === "visible") void playCustomerNoticeSound(uid);
+        }
         if (first) toast.info(fresh.length === 1 ? first.title : `${fresh.length} customer updates`, { description: fresh.length === 1 ? first.message : "Open the bell to see your updates." });
         setItems(next); setError(""); setLoadedUid(uid);
       } catch { if (active) { setError("Could not load updates. Check your connection and try again."); setLoadedUid(uid); } }
-      finally { running = false; if (active) setFetching(false); }
+      finally { running = false; if (active) { setFetching(false); if (queued) { queued = false; void refresh(); } } }
     };
     refreshRef.current = refresh;
     void refresh();
-    const channel = supabase.channel(`customer-updates-${crypto.randomUUID()}`).on("postgres_changes", { event: "*", schema: "public", table: "customer_notifications", filter: `viewer_id=eq.${uid}` }, () => void refresh()).subscribe();
+    const channel = supabase.channel(`customer-updates-${crypto.randomUUID()}`).on("postgres_changes", { event: "INSERT", schema: "public", table: "customer_notifications", filter: `viewer_id=eq.${uid}` }, () => {
+      if (active) window.dispatchEvent(new CustomEvent("farm-customer-update", { detail: { uid } }));
+      void refresh();
+    }).subscribe();
     const timer = window.setInterval(() => void refresh(), 30000);
     const onVisible = () => { if (document.visibilityState === "visible") void refresh(); };
     window.addEventListener("online", refresh); document.addEventListener("visibilitychange", onVisible);
     let remove: (() => void) | undefined;
     void import("@capacitor/app").then(({ App }) => App.addListener("appStateChange", (state) => { if (state.isActive) void refresh(); })).then((handle) => { if (active) remove = () => void handle.remove(); else void handle.remove(); }).catch(() => {});
-    return () => { active = false; remove?.(); window.clearInterval(timer); window.removeEventListener("online", refresh); document.removeEventListener("visibilitychange", onVisible); if (refreshRef.current === refresh) refreshRef.current = async () => {}; };
+    return () => { active = false; void supabase.removeChannel(channel); remove?.(); window.clearInterval(timer); window.removeEventListener("online", refresh); document.removeEventListener("visibilitychange", onVisible); if (refreshRef.current === refresh) refreshRef.current = async () => {}; };
   }, [uid]);
   const visibleItems = loadedUid === uid ? items : [];
   const unread = visibleItems.filter((notice) => !notice.read_at).length;
-  const filtered = visibleItems.filter((notice) => filter === "All" || (filter === "Unread" ? !notice.read_at : filter === "Payments" ? notice.kind === "payment" : notice.title.toLowerCase().includes("health")));
+  const filtered = visibleItems.filter((notice) => filter === "All" || (filter === "Unread" ? !notice.read_at : filter === "Payments" ? notificationPresentation(notice.title, notice.kind).type === "payment" : notice.title.toLowerCase().includes("health")));
   const markRead = async (ids: string[]) => {
     if (!uid || saving || !ids.length) return;
     const account = uid; setSaving(true);
@@ -80,7 +90,7 @@ export function CustomerNotifications() {
         const payment = presentation.type === "payment";
         const health = presentation.type === "health";
         const Icon = payment ? Wallet : health ? HeartPulse : notice.title.toLowerCase().includes("vaccin") ? Syringe : TrendingUp;
-        return <li key={notice.id} className={`py-4 ${notice.read_at ? "bg-card" : "bg-secondary/15"}`}><div className="flex items-start gap-3"><span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${payment ? "bg-amber-100 text-amber-800" : "bg-secondary text-primary"}`}><Icon aria-hidden="true" className="h-5 w-5" /></span><div className="min-w-0 flex-1"><p className="mb-1 text-xs font-semibold text-primary">{presentation.label}</p>{notice.animal_id ? <Link to="/animals/$id" params={{ id: notice.animal_id }} onClick={() => { setOpen(false); if (!notice.read_at) void markRead([notice.id]); }} className="block break-words text-base font-bold leading-snug">{notice.title}<span className="mt-2 inline-flex rounded-md bg-secondary px-2 py-1 text-sm font-bold tracking-wide text-primary">{notice.animal_id}</span></Link> : <Link to="/my-animals" onClick={() => { setOpen(false); if (!notice.read_at) void markRead([notice.id]); }} className="block break-words text-base font-bold leading-snug">{notice.title}</Link>}<p className="mt-2 break-words text-sm leading-relaxed text-muted-foreground">{notice.message}</p><div className="mt-3 flex flex-wrap items-center justify-between gap-2"><time dateTime={notice.created_at} className="text-xs text-muted-foreground">{new Date(notice.created_at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</time>{!notice.read_at ? <Button variant="ghost" size="sm" disabled={saving} className="h-7 gap-1 rounded-full px-2 text-xs text-primary" onClick={() => void markRead([notice.id])}><Check className="h-3 w-3" />Mark read</Button> : <CheckCheck aria-label="Read" className="h-3.5 w-3.5 text-primary/60" />}</div></div>{!notice.read_at && <span aria-label="Unread" className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />}</div></li>;
+        return <li key={notice.id} className={`py-4 ${notice.read_at ? "bg-card" : "bg-secondary/15"}`}><div className="flex items-start gap-3"><span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${payment ? "bg-secondary text-primary" : "bg-secondary text-primary"}`}><Icon aria-hidden="true" className="h-5 w-5" /></span><div className="min-w-0 flex-1"><p className="mb-1 text-xs font-semibold text-primary">{presentation.label}</p>{notice.animal_id ? <Link to="/animals/$id" params={{ id: notice.animal_id }} onClick={() => { setOpen(false); if (!notice.read_at) void markRead([notice.id]); }} className="block break-words text-base font-bold leading-snug">{notice.title}<span className="mt-2 inline-flex rounded-md bg-secondary px-2 py-1 text-sm font-bold tracking-wide text-primary">{notice.animal_id}</span></Link> : <Link to="/my-animals" onClick={() => { setOpen(false); if (!notice.read_at) void markRead([notice.id]); }} className="block break-words text-base font-bold leading-snug">{notice.title}</Link>}<p className="mt-2 break-words text-sm leading-relaxed text-muted-foreground">{notice.message}</p><div className="mt-3 flex flex-wrap items-center justify-between gap-2"><time dateTime={notice.created_at} className="text-xs text-muted-foreground">{new Date(notice.created_at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</time>{!notice.read_at ? <Button variant="ghost" size="sm" disabled={saving} className="h-7 gap-1 rounded-full px-2 text-xs text-primary" onClick={() => void markRead([notice.id])}><Check className="h-3 w-3" />Mark read</Button> : <CheckCheck aria-label="Read" className="h-3.5 w-3.5 text-primary/60" />}</div></div>{!notice.read_at && <span aria-label="Unread" className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />}</div></li>;
       })}</ul>
       {unread > 0 && <Button variant="outline" disabled={saving} className="m-4 h-10 rounded-lg text-sm font-semibold" onClick={() => void markRead(visibleItems.filter((notice) => !notice.read_at).map((notice) => notice.id))}><CheckCheck className="h-4 w-4" />{saving ? "Updating…" : "Mark all read"}</Button>}
     </DialogContent></Dialog>

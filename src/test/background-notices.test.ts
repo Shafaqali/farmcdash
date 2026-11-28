@@ -72,3 +72,17 @@ describe("Android background notice account lifecycle", () => {
     expect(mocks.native.bindAccount).not.toHaveBeenCalled();
   });
 });
+
+it("does not activate background delivery if the polling RPC is missing", async () => {
+ const { syncBackgroundNotices } = await import("@/lib/background-notices");
+ mocks.rpc.mockImplementation(async(name)=>({error:name==="poll_customer_notifications_v2"?{code:"PGRST202"}:null}));
+ await expect(syncBackgroundNotices("customer-a","customer")).rejects.toThrow("SQL update");
+ expect(mocks.native.activate).not.toHaveBeenCalled();expect(mocks.native.stop).toHaveBeenCalled();
+});
+
+it("preserves existing scheduled work on a transient polling check failure",async()=>{
+ const {syncBackgroundNotices}=await import("@/lib/background-notices");
+ mocks.rpc.mockImplementation(async(name)=>({error:name==="poll_customer_notifications_v2"?{code:"503"}:null}));
+ await expect(syncBackgroundNotices("customer-a","customer")).rejects.toThrow("could not be verified");
+ expect(mocks.native.activate).not.toHaveBeenCalled();expect(mocks.native.stop).not.toHaveBeenCalled();
+});
